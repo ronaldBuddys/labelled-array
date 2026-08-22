@@ -26,33 +26,55 @@ class ArithmeticMixin:
     """Element-wise arithmetic applied to every variable.
 
     The other operand is either a scalar or array broadcastable against the
-    variables, or another labelled array with identical dimensions and variable
-    names. Masks are combined so a cell is populated only where both operands
-    are. Coordinates and attributes are taken from the left operand.
+    variables, or another labelled array with the same dimension and variable
+    names. Two arrays whose labels differ are aligned first, so arithmetic is
+    always between the cells that mean the same thing; the dimension *names*
+    must match, because nothing says how to broadcast one dimension onto
+    another. Masks are combined so a cell is populated only where both operands
+    are, which includes the cells alignment invented. Coordinates and
+    attributes are taken from the left operand.
     """
+
+    #: How arithmetic resolves a dimension whose labels differ between operands.
+    _arithmetic_join: str = "inner"
+
+    def _align_operands(self, other: Any) -> tuple[Any, Any]:
+        """Return this array and ``other`` on one set of dimensions."""
+        if other.dims == self.dims:
+            return self, other
+        if set(other.dims.names) != set(self.dims.names):
+            raise ValueError(
+                f"operands have different dimensions: {list(self.dims.names)} "
+                f"vs {list(other.dims.names)}"
+            )
+        from labelled_array._align import align
+
+        if other.dims.names != self.dims.names:
+            other = other.transpose(self.dims.names)
+        return align([self, other], join=self._arithmetic_join)
 
     def _binary_op(self, other: Any, op: Callable, reflected: bool = False) -> Any:
         """Apply ``op`` to every variable against ``other``."""
         from labelled_array.core import LabelledArray
 
+        left = self
         if isinstance(other, LabelledArray):
-            if other.dims != self.dims:
-                raise ValueError("operands have different dimensions")
             if other.variables != self.variables:
                 raise ValueError(
                     f"operands have different variables: {self.variables} vs {other.variables}"
                 )
-            operands = {name: other[name] for name in self.variables}
-            mask = _combine_masks(self.mask, other.mask)
+            left, other = self._align_operands(other)
+            operands = {name: other[name] for name in left.variables}
+            mask = _combine_masks(left.mask, other.mask)
         else:
             operands = dict.fromkeys(self.variables, other)
             mask = self.mask
 
         data = {
-            name: op(operands[name], self[name]) if reflected else op(self[name], operands[name])
-            for name in self.variables
+            name: op(operands[name], left[name]) if reflected else op(left[name], operands[name])
+            for name in left.variables
         }
-        return self._replace(data=data, mask=mask)
+        return left._replace(data=data, mask=mask)
 
     def _unary_op(self, op: Callable) -> Any:
         """Apply ``op`` to every variable."""
