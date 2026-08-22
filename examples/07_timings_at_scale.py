@@ -1,0 +1,484 @@
+"""
+Timings at scale
+================
+
+Where the time goes on a large array, and which choices change it. Every number
+below is measured on the machine running the script -- the point is not the
+absolute milliseconds but the ratios, which hold up across machines: what
+dominates ``from_dataframe``, what a ``select`` costs, what the operations --
+reductions, groups, rolling windows, alignment -- cost on a million cells, and
+what sparsity costs in memory rather than in time.
+
+Set ``LABELLED_ARRAY_SCALE`` to run it larger: ``2`` is four times the cells,
+``4`` is sixteen times.
+"""
+
+# %%
+# A timing helper
+# ---------------
+# Best of a few runs rather than a mean, because the interesting quantity is
+# the cost of the work and not the cost of an unlucky page fault. Nothing here
+# asserts on a duration -- timings are not reproducible enough to assert on --
+# so the assertions check that the faster spelling computes the same answer.
+
+import os
+import time
+
+import numpy as np
+import pandas as pd
+
+from labelled_array import LabelledArray
+from labelled_array.backends import available_backends
+
+SCALE = float(os.environ.get("LABELLED_ARRAY_SCALE", "1"))
+TIMINGS: dict[str, float] = {}
+
+
+def bench(label, call, repeat=3):
+    """Run ``call`` ``repeat`` times, report the fastest, and return its result."""
+    best, result = float("inf"), None
+    for _ in range(repeat):
+        start = time.perf_counter()
+        result = call()
+        best = min(best, time.perf_counter() - start)
+    TIMINGS[label] = best
+    print(f"{label:<46}{best * 1e3:9.2f} ms")
+    return result
+
+
+# %%
+# The data
+# --------
+# A price panel: every asset quoted on every date, which is the dense case the
+# layout is built for. At the default scale that is a million rows.
+
+n_assets, n_dates = int(400 * SCALE), int(2500 * SCALE)
+rng = np.random.default_rng(0)
+
+assets = np.array([f"A{i:05d}" for i in range(n_assets)])
+dates = np.datetime64("2015-01-03", "ns") + np.arange(n_dates) * np.timedelta64(1, "D")
+
+panel = pd.DataFrame(
+    {
+        "asset": np.repeat(assets, n_dates),
+        "date": np.tile(dates, n_assets),
+        "close": rng.standard_normal(n_assets * n_dates),
+        "volume": rng.integers(0, 10**6, n_assets * n_dates),
+    }
+)
+print(f"{len(panel):,} rows, {n_assets} assets x {n_dates} dates")
+
+# %%
+# Building the array
+# ------------------
+# One pass over the frame: factorize each dimension column, ravel the codes
+# into flat positions, then scatter each value column into a preallocated
+# array.
+
+prices = bench(
+    "from_dataframe",
+    lambda: LabelledArray.from_dataframe(panel, cols=["close", "volume"], dims=["asset", "date"]),
+    repeat=2,
+)
+print(prices)
+
+assert prices.shape == (n_assets, n_dates)
+assert prices.density == 1.0
+assert prices.mask is None, "a fully populated array keeps no mask"
+
+# %%
+# Where that time goes
+# --------------------
+# Calling the pieces directly shows the split. Factorizing the asset column
+# dominates: pandas hands strings over as an object array, and every one of the
+# million entries has to be hashed to find which of the few hundred labels it
+# is. The numeric work either side of it -- ravelling positions, checking them
+# for duplicates, scattering the values -- is a fraction of it.
+
+from labelled_array import Dimensions  # noqa: E402
+from labelled_array._reshape import factorize, flat_positions, scatter  # noqa: E402
+
+asset_values = panel["asset"].to_numpy()
+date_values = panel["date"].to_numpy()
+
+bench("  factorize 'asset' (object dtype)", lambda: factorize(asset_values))
+bench("  factorize 'date' (datetime64)", lambda: factorize(date_values))
+
+codes = [np.repeat(np.arange(n_assets), n_dates), np.tile(np.arange(n_dates), n_assets)]
+dims = Dimensions({"asset": assets, "date": dates})
+positions = bench(
+    "  flat_positions (+ duplicate check)", lambda: flat_positions(codes, dims, len(panel))
+)
+bench("  scatter one column", lambda: scatter(panel["close"].to_numpy(), positions, dims.shape))
+
+# %%
+# Labels you already hold as codes
+# --------------------------------
+# The way to avoid that cost is not to pay it: when the dimension columns are
+# already integers, factorizing them is a sort of a few hundred distinct values
+# rather than a hash of a million strings. Same array, and typically several
+# times quicker to build.
+
+coded = panel.assign(
+    asset=np.repeat(np.arange(n_assets), n_dates), date=np.tile(np.arange(n_dates), n_assets)
+)
+by_code = bench(
+    "from_dataframe, integer dimension columns",
+    lambda: LabelledArray.from_dataframe(coded, cols=["close", "volume"], dims=["asset", "date"]),
+    repeat=2,
+)
+assert np.array_equal(by_code["close"], prices["close"]), "same layout, cheaper labels"
+speed_up = TIMINGS["from_dataframe"] / TIMINGS["from_dataframe, integer dimension columns"]
+print(f"{'speed-up':<46}{speed_up:8.1f}x")
+
+# %%
+# It is linear in the rows
+# ------------------------
+# Nothing in the conversion is worse than a sort of the distinct labels, so
+# doubling the rows doubles the time. The per-row cost is the number to carry
+# to a bigger frame.
+
+for rows in (250_000, 500_000, 1_000_000):
+    n_groups = rows // 1000
+    frame = pd.DataFrame(
+        {
+            "g": np.repeat(np.arange(n_groups), 1000),
+            "d": np.tile(np.arange(1000), n_groups),
+            "v": rng.standard_normal(rows),
+        }
+    )
+    label = f"  {rows:>9,} rows"
+    bench(
+        label,
+        lambda frame=frame: LabelledArray.from_dataframe(frame, cols=["v"], dims=["g", "d"]),
+        repeat=2,
+    )
+    print(f"{'':<46}{TIMINGS[label] / rows * 1e9:9.0f} ns/row")
+
+# %%
+# Selecting is a copy, priced by what comes out
+# ---------------------------------------------
+# ``select`` gathers the chosen entries into a new array, so it costs what the
+# result costs and is independent of how many labels were looked up. The label
+# lookup itself is a hash map, built once per dimension on first use and cached
+# on the array's ``Dimensions``.
+
+some_assets = assets[: max(1, n_assets // 100)]
+same_positions = np.arange(len(some_assets))
+
+cold = LabelledArray.from_dataframe(panel, cols=["close"], dims=["asset", "date"])
+bench("select on a fresh array (builds the lookup)", lambda: cold.select(asset=some_assets), 1)
+bench("select again (the lookup is cached)", lambda: cold.select(asset=some_assets), 5)
+bench("isel, by position (no lookup at all)", lambda: cold.isel(asset=same_positions), 5)
+
+assert cold.select(asset=some_assets).equals(cold.isel(asset=same_positions))
+
+# %%
+# Several dimensions are one gather, in either order
+# --------------------------------------------------
+# ``select`` hands every dimension to the backend at once -- ``np.ix_`` on
+# numpy -- so no intermediate array is built for the axes still to come, and
+# the order the indexers are given in does not change the cost. Applying them
+# one axis at a time, as the package used to, made a wide-then-narrow selection
+# several times more expensive than the same selection asked for the other way
+# round.
+
+few_dates, many_assets = dates[:5], assets[: n_assets // 2]
+
+wide_first = bench(
+    "select assets, then dates",
+    lambda: prices.select({"asset": many_assets, "date": few_dates}),
+    repeat=5,
+)
+narrow_first = bench(
+    "select dates, then assets",
+    lambda: prices.select({"date": few_dates, "asset": many_assets}),
+    repeat=5,
+)
+assert wide_first.equals(narrow_first)
+
+close = prices["close"]
+rows_, cols_ = np.arange(n_assets // 2), np.arange(5)
+one_pass = bench(
+    "  np.ix_ on the bare array, one variable",
+    lambda: close[np.ix_(rows_, cols_)],
+    repeat=5,
+)
+assert np.array_equal(one_pass, narrow_first["close"])
+
+# %%
+# Arithmetic costs what the backend costs
+# ---------------------------------------
+# Operators map over the variables and rebuild the container. On a large array
+# that container overhead is invisible next to the arithmetic; on a small one
+# it is all there is, so it is worth knowing the fixed part.
+
+bench(f"{prices.size:,}-cell array * 2 + 1", lambda: prices * 2 + 1, repeat=5)
+bench(
+    "  the same on the bare numpy arrays",
+    lambda: (prices["close"] * 2 + 1, prices["volume"] * 2 + 1),
+    repeat=5,
+)
+
+tiny = LabelledArray({"w": np.arange(6.0).reshape(2, 3)}, {"a": ["x", "y"], "b": [1, 2, 3]})
+bench("2x3 array * 2 + 1 (fixed overhead)", lambda: tiny * 2 + 1, repeat=50)
+bench("2x3 select", lambda: tiny.select({"a": "x"}), repeat=50)
+
+# %%
+# Moving between backends
+# -----------------------
+# The move is a per-variable conversion, and how much it costs is the library's
+# choice, not the container's: torch wraps the same buffer, while JAX copies it
+# to a device. The labels, mask and coordinates never move.
+
+print("available backends:", available_backends())
+for name in available_backends():
+    if name == "numpy":
+        continue
+    moved = bench(f"to_backend({name!r})", lambda name=name: prices.to_backend(name), repeat=2)
+    bench(f"  {name} back to numpy", lambda moved=moved: moved.to_backend("numpy"), repeat=2)
+    assert moved.shape == prices.shape and moved.dims == prices.dims
+
+if "torch" in available_backends():
+    shared = prices.to_backend("torch")
+    assert shared["close"].data_ptr() == prices["close"].__array_interface__["data"][0], (
+        "torch wraps the numpy buffer rather than copying it"
+    )
+
+# %%
+# Sparsity is a memory cost, not a time cost
+# ------------------------------------------
+# A dense layout spans the product of the label sets. When one dimension's
+# labels are unique to a group -- a date column that never repeats across
+# assets -- the cells outnumber the rows by the number of groups.
+
+n_groups, per_group = 60, 200
+uneven = pd.DataFrame(
+    {
+        "group": np.repeat([f"g{i:02d}" for i in range(n_groups)], per_group),
+        "date": np.datetime64("2015-01-03", "ns")
+        + np.arange(n_groups * per_group) * np.timedelta64(1, "D"),
+        "value": rng.standard_normal(n_groups * per_group),
+    }
+)
+
+spread = bench(
+    "from_dataframe, dates as labels",
+    lambda: LabelledArray.from_dataframe(uneven, cols=["value"], dims=["group", "date"]),
+    repeat=2,
+)
+packed = bench(
+    "from_dataframe, natural=['date']",
+    lambda: LabelledArray.from_dataframe(
+        uneven, cols=["value"], dims=["group", "date"], natural=["date"]
+    ),
+    repeat=2,
+)
+
+
+def footprint(array):
+    """Bytes held by the variables, the mask and the coordinates."""
+    total = sum(value.nbytes for value in array.data.values())
+    total += array.mask.nbytes if array.mask is not None else 0
+    return total + sum(coord.nbytes for coord in array.coords.values())
+
+
+for name, array in (("labelled dates", spread), ("natural index ", packed)):
+    print(
+        f"{name}: {str(array.shape):>14}, {array.density:>7.2%} populated,"
+        f" {footprint(array) / 1e6:6.2f} MB"
+    )
+
+assert spread.size == n_groups * n_groups * per_group
+assert packed.size == n_groups * per_group
+assert footprint(packed) < footprint(spread)
+assert spread.to_dataframe(index=False).equals(packed.to_dataframe(index=False))
+
+# %%
+# What that would cost at a realistic size
+# ----------------------------------------
+# The density is knowable before anything is allocated, which is the check
+# worth making in a pipeline: cells are the product of the distinct label
+# counts, and the rows you have divided by that product is the density you will
+# get. A dimension that is unique per row turns a modest frame into an array
+# that will not fit.
+
+n_instruments, n_days, n_fields = 5_000, 2_520, 4
+rows = n_instruments * n_days
+labelled_cells = n_instruments * rows  # a date column unique to each instrument
+natural_cells = n_instruments * n_days
+
+print(f"{rows:,} rows x {n_fields} fields")
+print(f"  dates as labels : {labelled_cells:,} cells,"
+      f" {labelled_cells * 8 * n_fields / 1e12:.1f} TB")
+print(f"  natural index   : {natural_cells:,} cells, {natural_cells * 8 * n_fields / 1e9:.1f} GB")
+print(f"  density         : {rows / labelled_cells:.2%} against {rows / natural_cells:.0%}")
+
+assert rows / labelled_cells < 0.001, "the dense layout is the wrong one here"
+
+# %%
+# The mask costs a byte a cell
+# ----------------------------
+# A byte per cell, however many variables there are: an eighth of one float64
+# variable, less with each one added. It is dropped entirely when every cell is
+# populated, which is why the dense array above carries none.
+
+unmasked = bench(
+    "from_dataframe, mask=False",
+    lambda: LabelledArray.from_dataframe(
+        uneven, cols=["value"], dims=["group", "date"], mask=False
+    ),
+    repeat=2,
+)
+print("mask     :", f"{spread.mask.nbytes / 1e6:.2f} MB")
+print("variables:", f"{spread['value'].nbytes / 1e6:.2f} MB")
+assert spread.mask.nbytes * 8 == spread["value"].nbytes, "one bool against one float64"
+assert unmasked.mask is None
+
+# Dropping it is a memory decision, not a speed one, and it is only safe when
+# the frame really is dense: without a mask every empty cell is a row on the
+# way back out.
+assert len(unmasked.to_dataframe()) == unmasked.size
+assert len(spread.to_dataframe()) == len(uneven)
+
+# %%
+# Reducing a dimension away
+# -------------------------
+# A reduction is one pass over the cells, so it costs about what the backend's
+# own reduction costs. A mask costs another pass: absent cells are replaced
+# with the reduction's identity first, which is a full copy of every variable
+# before anything is added up.
+
+sparse_prices = prices._replace(mask=rng.random(prices.shape) > 0.2)
+
+for op in ("sum", "mean", "min", "max"):
+    bench(f"{op} over 'date'", lambda op=op: getattr(prices, op)("date"), repeat=3)
+bench("  the same on the bare numpy array", lambda: prices["close"].sum(axis=1), repeat=3)
+bench("sum over 'date', 80% populated", lambda: sparse_prices.sum("date"), repeat=3)
+bench("sum over both dimensions", lambda: prices.sum(), repeat=3)
+
+assert prices.sum("date").shape == (n_assets,)
+assert prices.sum().shape == ()
+np.testing.assert_allclose(prices.sum("date")["close"], prices["close"].sum(axis=1))
+
+# %%
+# Grouped reductions
+# ------------------
+# A group is a selection along one dimension followed by a reduction over it,
+# so the whole pass over the array is linear in its size however many groups
+# there are -- but each group is a python-level step, and that is what a large
+# number of them costs.
+
+sectors = np.array([f"sector-{i % 20:02d}" for i in range(n_assets)], dtype=object)
+many = np.array([f"group-{i % 200:03d}" for i in range(n_assets)], dtype=object)
+
+by_sector = bench("groupby 20 groups, mean", lambda: prices.groupby(sectors, dim="asset").mean())
+bench("groupby 200 groups, mean", lambda: prices.groupby(many, dim="asset").mean())
+bench(
+    "  pandas groupby on the same numbers",
+    lambda: pd.DataFrame(prices["close"]).groupby(sectors).mean(),
+    repeat=2,
+)
+
+assert by_sector.shape == (20, n_dates)
+assert by_sector.dims["asset"].tolist() == sorted(set(sectors.tolist()))
+
+# %%
+# Rolling windows
+# ---------------
+# Each window is reduced in full, so the work is the size of the array times
+# the window: this is where the time goes on a big panel. numpy sees the
+# windows as a view rather than a copy, so what is paid for is the arithmetic
+# and not the memory -- but it is still one addition per cell per position of
+# the window, which is why pandas, which keeps a running total instead, pulls
+# ahead as the window grows.
+
+for window in (5, 20, 60, 250):
+    bench(
+        f"rolling mean, window {window:>3}",
+        lambda w=window: prices.rolling("date", w).mean(),
+        repeat=2,
+    )
+bench(
+    "  pandas rolling(20).mean on the same numbers",
+    lambda: pd.DataFrame(prices["close"].T).rolling(20).mean(),
+    repeat=2,
+)
+
+rolled = prices.rolling("date", 20).mean()
+assert rolled.shape == prices.shape
+assert rolled.mask[:, :19].sum() == 0, "a partial window produces nothing"
+
+# %%
+# Putting two arrays onto one label set
+# -------------------------------------
+# ``reindex`` and ``align`` are a gather plus, where labels are new, a fill:
+# the same one pass ``select`` makes, with a second one over whatever the join
+# invented. Arithmetic between arrays whose labels differ pays for that
+# alignment before it multiplies anything.
+
+half = prices.isel({"asset": np.arange(0, n_assets, 2)})
+
+bench("reindex onto the full asset set", lambda: half.reindex(asset=assets))
+bench("align, inner join", lambda: half.align(prices))
+bench("align, outer join", lambda: half.align(prices, join="outer"))
+bench("arithmetic between aligned operands", lambda: half + prices)
+bench("  arithmetic on identical labels", lambda: prices + prices)
+
+first = prices.isel(date=slice(0, n_dates // 2))
+second = prices.isel(date=slice(n_dates // 2, None))
+bench("concat two halves along 'date'", lambda: LabelledArray.concat([first, second], dim="date"))
+bench("concat along a new dimension", lambda: LabelledArray.concat([first, first], dim="run"))
+
+assert (half + prices).shape == half.shape, "the inner join is the narrower operand"
+assert LabelledArray.concat([first, second], dim="date").equals(prices)
+
+# %%
+# Back out to a frame
+# -------------------
+# ``to_dataframe`` gathers one row per populated cell: a flat gather per
+# variable, plus the dimension labels expanded to match. It is priced on the
+# rows it emits, so a sparse array is cheaper than a dense one of the same
+# shape.
+
+bench("to_dataframe (pandas, dense)", lambda: prices.to_dataframe(index=False), repeat=2)
+bench("to_dataframe (polars, dense)", lambda: prices.to_dataframe("polars"), repeat=2)
+bench("  ... with the dimensions as an index", lambda: prices.to_dataframe(), repeat=2)
+
+# The same shape, masked and unmasked: the mask is what keeps the empty cells
+# out of the frame, and it is the row count that the conversion is priced on.
+bench(f"to_dataframe, {len(uneven):,} of {spread.size:,} cells masked in",
+      lambda: spread.to_dataframe(index=False), repeat=2)
+bench(f"to_dataframe, all {unmasked.size:,} cells (mask=False)",
+      lambda: unmasked.to_dataframe(index=False), repeat=2)
+
+round_tripped = prices.to_dataframe(index=False)
+assert len(round_tripped) == prices.size
+assert bool((round_tripped["close"].to_numpy() == prices["close"].reshape(-1)).all())
+
+# %%
+# What the numbers say
+# --------------------
+# Sorted by cost, for the array built at the top of this file.
+
+print(f"{'cells':<46}{prices.size:9,}")
+for label, seconds in sorted(TIMINGS.items(), key=lambda item: -item[1])[:8]:
+    print(f"{label.strip():<46}{seconds * 1e3:9.2f} ms")
+
+# %%
+# Rules of thumb
+# --------------
+# * Building is dominated by factorizing object-dtype dimension columns; hand
+#   over integer or datetime codes where you can.
+# * Everything else in the build is linear in the rows and cheap per row.
+# * ``select`` costs what the result costs, whichever order the dimensions are
+#   asked for in.
+# * A reduction is one pass over the cells; a mask adds another. A rolling
+#   window is one pass per position of the window, so a long window is the one
+#   operation here whose cost is not linear in the array.
+# * A group is cheap, but each one is a python-level step: hundreds of groups
+#   cost more than the pass over the data does.
+# * The container overhead is fixed and tens of microseconds; it disappears
+#   above about ten thousand cells.
+# * Sparsity is paid in memory, not in time. Work the density out before
+#   allocating, and reach for ``natural=`` when it collapses.
