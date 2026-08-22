@@ -261,6 +261,9 @@ def test_repr_names_the_subclass():
         (lambda la: 2 / (la + 1), lambda w: 2 / (w + 1)),
         (lambda la: la // 2, lambda w: w // 2),
         (lambda la: la % 2, lambda w: w % 2),
+        # +1 keeps the reflected operators away from the zero in 'w'.
+        (lambda la: 8 // (la + 1), lambda w: 8 // (w + 1)),
+        (lambda la: 8 % (la + 1), lambda w: 8 % (w + 1)),
         (lambda la: la**2, lambda w: w**2),
         (lambda la: 2 ** (la / 6), lambda w: 2 ** (w / 6)),
         (lambda la: -la, lambda w: -w),
@@ -293,9 +296,9 @@ def test_arithmetic_combines_masks(simple):
     assert (simple + simple._replace(mask=None)).mask.tolist() == simple.mask.tolist()
 
 
-def test_arithmetic_requires_matching_dimensions(simple):
+def test_arithmetic_requires_matching_dimension_names(simple):
     with pytest.raises(ValueError, match="different dimensions"):
-        simple + simple.isel(a=[0])
+        simple + simple.isel(a=0, drop=True)
 
 
 def test_arithmetic_requires_matching_variables(simple):
