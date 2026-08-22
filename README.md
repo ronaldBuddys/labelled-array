@@ -1,8 +1,8 @@
 # labelled-array
 
-N-dimensional arrays that carry their dimension names and labels, convert
-losslessly to and from pandas or polars DataFrames, and hold their data on
-numpy, JAX or torch.
+N-dimensional arrays that carry their dimension names and labels, align and
+reduce over them, convert losslessly to and from pandas or polars DataFrames,
+and hold their data on numpy, JAX or torch.
 
 ```python
 import pandas as pd
@@ -81,6 +81,42 @@ LabelledArray.from_dataframe(panel, cols=["value"], dims=["group", "item", "date
 
 See `examples/04_natural_index_and_sparsity.py`.
 
+## Operations
+
+Reductions, groups and windows are mask-aware in the same way the round trip
+is: a cell with no source row does not contribute, and a result with nothing
+behind it is filled and marked absent rather than being invented.
+
+```python
+book.sum("date")                              # sum / mean / min / max over named dimensions
+book.groupby(sectors, dim="asset").mean()     # or groupby("sector"), a coordinate per label
+book.rolling("date_idx", 20).mean()           # trailing windows; min_periods= for partial ones
+```
+
+Combining two arrays is a question about their labels first:
+
+```python
+book.reindex(date=week)                       # onto another label set, filling what is new
+book.fillna(0.0)                              # fill the absent cells and drop the mask
+book.align(other, join="outer")               # one label set per shared dimension
+book - other                                  # arithmetic aligns on its own (inner join)
+LabelledArray.concat([jan, feb], dim="date")  # extend a dimension, or stack a new one
+```
+
+The operations are deliberately narrow, and say so rather than guessing:
+
+- **Arithmetic aligns labels, but the dimension names must match.** Nothing
+  broadcasts one dimension onto another.
+- **`groupby` groups one dimension by one value per label.** A coordinate that
+  varies along two dimensions is refused rather than flattened.
+- **Windows are trailing**, never centred.
+- **There is no `skipna`.** Absence is what the mask records; a NaN that is
+  masked in is data, and propagates.
+
+See `examples/08_combining_and_reducing.py`, and
+`examples/07_timings_at_scale.py` for what each of them costs on a million
+cells.
+
 ## Round trip gotchas
 
 The round trip is exact for the great majority of dtypes. Where it is not, the
@@ -136,12 +172,22 @@ book.select({"ticker": "AAA"})   # still a FinancialArray
 ```
 
 See `examples/06_subclassing.py`, and `register_backend` / `register_adapter`
-for supporting another array or DataFrame library from outside the package.
+for supporting another array or DataFrame library from outside the package. An
+`ArrayBackend` only has to provide the abstract methods: `take_multi`, `full`,
+`where`, `concatenate`, `reduce` and `sliding_window` all have working
+implementations in the base class, which a backend overrides only where its
+library can do better -- `np.ix_` for a multi-axis gather, a view rather than a
+copy for a sliding window.
 
 ## Examples and tests
 
 ```bash
-python examples/01_basics.py                # 01 basics ... 06 subclassing
+python examples/01_basics.py                # 01 basics ... 08 combining and reducing
 pytest -q                                   # the full suite
 pytest --cov=labelled_array --cov-report=term-missing
 ```
+
+`examples/07_timings_at_scale.py` measures where the time goes on a million-row
+frame — what dominates `from_dataframe`, what a `select` costs, what the
+operations above cost, and what sparsity costs in memory rather than in time.
+Set `LABELLED_ARRAY_SCALE=2` to run it on four times the cells.
