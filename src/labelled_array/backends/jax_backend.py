@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import importlib
-from typing import Any, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -67,3 +68,29 @@ class JaxBackend(ArrayBackend):
 
     def reshape(self, arr: Any, shape: Sequence[int]) -> Any:
         return self._jnp.reshape(arr, tuple(shape))
+
+    def take_multi(self, arr: Any, indexers: Mapping[int, np.ndarray]) -> Any:
+        """Gather every axis in one pass, so no intermediate array is built."""
+        if not indexers:
+            return arr
+        jnp = self._jnp
+        grids = [
+            jnp.asarray(indexers[axis]) if axis in indexers else jnp.arange(length)
+            for axis, length in enumerate(arr.shape)
+        ]
+        return arr[jnp.ix_(*grids)]
+
+    def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> Any:
+        self.check_dtype(dtype)
+        return self._jnp.full(tuple(shape), fill_value, dtype=np.dtype(dtype))
+
+    def where(self, condition: np.ndarray, arr: Any, other: Any) -> Any:
+        return self._jnp.where(self._jnp.asarray(condition), arr, other)
+
+    def concatenate(self, arrays: Sequence[Any], axis: int) -> Any:
+        return self._jnp.concatenate(list(arrays), axis=axis)
+
+    def reduce(self, arr: Any, op: str, axes: Sequence[int]) -> Any:
+        if not axes:
+            return arr
+        return getattr(self._jnp, op)(arr, axis=tuple(axes))

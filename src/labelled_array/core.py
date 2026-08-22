@@ -10,9 +10,9 @@ from typing import Any
 
 import numpy as np
 
-from labelled_array import _convert
+from labelled_array import _align, _convert, _ops
 from labelled_array._arithmetic import ArithmeticMixin
-from labelled_array._utils import array_repr, arrays_equal, as_name_list, per_name
+from labelled_array._utils import array_repr, arrays_equal, as_name_list, is_null, per_name
 from labelled_array.backends import (
     DEFAULT_BACKEND,
     ArrayBackend,
@@ -322,12 +322,8 @@ class LabelledArray(ArithmeticMixin):
             Drop the selected dimensions that end up with a single entry.
         """
         dims = self._dims.subset(positions)
-        cells = self._cells()
-        for name, indices in positions.items():
-            axis = self._dims.axis(name)
-            cells = self._map_cells(
-                lambda backend, array: backend.take(array, indices, axis), cells
-            )
+        axes = {self._dims.axis(name): indices for name, indices in positions.items()}
+        cells = self._map_cells(lambda backend, array: backend.take_multi(array, axes))
 
         if drop:
             dropped = [name for name in positions if len(dims[name]) == 1]
@@ -536,6 +532,329 @@ class LabelledArray(ArithmeticMixin):
             attrs=copy_module.deepcopy(self._attrs),
             **self._map_cells(lambda backend, array: backend.copy(array)),
         )
+
+    # -- combining ---------------------------------------------------------------
+
+    def reindex(
+        self, indexers: Mapping[str, Any] | None = None, fill_value: Any = None, **kwargs: Any
+    ):
+        """Return the array on a different label set for the named dimensions.
+
+        Labels the array already has bring their cells with them; labels it does
+        not are new, empty cells, filled with ``fill_value`` and marked absent in
+        the mask. Labels the array has and the new set does not are dropped.
+
+        Parameters
+        ----------
+        indexers : mapping of str to array_like, optional
+            New labels, per dimension. Dimensions not named are unchanged.
+        fill_value : scalar or mapping of str to scalar, optional
+            Value for the new cells, per variable. Defaults to NaN, NaT, empty
+            string, False, None or 0, whichever the dtype can hold -- the same
+            choice :meth:`from_dataframe` makes.
+        **kwargs
+            Alternative to ``indexers``, as keyword arguments.
+
+        Returns
+        -------
+        LabelledArray
+            An instance of this class on the new labels.
+
+        Raises
+        ------
+        DimensionError
+            If a dimension is unknown, or the new labels are not unique.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> la = LabelledArray({"w": np.arange(3.0)}, {"b": ["x", "y", "z"]})
+        >>> wider = la.reindex(b=["x", "z", "q"])
+        >>> wider["w"]
+        array([ 0.,  2., nan])
+        >>> wider.mask.tolist()
+        [True, True, False]
+
+        See Also
+        --------
+        align : put two arrays onto one label set.
+        """
+        return _align.reindex(self, {**(indexers or {}), **kwargs}, fill_value=fill_value)
+
+    def reindex_like(self, other: LabelledArray, fill_value: Any = None):
+        """Return the array on ``other``'s labels, for the dimensions they share.
+
+        Parameters
+        ----------
+        other : LabelledArray
+            Array whose labels to take.
+        fill_value : scalar or mapping of str to scalar, optional
+            Value for cells ``other`` has and this array does not.
+        """
+        shared = {name: other.dims[name] for name in other.dims.names if name in self._dims}
+        return _align.reindex(self, shared, fill_value=fill_value)
+
+    def align(self, *others: LabelledArray, join: str = "inner", fill_value: Any = None):
+        """Return this array and ``others`` on one label set per shared dimension.
+
+        Dimensions no other array has are left alone, and no array is
+        transposed: alignment is about labels, not about axis order.
+
+        Parameters
+        ----------
+        *others : LabelledArray
+            Arrays to align with this one.
+        join : {'inner', 'outer', 'left', 'right', 'exact'}, default 'inner'
+            How to resolve a dimension whose labels differ. ``'inner'`` keeps
+            the labels every array has, in this array's order; ``'outer'`` takes
+            the union; ``'left'`` and ``'right'`` take this array's or the last
+            one's labels; ``'exact'`` raises unless they already match.
+        fill_value : scalar or mapping of str to scalar, optional
+            Value for cells an array gains, as in :meth:`reindex`.
+
+        Returns
+        -------
+        tuple of LabelledArray
+            This array first, then ``others``, all on the joined labels.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> left = LabelledArray({"w": np.arange(3.0)}, {"b": ["x", "y", "z"]})
+        >>> right = LabelledArray({"w": np.arange(2.0)}, {"b": ["y", "z"]})
+        >>> a, b = left.align(right)
+        >>> a.dims["b"].tolist()
+        ['y', 'z']
+        """
+        return _align.align([self, *others], join=join, fill_value=fill_value)
+
+    @classmethod
+    def concat(
+        cls,
+        arrays: Sequence[LabelledArray],
+        dim: str,
+        labels: Any = None,
+        join: str = "outer",
+        fill_value: Any = None,
+    ):
+        """Join arrays along an existing or a new dimension.
+
+        Parameters
+        ----------
+        arrays : sequence of LabelledArray
+            Arrays to join. They must hold the same variables and coordinates,
+            live on the same backend, and span the same dimensions.
+        dim : str
+            Dimension to join along. A dimension every array has is extended,
+            and its labels must stay unique; a name none of them has becomes a
+            new first axis, one entry per array.
+        labels : array_like, optional
+            Labels for ``dim`` in the result. Defaults to the joined labels of
+            an existing dimension, or ``0 .. n-1`` for a new one. A natural
+            index is always renumbered.
+        join : {'inner', 'outer', 'left', 'right', 'exact'}, default 'outer'
+            How to resolve the *other* dimensions, whose labels need not match.
+        fill_value : scalar or mapping of str to scalar, optional
+            Value for cells an array gains from that join.
+
+        Returns
+        -------
+        LabelledArray
+            An instance of the first array's class.
+
+        Raises
+        ------
+        DimensionError
+            If the arrays disagree on their variables, coordinates, backend or
+            dimensions, if ``dim`` is a dimension of only some of them, or if
+            the joined labels are not unique.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> jan = LabelledArray({"w": np.arange(2.0)}, {"day": [1, 2]})
+        >>> feb = LabelledArray({"w": np.arange(2.0)}, {"day": [3, 4]})
+        >>> LabelledArray.concat([jan, feb], dim="day").dims["day"].tolist()
+        [1, 2, 3, 4]
+        >>> LabelledArray.concat([jan, feb], dim="month").shape  # 'day' is joined too
+        (2, 4)
+        """
+        return _align.concat(arrays, dim, labels=labels, join=join, fill_value=fill_value)
+
+    def fillna(self, value: Any):
+        """Return the array with unpopulated and null cells filled.
+
+        A cell is filled when the mask marks it absent or the value there is
+        null, so the result holds data everywhere and the mask is dropped --
+        which also means :meth:`to_dataframe` then emits every cell.
+
+        Parameters
+        ----------
+        value : scalar or mapping of str to scalar
+            Fill value, for every variable or per named variable. Variables a
+            mapping leaves out keep their nulls, and the mask is then kept too.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> la = LabelledArray({"w": np.array([1.0, np.nan])}, {"b": ["x", "y"]})
+        >>> la.fillna(0.0)["w"].tolist()
+        [1.0, 0.0]
+        """
+        values = per_name(value, self.variables, "value", "variables")
+        absent = None if self._mask is None else ~self._mask
+        data = {}
+        for name, array in self._data.items():
+            if values[name] is None:
+                data[name] = array
+                continue
+            empty = is_null(self._backend.to_numpy(array))
+            if absent is not None:
+                empty = empty | absent
+            data[name] = self._backend.where(~empty, array, values[name])
+        filled_all = all(values[name] is not None for name in self.variables)
+        return self._replace(data=data, mask=None if filled_all else self._mask)
+
+    # -- reductions ----------------------------------------------------------------
+
+    def reduce(self, op: str, dim: str | Sequence[str] | None = None):
+        """Reduce every variable over the named dimensions.
+
+        Only populated cells take part: those the mask marks absent are
+        replaced with the reduction's identity first, so a sparse array reduces
+        to what its rows say and nothing else. A NaN that is masked in is data,
+        and propagates.
+
+        Parameters
+        ----------
+        op : {'sum', 'mean', 'min', 'max'}
+            Reduction to apply.
+        dim : str or sequence of str, optional
+            Dimensions to reduce over; defaults to all of them, which gives a
+            zero-dimensional array.
+
+        Returns
+        -------
+        LabelledArray
+            An instance of this class without the reduced dimensions. Cells
+            with no populated input are filled and marked absent in the mask,
+            so an empty sum is absent rather than zero. Coordinates that vary
+            along a reduced dimension are dropped, since there is no longer a
+            cell for them to label.
+
+        Raises
+        ------
+        TypeError
+            If a variable's dtype cannot be reduced: strings and objects have
+            no ordering the backends share, and dates cannot be summed.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> la = LabelledArray({"w": np.arange(6.0).reshape(2, 3)},
+        ...                    {"a": [1, 2], "b": ["x", "y", "z"]})
+        >>> la.sum("b")["w"].tolist()
+        [3.0, 12.0]
+        >>> la.mean().values.tolist()
+        2.5
+
+        See Also
+        --------
+        groupby : reduce within groups of one dimension.
+        rolling : reduce over trailing windows along one dimension.
+        """
+        return _ops.reduce(self, op, dim)
+
+    def sum(self, dim: str | Sequence[str] | None = None):
+        """Sum over the named dimensions. See :meth:`reduce`."""
+        return _ops.reduce(self, "sum", dim)
+
+    def mean(self, dim: str | Sequence[str] | None = None):
+        """Average over the named dimensions, counting only populated cells.
+
+        See :meth:`reduce`.
+        """
+        return _ops.reduce(self, "mean", dim)
+
+    def min(self, dim: str | Sequence[str] | None = None):
+        """Smallest value over the named dimensions. See :meth:`reduce`."""
+        return _ops.reduce(self, "min", dim)
+
+    def max(self, dim: str | Sequence[str] | None = None):
+        """Largest value over the named dimensions. See :meth:`reduce`."""
+        return _ops.reduce(self, "max", dim)
+
+    def groupby(self, by: Any, dim: str | None = None):
+        """Group one dimension, for reducing within each group.
+
+        Parameters
+        ----------
+        by : str or array_like
+            The group each label of the dimension belongs to. Given as a name,
+            it is a coordinate that varies along exactly one dimension -- a
+            sector per asset, say -- and that dimension is the one grouped.
+            Given as an array, it holds one group value per label of ``dim``.
+        dim : str, optional
+            Dimension to group. Required when ``by`` is an array; checked
+            against the coordinate when ``by`` names one.
+
+        Returns
+        -------
+        GroupBy
+            Supporting ``sum``, ``mean``, ``min`` and ``max``, each returning
+            an array whose grouping dimension is labelled by group value.
+
+        Raises
+        ------
+        DimensionError
+            If ``by`` names a dimension rather than a coordinate, if a
+            coordinate varies along more than one dimension, or if an array of
+            group values is the wrong length.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> la = LabelledArray({"w": np.arange(4.0)}, {"asset": ["a", "b", "c", "d"]})
+        >>> la.groupby(["tech", "tech", "banks", "banks"], dim="asset").sum()["w"].tolist()
+        [5.0, 1.0]
+        """
+        return _ops.groupby(self, by, dim)
+
+    def rolling(self, dim: str, window: int, min_periods: int | None = None):
+        """Return trailing windows along one dimension, for reducing over.
+
+        The window at each position covers that position and the ``window - 1``
+        before it, so the result keeps this array's shape, labels and
+        coordinates. The dimension this is meant for is a natural index -- the
+        positions of a date within its group -- where neighbouring positions are
+        neighbouring observations.
+
+        Parameters
+        ----------
+        dim : str
+            Dimension to roll along.
+        window : int
+            Number of positions in each window, between 1 and the length of the
+            dimension.
+        min_periods : int, optional
+            Populated cells a window needs before it produces a value.
+            Defaults to ``window``, so partial windows -- the first few
+            positions, and any window overlapping absent cells -- are marked
+            absent rather than being computed from less data than asked for.
+
+        Returns
+        -------
+        Rolling
+            Supporting ``sum``, ``mean``, ``min`` and ``max``.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> la = LabelledArray({"w": np.arange(5.0)}, {"t": [0, 1, 2, 3, 4]})
+        >>> la.rolling("t", 2).sum()["w"].tolist()
+        [nan, 1.0, 3.0, 5.0, 7.0]
+        """
+        return _ops.rolling(self, dim, window, min_periods=min_periods)
 
     # -- DataFrame conversion ----------------------------------------------------
 

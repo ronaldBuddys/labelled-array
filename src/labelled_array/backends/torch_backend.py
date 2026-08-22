@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import importlib
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
@@ -81,3 +82,30 @@ class TorchBackend(ArrayBackend):
 
     def reshape(self, arr: Any, shape: Sequence[int]) -> Any:
         return arr.reshape(tuple(shape))
+
+    def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> Any:
+        torch_dtype = self._as_torch_dtype(dtype)
+        return self._torch.full(tuple(shape), np.asarray(fill_value).item(), dtype=torch_dtype)
+
+    def where(self, condition: np.ndarray, arr: Any, other: Any) -> Any:
+        torch = self._torch
+        # np.array copies, which a read-only mask needs: torch refuses to wrap
+        # a buffer it cannot write to.
+        return torch.where(
+            torch.as_tensor(np.array(condition, dtype=bool)),
+            arr,
+            torch.as_tensor(np.asarray(other), dtype=arr.dtype),
+        )
+
+    def concatenate(self, arrays: Sequence[Any], axis: int) -> Any:
+        return self._torch.cat(list(arrays), dim=axis)
+
+    def reduce(self, arr: Any, op: str, axes: Sequence[int]) -> Any:
+        if not axes:
+            return arr
+        reduction = {"sum": self._torch.sum, "min": self._torch.amin, "max": self._torch.amax}[op]
+        return reduction(arr, dim=tuple(axes))
+
+    def sliding_window(self, arr: Any, axis: int, window: int) -> Any:
+        """Return a view of the windows; ``unfold`` appends them as a last axis."""
+        return arr.unfold(axis, window, 1)

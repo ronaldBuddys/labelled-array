@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
-from labelled_array.backends.base import ArrayBackend
+from labelled_array.backends.base import REDUCTIONS, ArrayBackend
 
 __all__ = ["NumpyBackend"]
 
@@ -47,3 +48,31 @@ class NumpyBackend(ArrayBackend):
 
     def reshape(self, arr: np.ndarray, shape: Sequence[int]) -> np.ndarray:
         return np.reshape(arr, tuple(shape))
+
+    def take_multi(self, arr: np.ndarray, indexers: Mapping[int, np.ndarray]) -> np.ndarray:
+        """Gather every axis in one pass, so no intermediate array is built."""
+        if not indexers:
+            return arr
+        grids = [
+            indexers[axis] if axis in indexers else np.arange(length)
+            for axis, length in enumerate(arr.shape)
+        ]
+        return arr[np.ix_(*grids)]
+
+    def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> np.ndarray:
+        return np.full(tuple(shape), fill_value, dtype=np.dtype(dtype))
+
+    def where(self, condition: np.ndarray, arr: np.ndarray, other: Any) -> np.ndarray:
+        return np.where(condition, arr, other)
+
+    def concatenate(self, arrays: Sequence[np.ndarray], axis: int) -> np.ndarray:
+        return np.concatenate(list(arrays), axis=axis)
+
+    def reduce(self, arr: np.ndarray, op: str, axes: Sequence[int]) -> np.ndarray:
+        if not axes:
+            return arr
+        return REDUCTIONS[op](arr, axis=tuple(axes))
+
+    def sliding_window(self, arr: np.ndarray, axis: int, window: int) -> np.ndarray:
+        """Return a read-only view of the windows, costing no memory at all."""
+        return np.lib.stride_tricks.sliding_window_view(arr, window, axis=axis)

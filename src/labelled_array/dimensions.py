@@ -279,6 +279,16 @@ class Dimensions(Mapping[str, np.ndarray]):
         if missing not in MISSING_MODES:
             raise ValueError(f"missing must be one of {MISSING_MODES}, got {missing!r}")
 
+        query = self._as_query(name, labels)
+        found = self.locate(name, query)
+        if np.any(found < 0):
+            if missing == "raise":
+                raise LabelNotFoundError(name, query[found < 0].tolist())
+            found = found[found >= 0]
+        return found
+
+    def _as_query(self, name: str, labels: Any) -> np.ndarray:
+        """Return ``labels`` as a one-dimensional array comparable with ``name``'s."""
         dim_labels = self[name]
         query = as_1d(labels, name, "labels selected")
         # datetime64/timedelta64 compare across units only once aligned; other
@@ -289,14 +299,37 @@ class Dimensions(Mapping[str, np.ndarray]):
                 query = query.astype(dim_labels.dtype)
             except (TypeError, ValueError):
                 pass
+        return query
 
+    def locate(self, name: str, labels: Any) -> np.ndarray:
+        """Return the position of each label within dimension ``name``, -1 where absent.
+
+        Unlike :meth:`get_indexer` this neither raises nor drops, so the caller
+        can tell which labels were missing and where -- what
+        :meth:`~labelled_array.LabelledArray.reindex` needs to know which cells
+        to fill.
+
+        Parameters
+        ----------
+        name : str
+            Dimension to look up in.
+        labels : scalar or array_like
+            Labels to locate.
+
+        Returns
+        -------
+        numpy.ndarray
+            One integer position per label, ``-1`` where the label is absent.
+
+        Examples
+        --------
+        >>> dims = Dimensions({"b": ["x", "y", "z"]})
+        >>> dims.locate("b", ["z", "q"])
+        array([ 2, -1])
+        """
         lookup = self._lookup(name)
-        found = np.asarray([lookup.get(label, -1) for label in query.tolist()], dtype=np.intp)
-        if np.any(found < 0):
-            if missing == "raise":
-                raise LabelNotFoundError(name, query[found < 0].tolist())
-            found = found[found >= 0]
-        return found
+        query = self._as_query(name, labels)
+        return np.asarray([lookup.get(label, -1) for label in query.tolist()], dtype=np.intp)
 
     def get_positions(self, name: str, value: Any) -> np.ndarray:
         """Return integer positions along dimension ``name``.
