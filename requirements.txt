@@ -1,7 +1,0 @@
-numpy
-pandas
-polars
-# optional array backends
-jax
-# torch  (install from the CPU wheel index if wanted:
-#   pip install torch --index-url https://download.pytorch.org/whl/cpu)
