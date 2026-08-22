@@ -1,1 +1,17 @@
-.venv
+.venv/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# tooling caches
+.coverage
+.pytest_cache/
+.hypothesis/
+
+# editors
+.idea/
+.vscode/
