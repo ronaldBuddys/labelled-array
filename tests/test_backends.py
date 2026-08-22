@@ -148,6 +148,143 @@ def test_reshape(backend, source):
     np.testing.assert_array_equal(backend.to_numpy(arr), source.reshape(3, 2))
 
 
+# -- operations -----------------------------------------------------------------
+
+
+def test_take_multi_gathers_several_axes(backend, source):
+    arr = backend.take_multi(backend.asarray(source), {0: np.array([1]), 1: np.array([2, 0])})
+    np.testing.assert_array_equal(backend.to_numpy(arr), source[np.ix_([1], [2, 0])])
+
+
+def test_take_multi_leaves_unnamed_axes_whole(backend, source):
+    arr = backend.take_multi(backend.asarray(source), {1: np.array([1])})
+    np.testing.assert_array_equal(backend.to_numpy(arr), source[:, [1]])
+
+
+def test_take_multi_without_indexers_is_the_identity(backend, source):
+    arr = backend.asarray(source)
+    assert backend.take_multi(arr, {}) is arr
+
+
+def test_take_multi_can_select_nothing(backend, source):
+    arr = backend.take_multi(backend.asarray(source), {0: np.array([], dtype=np.intp)})
+    assert backend.shape(arr) == (0, 3)
+
+
+def test_full(backend):
+    # float32 rather than a 64-bit dtype, which JAX would narrow and warn about.
+    arr = backend.full((2, 2), 3, np.dtype("float32"))
+    np.testing.assert_array_equal(backend.to_numpy(arr), np.full((2, 2), 3, "float32"))
+
+
+def test_where_takes_the_condition_from_numpy(backend, source):
+    condition = source > 2
+    arr = backend.where(condition, backend.asarray(source), -1.0)
+    np.testing.assert_array_equal(backend.to_numpy(arr), np.where(condition, source, -1.0))
+
+
+def test_where_broadcasts_the_condition(backend, source):
+    arr = backend.where(np.array([[True], [False]]), backend.asarray(source), 0.0)
+    np.testing.assert_array_equal(
+        backend.to_numpy(arr), np.where(np.array([[True], [False]]), source, 0.0)
+    )
+
+
+def test_where_accepts_a_read_only_condition(backend, source):
+    """Masks are read-only, and torch refuses to wrap a buffer it cannot write."""
+    condition = source > 2
+    condition.flags.writeable = False
+    arr = backend.where(condition, backend.asarray(source), 0.0)
+    np.testing.assert_array_equal(backend.to_numpy(arr), np.where(condition, source, 0.0))
+
+
+def test_concatenate(backend, source):
+    arr = backend.asarray(source)
+    joined = backend.concatenate([arr, arr], axis=1)
+    np.testing.assert_array_equal(backend.to_numpy(joined), np.concatenate([source, source], 1))
+
+
+@pytest.mark.parametrize("op", ["sum", "min", "max"])
+@pytest.mark.parametrize("axes", [(0,), (1,), (0, 1)])
+def test_reduce(backend, source, op, axes):
+    reduced = backend.reduce(backend.asarray(source), op, axes)
+    expected = getattr(np, op)(source, axis=axes)
+    np.testing.assert_allclose(backend.to_numpy(reduced), expected)
+
+
+def test_reduce_over_no_axes_is_the_identity(backend, source):
+    arr = backend.asarray(source)
+    assert backend.reduce(arr, "sum", ()) is arr
+
+
+def test_sliding_window_appends_the_window_axis(backend, source):
+    windows = backend.sliding_window(backend.asarray(source), axis=1, window=2)
+    assert backend.shape(windows) == (2, 2, 2)
+    np.testing.assert_array_equal(backend.to_numpy(windows)[..., 0], source[:, :2])
+    np.testing.assert_array_equal(backend.to_numpy(windows)[..., 1], source[:, 1:])
+
+
+def test_sliding_window_of_one_keeps_every_position(backend, source):
+    windows = backend.sliding_window(backend.asarray(source), axis=0, window=1)
+    assert backend.shape(windows) == (2, 3, 1)
+    np.testing.assert_array_equal(backend.to_numpy(windows)[..., 0], source)
+
+
+# -- the implementations every backend inherits ---------------------------------
+#
+# A backend registered from outside the package only has to provide the
+# abstract methods, so the fallbacks must give the same answers as the
+# overrides. They are called unbound, with numpy as the host.
+
+
+def test_inherited_take_multi_matches_the_override(source):
+    numpy_backend = get_backend("numpy")
+    indexers = {0: np.array([1, 0]), 1: np.array([2])}
+    np.testing.assert_array_equal(
+        ArrayBackend.take_multi(numpy_backend, source, indexers),
+        numpy_backend.take_multi(source, indexers),
+    )
+
+
+def test_inherited_full_and_where_match_the_overrides(source):
+    numpy_backend = get_backend("numpy")
+    np.testing.assert_array_equal(
+        ArrayBackend.full(numpy_backend, (2, 3), 1.5, np.dtype("float64")),
+        numpy_backend.full((2, 3), 1.5, np.dtype("float64")),
+    )
+    condition = source > 1
+    np.testing.assert_array_equal(
+        ArrayBackend.where(numpy_backend, condition, source, 0.0),
+        numpy_backend.where(condition, source, 0.0),
+    )
+
+
+def test_inherited_concatenate_and_reduce_match_the_overrides(source):
+    numpy_backend = get_backend("numpy")
+    np.testing.assert_array_equal(
+        ArrayBackend.concatenate(numpy_backend, [source, source], 0),
+        numpy_backend.concatenate([source, source], 0),
+    )
+    np.testing.assert_array_equal(
+        ArrayBackend.reduce(numpy_backend, source, "sum", (1,)),
+        numpy_backend.reduce(source, "sum", (1,)),
+    )
+    assert ArrayBackend.reduce(numpy_backend, source, "sum", ()) is source
+
+
+def test_inherited_sliding_window_matches_the_override(source):
+    numpy_backend = get_backend("numpy")
+    np.testing.assert_array_equal(
+        ArrayBackend.sliding_window(numpy_backend, source, axis=1, window=2),
+        numpy_backend.sliding_window(source, axis=1, window=2),
+    )
+
+
+def test_inherited_sliding_window_rejects_an_oversized_window(source):
+    with pytest.raises(ValueError, match="window 4 is longer than axis 1"):
+        ArrayBackend.sliding_window(get_backend("numpy"), source, axis=1, window=4)
+
+
 # -- dtype support --------------------------------------------------------------
 
 
