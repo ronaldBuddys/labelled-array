@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "labelled-array"
+version = "0.1.0"
+description = "N-dimensional arrays carrying named, labelled dimensions, with lossless DataFrame round trips."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "ronaldBuddys" }]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+pandas = ["pandas>=2.0"]
+polars = ["polars>=0.20"]
+jax = ["jax>=0.4"]
+torch = ["torch>=2.0"]
+dev = [
+    "pandas>=2.0",
+    "polars>=0.20",
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "hypothesis>=6.90",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.coverage.run]
+source = ["labelled_array"]
