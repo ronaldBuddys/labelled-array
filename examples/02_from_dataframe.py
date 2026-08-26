@@ -34,7 +34,9 @@ print(df)
 # Each dimension column contributes its sorted unique values as labels, so the
 # array is 2 x 3 even though only four of those six cells exist.
 
-sales = LabelledArray.from_dataframe(df, cols=["units", "price"], dims=["region", "product"])
+sales = LabelledArray.from_dataframe(
+    df, cols=["units", "price"], dims=["region", "product"]
+)
 print(sales)
 
 assert sales.shape == (2, 3)
@@ -62,7 +64,9 @@ assert not sales.mask[1, 1]
 # order, which follows the dimension labels.
 
 out = sales.to_dataframe(index=False)
-pd.testing.assert_frame_equal(df.sort_values(["region", "product"]).reset_index(drop=True), out)
+pd.testing.assert_frame_equal(
+    df.sort_values(["region", "product"]).reset_index(drop=True), out
+)
 print(out)
 
 # %%
@@ -113,7 +117,9 @@ assert filled.dtypes["price"] == np.dtype("float32")
 
 from labelled_array import DuplicateIndexError  # noqa: E402
 
-duplicated = pd.DataFrame({"region": ["north", "north"], "product": ["AAA", "AAA"], "units": [1, 2]})
+duplicated = pd.DataFrame(
+    {"region": ["north", "north"], "product": ["AAA", "AAA"], "units": [1, 2]}
+)
 try:
     LabelledArray.from_dataframe(duplicated, dims=["region", "product"])
 except DuplicateIndexError as error:

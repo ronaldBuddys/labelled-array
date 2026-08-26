@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import importlib
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
@@ -40,4 +41,6 @@ class PolarsAdapter(DataFrameAdapter):
         index: bool = True,
     ) -> Any:
         pl = self._pl
-        return pl.DataFrame({name: pl.Series(name, values) for name, values in columns.items()})
+        return pl.DataFrame(
+            {name: pl.Series(name, values) for name, values in columns.items()}
+        )

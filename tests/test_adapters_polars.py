@@ -64,7 +64,10 @@ def test_date_columns_round_trip(adapter):
     import datetime
 
     df = pl.DataFrame(
-        {"date": [datetime.date(2024, 1, 2), datetime.date(2024, 1, 1)], "w": [1.0, 2.0]}
+        {
+            "date": [datetime.date(2024, 1, 2), datetime.date(2024, 1, 1)],
+            "w": [1.0, 2.0],
+        }
     )
     assert adapter.column_values(df, "date").dtype == np.dtype("datetime64[D]")
     out = LabelledArray.from_dataframe(df, dims=["date"]).to_dataframe("polars")

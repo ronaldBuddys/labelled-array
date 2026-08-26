@@ -9,7 +9,14 @@ from typing import Any
 
 import numpy as np
 
-__all__ = ["array_repr", "arrays_equal", "as_name_list", "duplicates", "is_null", "per_name"]
+__all__ = [
+    "array_repr",
+    "arrays_equal",
+    "as_name_list",
+    "duplicates",
+    "is_null",
+    "per_name",
+]
 
 
 def array_repr(arr: np.ndarray, full: bool = True) -> str:
@@ -97,7 +104,9 @@ def as_name_list(names: str | Sequence[str] | None) -> list[str]:
     return [names] if isinstance(names, str) else list(names)
 
 
-def per_name(value: Any, names: Sequence[str], what: str, noun: str = "columns") -> dict:
+def per_name(
+    value: Any, names: Sequence[str], what: str, noun: str = "columns"
+) -> dict:
     """Spread an option over ``names``, or validate a per-name mapping.
 
     Parameters
@@ -111,7 +120,7 @@ def per_name(value: Any, names: Sequence[str], what: str, noun: str = "columns")
     noun : str, default 'columns'
         What the names are, used in the error message.
 
-    Returns
+    Returns:
     -------
     dict
         One entry per name, None where a mapping did not name it.

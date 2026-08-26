@@ -34,7 +34,9 @@ print(panel.head())
 # Every distinct date becomes a label of its own, so the array spans
 # 3 x 4 x 12 cells to hold twelve numbers.
 
-labelled = LabelledArray.from_dataframe(panel, cols=["value"], dims=["group", "item", "date"])
+labelled = LabelledArray.from_dataframe(
+    panel, cols=["value"], dims=["group", "item", "date"]
+)
 
 print("shape  :", labelled.shape)
 print("cells  :", labelled.size)
@@ -112,7 +114,9 @@ assert other_order.size == natural.size
 ragged = pd.DataFrame(
     {
         "group": ["A", "A", "A", "B"],
-        "date": np.array(["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"], "datetime64[D]"),
+        "date": np.array(
+            ["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"], "datetime64[D]"
+        ),
         "value": [1.0, 2.0, 3.0, 4.0],
     }
 )

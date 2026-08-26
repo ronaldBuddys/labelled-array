@@ -77,7 +77,9 @@ print(f"{len(panel):,} rows, {n_assets} assets x {n_dates} dates")
 
 prices = bench(
     "from_dataframe",
-    lambda: LabelledArray.from_dataframe(panel, cols=["close", "volume"], dims=["asset", "date"]),
+    lambda: LabelledArray.from_dataframe(
+        panel, cols=["close", "volume"], dims=["asset", "date"]
+    ),
     repeat=2,
 )
 print(prices)
@@ -107,9 +109,13 @@ bench("  factorize 'date' (datetime64)", lambda: factorize(date_values))
 codes = [np.repeat(np.arange(n_assets), n_dates), np.tile(np.arange(n_dates), n_assets)]
 dims = Dimensions({"asset": assets, "date": dates})
 positions = bench(
-    "  flat_positions (+ duplicate check)", lambda: flat_positions(codes, dims, len(panel))
+    "  flat_positions (+ duplicate check)",
+    lambda: flat_positions(codes, dims, len(panel)),
 )
-bench("  scatter one column", lambda: scatter(panel["close"].to_numpy(), positions, dims.shape))
+bench(
+    "  scatter one column",
+    lambda: scatter(panel["close"].to_numpy(), positions, dims.shape),
+)
 
 # %%
 # Labels you already hold as codes
@@ -120,15 +126,20 @@ bench("  scatter one column", lambda: scatter(panel["close"].to_numpy(), positio
 # times quicker to build.
 
 coded = panel.assign(
-    asset=np.repeat(np.arange(n_assets), n_dates), date=np.tile(np.arange(n_dates), n_assets)
+    asset=np.repeat(np.arange(n_assets), n_dates),
+    date=np.tile(np.arange(n_dates), n_assets),
 )
 by_code = bench(
     "from_dataframe, integer dimension columns",
-    lambda: LabelledArray.from_dataframe(coded, cols=["close", "volume"], dims=["asset", "date"]),
+    lambda: LabelledArray.from_dataframe(
+        coded, cols=["close", "volume"], dims=["asset", "date"]
+    ),
     repeat=2,
 )
 assert np.array_equal(by_code["close"], prices["close"]), "same layout, cheaper labels"
-speed_up = TIMINGS["from_dataframe"] / TIMINGS["from_dataframe, integer dimension columns"]
+speed_up = (
+    TIMINGS["from_dataframe"] / TIMINGS["from_dataframe, integer dimension columns"]
+)
 print(f"{'speed-up':<46}{speed_up:8.1f}x")
 
 # %%
@@ -150,7 +161,9 @@ for rows in (250_000, 500_000, 1_000_000):
     label = f"  {rows:>9,} rows"
     bench(
         label,
-        lambda frame=frame: LabelledArray.from_dataframe(frame, cols=["v"], dims=["g", "d"]),
+        lambda frame=frame: LabelledArray.from_dataframe(
+            frame, cols=["v"], dims=["g", "d"]
+        ),
         repeat=2,
     )
     print(f"{'':<46}{TIMINGS[label] / rows * 1e9:9.0f} ns/row")
@@ -167,9 +180,15 @@ some_assets = assets[: max(1, n_assets // 100)]
 same_positions = np.arange(len(some_assets))
 
 cold = LabelledArray.from_dataframe(panel, cols=["close"], dims=["asset", "date"])
-bench("select on a fresh array (builds the lookup)", lambda: cold.select(asset=some_assets), 1)
+bench(
+    "select on a fresh array (builds the lookup)",
+    lambda: cold.select(asset=some_assets),
+    1,
+)
 bench("select again (the lookup is cached)", lambda: cold.select(asset=some_assets), 5)
-bench("isel, by position (no lookup at all)", lambda: cold.isel(asset=same_positions), 5)
+bench(
+    "isel, by position (no lookup at all)", lambda: cold.isel(asset=same_positions), 5
+)
 
 assert cold.select(asset=some_assets).equals(cold.isel(asset=same_positions))
 
@@ -220,7 +239,9 @@ bench(
     repeat=5,
 )
 
-tiny = LabelledArray({"w": np.arange(6.0).reshape(2, 3)}, {"a": ["x", "y"], "b": [1, 2, 3]})
+tiny = LabelledArray(
+    {"w": np.arange(6.0).reshape(2, 3)}, {"a": ["x", "y"], "b": [1, 2, 3]}
+)
 bench("2x3 array * 2 + 1 (fixed overhead)", lambda: tiny * 2 + 1, repeat=50)
 bench("2x3 select", lambda: tiny.select({"a": "x"}), repeat=50)
 
@@ -235,15 +256,21 @@ print("available backends:", available_backends())
 for name in available_backends():
     if name == "numpy":
         continue
-    moved = bench(f"to_backend({name!r})", lambda name=name: prices.to_backend(name), repeat=2)
-    bench(f"  {name} back to numpy", lambda moved=moved: moved.to_backend("numpy"), repeat=2)
+    moved = bench(
+        f"to_backend({name!r})", lambda name=name: prices.to_backend(name), repeat=2
+    )
+    bench(
+        f"  {name} back to numpy",
+        lambda moved=moved: moved.to_backend("numpy"),
+        repeat=2,
+    )
     assert moved.shape == prices.shape and moved.dims == prices.dims
 
 if "torch" in available_backends():
     shared = prices.to_backend("torch")
-    assert shared["close"].data_ptr() == prices["close"].__array_interface__["data"][0], (
-        "torch wraps the numpy buffer rather than copying it"
-    )
+    assert (
+        shared["close"].data_ptr() == prices["close"].__array_interface__["data"][0]
+    ), "torch wraps the numpy buffer rather than copying it"
 
 # %%
 # Sparsity is a memory cost, not a time cost
@@ -264,7 +291,9 @@ uneven = pd.DataFrame(
 
 spread = bench(
     "from_dataframe, dates as labels",
-    lambda: LabelledArray.from_dataframe(uneven, cols=["value"], dims=["group", "date"]),
+    lambda: LabelledArray.from_dataframe(
+        uneven, cols=["value"], dims=["group", "date"]
+    ),
     repeat=2,
 )
 packed = bench(
@@ -309,10 +338,16 @@ labelled_cells = n_instruments * rows  # a date column unique to each instrument
 natural_cells = n_instruments * n_days
 
 print(f"{rows:,} rows x {n_fields} fields")
-print(f"  dates as labels : {labelled_cells:,} cells,"
-      f" {labelled_cells * 8 * n_fields / 1e12:.1f} TB")
-print(f"  natural index   : {natural_cells:,} cells, {natural_cells * 8 * n_fields / 1e9:.1f} GB")
-print(f"  density         : {rows / labelled_cells:.2%} against {rows / natural_cells:.0%}")
+print(
+    f"  dates as labels : {labelled_cells:,} cells,"
+    f" {labelled_cells * 8 * n_fields / 1e12:.1f} TB"
+)
+print(
+    f"  natural index   : {natural_cells:,} cells, {natural_cells * 8 * n_fields / 1e9:.1f} GB"
+)
+print(
+    f"  density         : {rows / labelled_cells:.2%} against {rows / natural_cells:.0%}"
+)
 
 assert rows / labelled_cells < 0.001, "the dense layout is the wrong one here"
 
@@ -353,7 +388,9 @@ sparse_prices = prices._replace(mask=rng.random(prices.shape) > 0.2)
 
 for op in ("sum", "mean", "min", "max"):
     bench(f"{op} over 'date'", lambda op=op: getattr(prices, op)("date"), repeat=3)
-bench("  the same on the bare numpy array", lambda: prices["close"].sum(axis=1), repeat=3)
+bench(
+    "  the same on the bare numpy array", lambda: prices["close"].sum(axis=1), repeat=3
+)
 bench("sum over 'date', 80% populated", lambda: sparse_prices.sum("date"), repeat=3)
 bench("sum over both dimensions", lambda: prices.sum(), repeat=3)
 
@@ -372,7 +409,9 @@ np.testing.assert_allclose(prices.sum("date")["close"], prices["close"].sum(axis
 sectors = np.array([f"sector-{i % 20:02d}" for i in range(n_assets)], dtype=object)
 many = np.array([f"group-{i % 200:03d}" for i in range(n_assets)], dtype=object)
 
-by_sector = bench("groupby 20 groups, mean", lambda: prices.groupby(sectors, dim="asset").mean())
+by_sector = bench(
+    "groupby 20 groups, mean", lambda: prices.groupby(sectors, dim="asset").mean()
+)
 bench("groupby 200 groups, mean", lambda: prices.groupby(many, dim="asset").mean())
 bench(
     "  pandas groupby on the same numbers",
@@ -427,8 +466,14 @@ bench("  arithmetic on identical labels", lambda: prices + prices)
 
 first = prices.isel(date=slice(0, n_dates // 2))
 second = prices.isel(date=slice(n_dates // 2, None))
-bench("concat two halves along 'date'", lambda: LabelledArray.concat([first, second], dim="date"))
-bench("concat along a new dimension", lambda: LabelledArray.concat([first, first], dim="run"))
+bench(
+    "concat two halves along 'date'",
+    lambda: LabelledArray.concat([first, second], dim="date"),
+)
+bench(
+    "concat along a new dimension",
+    lambda: LabelledArray.concat([first, first], dim="run"),
+)
 
 assert (half + prices).shape == half.shape, "the inner join is the narrower operand"
 assert LabelledArray.concat([first, second], dim="date").equals(prices)
@@ -441,16 +486,24 @@ assert LabelledArray.concat([first, second], dim="date").equals(prices)
 # rows it emits, so a sparse array is cheaper than a dense one of the same
 # shape.
 
-bench("to_dataframe (pandas, dense)", lambda: prices.to_dataframe(index=False), repeat=2)
+bench(
+    "to_dataframe (pandas, dense)", lambda: prices.to_dataframe(index=False), repeat=2
+)
 bench("to_dataframe (polars, dense)", lambda: prices.to_dataframe("polars"), repeat=2)
 bench("  ... with the dimensions as an index", lambda: prices.to_dataframe(), repeat=2)
 
 # The same shape, masked and unmasked: the mask is what keeps the empty cells
 # out of the frame, and it is the row count that the conversion is priced on.
-bench(f"to_dataframe, {len(uneven):,} of {spread.size:,} cells masked in",
-      lambda: spread.to_dataframe(index=False), repeat=2)
-bench(f"to_dataframe, all {unmasked.size:,} cells (mask=False)",
-      lambda: unmasked.to_dataframe(index=False), repeat=2)
+bench(
+    f"to_dataframe, {len(uneven):,} of {spread.size:,} cells masked in",
+    lambda: spread.to_dataframe(index=False),
+    repeat=2,
+)
+bench(
+    f"to_dataframe, all {unmasked.size:,} cells (mask=False)",
+    lambda: unmasked.to_dataframe(index=False),
+    repeat=2,
+)
 
 round_tripped = prices.to_dataframe(index=False)
 assert len(round_tripped) == prices.size

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from helpers import assert_frames_equal, build_frame, n_rows, sort_frame
 
+from helpers import assert_frames_equal, build_frame, n_rows, sort_frame
 from labelled_array import LabelledArray
 
 DIMS = ["region", "product"]
@@ -50,7 +50,9 @@ def test_three_dimensions_round_trip(engine):
         "year": [2023, 2024, 2023],
         "units": [1, 2, 3],
     }
-    assert_frames_equal(engine, *round_trip(engine, data, dims=["region", "product", "year"]))
+    assert_frames_equal(
+        engine, *round_trip(engine, data, dims=["region", "product", "year"])
+    )
 
 
 def test_single_row_round_trips(engine):
@@ -83,11 +85,17 @@ def test_round_trip_through_every_array_backend(engine, backend):
         "price": [1.5, 2.5, 3.5],
     }
     df = build_frame(engine, data)
-    la = LabelledArray.from_dataframe(df, dims=DIMS, dtype="float32").to_backend(backend)
+    la = LabelledArray.from_dataframe(df, dims=DIMS, dtype="float32").to_backend(
+        backend
+    )
     out = la.to_dataframe(engine, index=False)
     assert_frames_equal(
         engine,
-        sort_frame(engine, build_frame(engine, {**data, "price": np.float32(data["price"])}), DIMS),
+        sort_frame(
+            engine,
+            build_frame(engine, {**data, "price": np.float32(data["price"])}),
+            DIMS,
+        ),
         out,
     )
 
@@ -95,7 +103,9 @@ def test_round_trip_through_every_array_backend(engine, backend):
 def test_round_trip_is_idempotent(engine, sales_data):
     df = build_frame(engine, sales_data)
     first = LabelledArray.from_dataframe(df, dims=DIMS)
-    second = LabelledArray.from_dataframe(first.to_dataframe(engine, index=False), dims=DIMS)
+    second = LabelledArray.from_dataframe(
+        first.to_dataframe(engine, index=False), dims=DIMS
+    )
     assert first.equals(second)
 
 
@@ -127,4 +137,6 @@ def test_dtypes_survive_a_sparse_round_trip(engine, dtype, values):
     df = build_frame(engine, data)
     la = LabelledArray.from_dataframe(df, dims=DIMS)
     assert la.dtypes["units"] == np.dtype(dtype)
-    assert_frames_equal(engine, sort_frame(engine, df, DIMS), la.to_dataframe(engine, index=False))
+    assert_frames_equal(
+        engine, sort_frame(engine, df, DIMS), la.to_dataframe(engine, index=False)
+    )

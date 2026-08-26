@@ -61,7 +61,7 @@ def factorize(values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     values : numpy.ndarray
         One-dimensional column of dimension labels, one entry per row.
 
-    Returns
+    Returns:
     -------
     labels : numpy.ndarray
         The unique values.
@@ -91,7 +91,9 @@ def factorize(values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return labels[order], ranks[codes]
 
 
-def flat_positions(codes: list[np.ndarray], dims: Dimensions, n_rows: int) -> np.ndarray:
+def flat_positions(
+    codes: list[np.ndarray], dims: Dimensions, n_rows: int
+) -> np.ndarray:
     """Return the flat array position of each row, checking they are unique.
 
     Parameters
@@ -103,7 +105,7 @@ def flat_positions(codes: list[np.ndarray], dims: Dimensions, n_rows: int) -> np
     n_rows : int
         Number of rows, needed when there are no dimensions at all.
 
-    Raises
+    Raises:
     ------
     DuplicateIndexError
         If two rows map to the same cell, which would make the conversion
@@ -125,7 +127,10 @@ def flat_positions(codes: list[np.ndarray], dims: Dimensions, n_rows: int) -> np
     cells = np.unravel_index(duplicated[:5], shape)
     labels = {name: dims[name].tolist() for name in names}
     examples = [
-        {name: labels[name][axis[row]] for name, axis in zip(names, cells)}
+        {
+            name: labels[name][axis[row]]
+            for name, axis in zip(names, cells, strict=False)
+        }
         for row in range(min(len(duplicated), 5))
     ]
     raise DuplicateIndexError(
@@ -186,7 +191,7 @@ def natural_index(codes: list[np.ndarray]) -> np.ndarray:
         Codes of the preceding dimensions, then the codes of the dimension
         being replaced, as the last entry.
 
-    Returns
+    Returns:
     -------
     numpy.ndarray
         The within-group position of each row.
@@ -202,7 +207,8 @@ def natural_index(codes: list[np.ndarray]) -> np.ndarray:
     starts_group = np.empty(len(target), dtype=bool)
     starts_group[0] = True
     starts_group[1:] = np.any(grouped[:, 1:] != grouped[:, :-1], axis=0)
-    group_start = np.maximum.accumulate(np.where(starts_group, np.arange(len(target)), 0))
+    group_start = np.maximum.accumulate(
+        np.where(starts_group, np.arange(len(target)), 0)
+    )
     index[order] = np.arange(len(target)) - group_start
     return index
-

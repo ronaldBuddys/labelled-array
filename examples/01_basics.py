@@ -15,7 +15,10 @@ hand and shows what it can tell you about itself.
 
 import numpy as np
 
-from labelled_array import Dimensions, LabelledArray
+from labelled_array import (  # noqa: F401  (Dimensions is used by eval(repr(...)))
+    Dimensions,
+    LabelledArray,
+)
 
 rainfall = np.array([[12.0, 0.0, 3.5], [8.0, 1.5, 0.0]])
 sunshine = np.array([[1.0, 9.5, 6.0], [3.0, 8.0, 9.0]])
@@ -85,7 +88,9 @@ assert total["rainfall"][0, 0] == 24.0
 # ``repr`` returns a constructor call, so a small array can be pasted into a
 # test or an issue and evaluated back.
 
-from numpy import array  # noqa: E402  (needed to evaluate the repr)
+# noqa codes: E402 because the import sits where it is explained; F401 because
+# it is referenced only inside the eval'd repr below.
+from numpy import array  # noqa: E402, F401
 
 restored = eval(repr(weather))
 assert restored == weather

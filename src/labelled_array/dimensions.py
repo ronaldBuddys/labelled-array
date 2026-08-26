@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import math
 from collections.abc import Hashable, Iterable, Iterator, Mapping, Sequence
 from typing import Any
@@ -91,14 +92,14 @@ class Dimensions(Mapping[str, np.ndarray]):
         DataFrame round trip writes back out; given as a plain iterable, the
         dimensions are simply positional.
 
-    Raises
+    Raises:
     ------
     DimensionError
         If a name is repeated or is not a string, if labels are not
         one-dimensional, null, or unique within a dimension, or if a name given
         in ``natural`` is not a dimension.
 
-    Examples
+    Examples:
     --------
     >>> dims = Dimensions({"a": [1, 2], "b": ["x", "y", "z"]})
     >>> dims.shape
@@ -130,14 +131,18 @@ class Dimensions(Mapping[str, np.ndarray]):
                 raise DimensionError("dimension names must not be empty")
         repeated = duplicates(names)
         if repeated:
-            raise DimensionError(f"dimension names must be unique, duplicated: {repeated}")
+            raise DimensionError(
+                f"dimension names must be unique, duplicated: {repeated}"
+            )
 
         self._init(
             {name: _as_labels(name, labels) for name, labels in items},
             _as_natural(natural, names),
         )
 
-    def _init(self, labels: dict[str, np.ndarray], natural: dict[str, str | None]) -> None:
+    def _init(
+        self, labels: dict[str, np.ndarray], natural: dict[str, str | None]
+    ) -> None:
         """Populate the instance from labels that are already validated."""
         self._labels = labels
         self._names = tuple(labels)
@@ -147,7 +152,9 @@ class Dimensions(Mapping[str, np.ndarray]):
         self._lookups: dict[str, dict[Hashable, int]] = {}
 
     def _derive(
-        self, labels: dict[str, np.ndarray], natural: dict[str, str | None] | None = None
+        self,
+        labels: dict[str, np.ndarray],
+        natural: dict[str, str | None] | None = None,
     ) -> Dimensions:
         """Return a new instance from labels already known to be valid.
 
@@ -162,7 +169,9 @@ class Dimensions(Mapping[str, np.ndarray]):
     # -- alternative constructors ------------------------------------------------
 
     @classmethod
-    def from_shape(cls, shape: Sequence[int], names: Sequence[str] | None = None) -> Dimensions:
+    def from_shape(
+        cls, shape: Sequence[int], names: Sequence[str] | None = None
+    ) -> Dimensions:
         """Build dimensions with natural index labels for each entry of ``shape``.
 
         Parameters
@@ -176,7 +185,10 @@ class Dimensions(Mapping[str, np.ndarray]):
             names = [f"dim_{i}" for i in range(len(shape))]
         elif len(names) != len(shape):
             raise DimensionError(f"got {len(names)} names for {len(shape)} dimensions")
-        return cls({name: np.arange(n) for name, n in zip(names, shape)}, natural=names)
+        return cls(
+            {name: np.arange(n) for name, n in zip(names, shape, strict=False)},
+            natural=names,
+        )
 
     # -- mapping interface -------------------------------------------------------
 
@@ -271,7 +283,7 @@ class Dimensions(Mapping[str, np.ndarray]):
             Whether absent labels raise :class:`LabelNotFoundError` or are
             dropped from the result.
 
-        Returns
+        Returns:
         -------
         numpy.ndarray
             Integer positions, in the order the labels were given.
@@ -295,10 +307,8 @@ class Dimensions(Mapping[str, np.ndarray]):
         # kinds are matched via their python equivalents, which avoids the
         # silent truncation of casting (e.g. '<U8' labels cast to '<U1').
         if dim_labels.dtype.kind in "mM" and query.dtype != dim_labels.dtype:
-            try:
+            with contextlib.suppress(TypeError, ValueError):
                 query = query.astype(dim_labels.dtype)
-            except (TypeError, ValueError):
-                pass
         return query
 
     def locate(self, name: str, labels: Any) -> np.ndarray:
@@ -316,12 +326,12 @@ class Dimensions(Mapping[str, np.ndarray]):
         labels : scalar or array_like
             Labels to locate.
 
-        Returns
+        Returns:
         -------
         numpy.ndarray
             One integer position per label, ``-1`` where the label is absent.
 
-        Examples
+        Examples:
         --------
         >>> dims = Dimensions({"b": ["x", "y", "z"]})
         >>> dims.locate("b", ["z", "q"])
@@ -329,7 +339,9 @@ class Dimensions(Mapping[str, np.ndarray]):
         """
         lookup = self._lookup(name)
         query = self._as_query(name, labels)
-        return np.asarray([lookup.get(label, -1) for label in query.tolist()], dtype=np.intp)
+        return np.asarray(
+            [lookup.get(label, -1) for label in query.tolist()], dtype=np.intp
+        )
 
     def get_positions(self, name: str, value: Any) -> np.ndarray:
         """Return integer positions along dimension ``name``.
@@ -342,7 +354,7 @@ class Dimensions(Mapping[str, np.ndarray]):
             Positions to keep. A boolean array is taken as a mask over the
             dimension; negative positions count from the end.
 
-        Returns
+        Returns:
         -------
         numpy.ndarray
             Integer positions, in the order given.
@@ -382,7 +394,7 @@ class Dimensions(Mapping[str, np.ndarray]):
         indexers : mapping of str to array_like of int
             Positions to keep, per dimension. Dimensions not named are unchanged.
 
-        Raises
+        Raises:
         ------
         DimensionError
             If a dimension is unknown, or a position is asked for twice, which
@@ -411,11 +423,15 @@ class Dimensions(Mapping[str, np.ndarray]):
         unknown = sorted(set(mapping) - set(self._names) - sources)
         if unknown:
             raise DimensionError(f"unknown dimensions: {unknown}")
-        labels = {mapping.get(name, name): values for name, values in self._labels.items()}
+        labels = {
+            mapping.get(name, name): values for name, values in self._labels.items()
+        }
         if len(labels) != len(self._labels):
             raise DimensionError("dimension names must be unique after renaming")
         natural = {
-            mapping.get(name, name): None if source is None else mapping.get(source, source)
+            mapping.get(name, name): None
+            if source is None
+            else mapping.get(source, source)
             for name, source in self._natural.items()
         }
         return self._derive(labels, natural)
@@ -432,11 +448,17 @@ class Dimensions(Mapping[str, np.ndarray]):
         """Return dimensions without ``names``."""
         names = set(as_name_list(names))
         self._require(names)
-        labels = {name: values for name, values in self._labels.items() if name not in names}
-        natural = {name: source for name, source in self._natural.items() if name not in names}
+        labels = {
+            name: values for name, values in self._labels.items() if name not in names
+        }
+        natural = {
+            name: source for name, source in self._natural.items() if name not in names
+        }
         return self._derive(labels, natural)
 
-    def replace(self, name: str, labels: Any, natural: bool | str | None = None) -> Dimensions:
+    def replace(
+        self, name: str, labels: Any, natural: bool | str | None = None
+    ) -> Dimensions:
         """Return dimensions with the labels of ``name`` replaced.
 
         Parameters
@@ -491,7 +513,8 @@ class Dimensions(Mapping[str, np.ndarray]):
             numpy and the result is no longer ``eval``-able.
         """
         body = ", ".join(
-            f"{name!r}: {array_repr(self._labels[name], full=full)}" for name in self._names
+            f"{name!r}: {array_repr(self._labels[name], full=full)}"
+            for name in self._names
         )
         natural = f", natural={self._natural!r}" if self._natural else ""
         return f"{type(self).__name__}({{{body}}}{natural})"
@@ -505,9 +528,13 @@ class Dimensions(Mapping[str, np.ndarray]):
         for name in self._names:
             labels = self._labels[name]
             source = self._natural.get(name)
-            flag = f" [natural for {source!r}]" if source else (
-                " [natural]" if name in self._natural else ""
+            flag = (
+                f" [natural for {source!r}]"
+                if source
+                else (" [natural]" if name in self._natural else "")
             )
             preview = np.array2string(labels, threshold=6, edgeitems=3, separator=", ")
-            lines.append(f"  {name:<{width}} ({len(labels)}) {labels.dtype}{flag}: {preview}")
+            lines.append(
+                f"  {name:<{width}} ({len(labels)}) {labels.dtype}{flag}: {preview}"
+            )
         return "\n".join(lines)

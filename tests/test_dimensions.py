@@ -9,7 +9,6 @@ from numpy import array  # noqa: F401  (needed to eval reprs)
 from labelled_array import DimensionError, LabelNotFoundError
 from labelled_array.dimensions import Dimensions
 
-
 # -- construction ---------------------------------------------------------------
 
 
@@ -189,7 +188,10 @@ def test_get_indexer_missing_raises_naming_dim_and_labels(labels_2d):
 
 def test_get_indexer_missing_ignore_drops(labels_2d):
     dims = Dimensions(labels_2d)
-    assert dims.get_indexer("b", ["z", "nope", "x"], missing="ignore").tolist() == [2, 0]
+    assert dims.get_indexer("b", ["z", "nope", "x"], missing="ignore").tolist() == [
+        2,
+        0,
+    ]
 
 
 def test_get_indexer_is_a_keyerror(labels_2d):
@@ -215,7 +217,9 @@ def test_get_indexer_does_not_truncate_long_strings():
 
 
 def test_get_indexer_matches_datetimes_across_units():
-    dims = Dimensions({"d": np.array(["2020-01-01", "2020-01-02"], dtype="datetime64[ns]")})
+    dims = Dimensions(
+        {"d": np.array(["2020-01-01", "2020-01-02"], dtype="datetime64[ns]")}
+    )
     assert dims.get_indexer("d", [np.datetime64("2020-01-02")]).tolist() == [1]
     assert dims.get_indexer("d", ["2020-01-01"]).tolist() == [0]
 

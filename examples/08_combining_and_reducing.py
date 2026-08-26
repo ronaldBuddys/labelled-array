@@ -49,7 +49,9 @@ print("mean pnl  :", book.mean("date")["pnl"].tolist())
 
 assert book.sum("date").dims.names == ("asset",)
 assert book.mean("date")["pnl"].tolist() == [2.5, 25.0, 150.0]
-assert book.sum("date").dtypes["lots"] == np.dtype("int64"), "an integer sum stays integer"
+assert book.sum("date").dtypes["lots"] == np.dtype("int64"), (
+    "an integer sum stays integer"
+)
 
 # %%
 # Naming nothing reduces everything
@@ -102,7 +104,9 @@ with_sector = book._replace(
 )
 # NaN marks the cells with nothing behind them, so compare the way numpy's
 # testing helpers do, with nulls matching nulls.
-np.testing.assert_array_equal(with_sector.groupby("sector").sum()["pnl"], by_sector["pnl"])
+np.testing.assert_array_equal(
+    with_sector.groupby("sector").sum()["pnl"], by_sector["pnl"]
+)
 
 # %%
 # What the groups are

@@ -12,9 +12,9 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
-from helpers import assert_frames_equal, build_frame, sort_frame
 
-from labelled_array import DimensionError, LabelledArray
+from helpers import assert_frames_equal, build_frame, sort_frame
+from labelled_array import BackendDtypeError, DimensionError, LabelledArray
 
 DIMS = ["a", "b"]
 #: A sparse key: (1, 'y') has no row, so the fill and mask paths are exercised.
@@ -31,9 +31,16 @@ def round_trip(engine, values, **kwargs):
 # -- dtypes that survive exactly ------------------------------------------------
 
 NUMERIC_DTYPES = [
-    "int8", "int16", "int32", "int64",
-    "uint8", "uint16", "uint32", "uint64",
-    "float32", "float64",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "float32",
+    "float64",
 ]
 
 
@@ -75,7 +82,9 @@ def test_float16_round_trips(engine):
 
 @pytest.mark.parametrize("unit", ["ns", "us", "ms", "s"])
 def test_pandas_datetimes_keep_their_unit(unit):
-    values = pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]).astype(f"datetime64[{unit}]")
+    values = pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]).astype(
+        f"datetime64[{unit}]"
+    )
     df, la, out = round_trip("pandas", values)
     assert la.dtypes["v"] == np.dtype(f"datetime64[{unit}]")
     assert_frames_equal("pandas", sort_frame("pandas", df, DIMS), out)
@@ -107,12 +116,17 @@ def test_polars_dates_and_durations_round_trip():
 
 def test_pandas_timezone_aware_datetimes_survive_as_objects():
     """Values and dtype are preserved, but the array holds Timestamp objects."""
-    values = pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]).tz_localize("UTC")
+    values = pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]).tz_localize(
+        "UTC"
+    )
     df, la, out = round_trip("pandas", values)
     assert la.dtypes["v"] == np.dtype("O"), "numpy has no tz-aware dtype"
     assert_frames_equal("pandas", sort_frame("pandas", df, DIMS), out)
-    with pytest.raises(Exception):
-        la.to_backend("torch"), "an object array cannot move to another backend"
+    # Without torch this would pass on the missing-backend error rather than the
+    # dtype error it is meant to prove, so skip rather than assert vacuously.
+    pytest.importorskip("torch")
+    with pytest.raises(BackendDtypeError):
+        la.to_backend("torch")
 
 
 def test_pandas_categoricals_lose_their_categories():
@@ -193,7 +207,9 @@ def test_dimension_label_dtypes_round_trip(engine, labels):
         data = {"k": [True, False], "v": [1.0, 2.0]}
     df = build_frame(engine, data)
     la = LabelledArray.from_dataframe(df, dims=["k"])
-    assert_frames_equal(engine, sort_frame(engine, df, ["k"]), la.to_dataframe(engine, index=False))
+    assert_frames_equal(
+        engine, sort_frame(engine, df, ["k"]), la.to_dataframe(engine, index=False)
+    )
 
 
 def test_labels_are_sorted_whatever_the_row_order(engine):
@@ -206,7 +222,9 @@ def test_timezone_aware_labels_round_trip():
     df = pd.DataFrame({"k": dates, "v": [1.0, 2.0]})
     la = LabelledArray.from_dataframe(df, dims=["k"])
     assert la.dims["k"].dtype == np.dtype("O")
-    assert_frames_equal("pandas", sort_frame("pandas", df, ["k"]), la.to_dataframe(index=False))
+    assert_frames_equal(
+        "pandas", sort_frame("pandas", df, ["k"]), la.to_dataframe(index=False)
+    )
 
 
 @pytest.mark.parametrize(
@@ -224,7 +242,9 @@ def test_null_labels_are_refused(labels):
 
 
 def test_mixed_type_labels_that_cannot_be_sorted_keep_first_seen_order():
-    df = pd.DataFrame({"k": np.array(["b", 1, "a"], dtype=object), "v": [1.0, 2.0, 3.0]})
+    df = pd.DataFrame(
+        {"k": np.array(["b", 1, "a"], dtype=object), "v": [1.0, 2.0, 3.0]}
+    )
     la = LabelledArray.from_dataframe(df, dims=["k"])
     assert la.dims["k"].tolist() == ["b", 1, "a"]
     assert la["v"].tolist() == [1.0, 2.0, 3.0]
@@ -241,7 +261,8 @@ def test_labels_of_a_dimension_may_repeat_across_dimensions(engine):
 
 @pytest.mark.parametrize("name", ["jax", "torch"])
 @pytest.mark.parametrize(
-    "values", [["p", "q", "r"], pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"])]
+    "values",
+    [["p", "q", "r"], pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"])],
 )
 def test_non_numeric_variables_cannot_move_to_an_array_backend(name, values):
     from labelled_array import BackendDtypeError

@@ -60,13 +60,19 @@ def test_new_labels_are_filled_and_marked_absent(prices):
     assert wider.dims["product"].tolist() == ["a", "c", "d"]
     assert np.isnan(wider["price"][:, 2]).all()
     assert wider.mask[:, 2].tolist() == [False, False]
-    assert wider.mask[:, :2].tolist() == prices.mask[:, [0, 2]].tolist(), "the rest is unchanged"
+    assert wider.mask[:, :2].tolist() == prices.mask[:, [0, 2]].tolist(), (
+        "the rest is unchanged"
+    )
 
 
 def test_the_fill_keeps_the_dtype_of_each_variable(prices):
     wider = prices.reindex(product=["a", "d"])
-    assert wider.dtypes["units"] == np.dtype("int64"), "an int column is not widened to float"
-    assert wider["units"][:, 1].tolist() == [0, 0], "the mask is what says the cell is empty"
+    assert wider.dtypes["units"] == np.dtype("int64"), (
+        "an int column is not widened to float"
+    )
+    assert wider["units"][:, 1].tolist() == [0, 0], (
+        "the mask is what says the cell is empty"
+    )
     assert not wider.mask[:, 1].any()
 
 
@@ -79,7 +85,9 @@ def test_fill_value_for_every_variable(prices):
 def test_fill_value_per_variable(prices):
     wider = prices.reindex(product=["a", "d"], fill_value={"price": -1.0})
     assert wider["price"][:, 1].tolist() == [-1.0, -1.0]
-    assert wider["units"][:, 1].tolist() == [0, 0], "unnamed variables take the dtype default"
+    assert wider["units"][:, 1].tolist() == [0, 0], (
+        "unnamed variables take the dtype default"
+    )
 
 
 def test_fill_value_for_an_unknown_variable_raises(prices):
@@ -112,7 +120,9 @@ def test_attributes_survive(prices):
 
 
 def test_coordinates_are_gathered_and_filled():
-    dates = np.array([["2024-01-01", "2024-01-02"], ["2024-02-01", "2024-02-02"]], "datetime64[D]")
+    dates = np.array(
+        [["2024-01-01", "2024-01-02"], ["2024-02-01", "2024-02-02"]], "datetime64[D]"
+    )
     array = LabelledArray(
         {"v": np.arange(4.0).reshape(2, 2)},
         {"g": ["a", "b"], "i": [0, 1]},
@@ -188,7 +198,10 @@ def test_reindex_like_ignores_dimensions_this_array_does_not_have(prices):
 
 def test_reindex_like_fills(prices):
     target = LabelledArray({"v": np.zeros(2)}, {"product": ["a", "z"]})
-    assert prices.reindex_like(target, fill_value=0.0)["price"][:, 1].tolist() == [0.0, 0.0]
+    assert prices.reindex_like(target, fill_value=0.0)["price"][:, 1].tolist() == [
+        0.0,
+        0.0,
+    ]
 
 
 # -- fillna ---------------------------------------------------------------------

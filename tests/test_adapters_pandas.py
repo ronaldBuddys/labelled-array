@@ -29,7 +29,10 @@ def test_named_index_is_reported(adapter, df):
 
 
 def test_multiindex_names_are_reported(adapter, df):
-    assert adapter.index_names(df.set_index(["region", "product"])) == ["region", "product"]
+    assert adapter.index_names(df.set_index(["region", "product"])) == [
+        "region",
+        "product",
+    ]
 
 
 def test_unnamed_multiindex_levels_are_skipped(adapter, df):
@@ -73,7 +76,9 @@ def test_to_dataframe_of_one_dimension_builds_a_plain_index():
 
 
 def test_to_dataframe_index_false_keeps_dimensions_as_columns(df):
-    out = LabelledArray.from_dataframe(df, dims=["region", "product"]).to_dataframe(index=False)
+    out = LabelledArray.from_dataframe(df, dims=["region", "product"]).to_dataframe(
+        index=False
+    )
     assert list(out.columns) == ["region", "product", "units", "price"]
     assert out.index.tolist() == [0, 1, 2, 3]
 
@@ -87,13 +92,17 @@ def test_index_round_trip(df):
 def test_default_engine_is_pandas(sales_data):
     import polars as pl
 
-    la = LabelledArray.from_dataframe(pl.DataFrame(sales_data), dims=["region", "product"])
+    la = LabelledArray.from_dataframe(
+        pl.DataFrame(sales_data), dims=["region", "product"]
+    )
     assert isinstance(la.to_dataframe(), pd.DataFrame), "the engine is not remembered"
 
 
 def test_datetime_columns_keep_their_unit(adapter):
     """pandas 3 defaults to microsecond resolution, and the unit is preserved."""
-    df = pd.DataFrame({"date": pd.to_datetime(["2024-01-02", "2024-01-01"]), "w": [1.0, 2.0]})
+    df = pd.DataFrame(
+        {"date": pd.to_datetime(["2024-01-02", "2024-01-01"]), "w": [1.0, 2.0]}
+    )
     values = adapter.column_values(df, "date")
     assert values.dtype == df["date"].dtype == np.dtype("datetime64[us]")
     out = LabelledArray.from_dataframe(df, dims=["date"]).to_dataframe(index=False)

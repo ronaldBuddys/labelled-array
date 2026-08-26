@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import runpy
-import sys
 from pathlib import Path
 
 import pytest
@@ -31,7 +30,9 @@ def test_example_is_written_in_the_sphinx_gallery_style(path):
     for number, line in enumerate(lines):
         if line.startswith("# %%"):
             title, underline = lines[number + 1], lines[number + 2]
-            assert title.startswith("# "), f"{path.name}:{number + 2} cell needs a title"
+            assert title.startswith("# "), (
+                f"{path.name}:{number + 2} cell needs a title"
+            )
             assert set(underline.removeprefix("# ")) == {"-"}, (
                 f"{path.name}:{number + 3} cell title needs an rst underline"
             )

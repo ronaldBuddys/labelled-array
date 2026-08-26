@@ -49,7 +49,9 @@ class NumpyBackend(ArrayBackend):
     def reshape(self, arr: np.ndarray, shape: Sequence[int]) -> np.ndarray:
         return np.reshape(arr, tuple(shape))
 
-    def take_multi(self, arr: np.ndarray, indexers: Mapping[int, np.ndarray]) -> np.ndarray:
+    def take_multi(
+        self, arr: np.ndarray, indexers: Mapping[int, np.ndarray]
+    ) -> np.ndarray:
         """Gather every axis in one pass, so no intermediate array is built."""
         if not indexers:
             return arr

@@ -6,7 +6,8 @@ and write columns as numpy arrays.
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -101,7 +102,9 @@ def from_dataframe(
         raise KeyError(f"columns not in the frame: {missing}, available: {available}")
     overlap = sorted(set(dim_names) & set(columns))
     if overlap:
-        raise DimensionError(f"columns cannot be both dimensions and variables: {overlap}")
+        raise DimensionError(
+            f"columns cannot be both dimensions and variables: {overlap}"
+        )
 
     fill_values = per_name(fill_value, columns, "fill_value")
     dtypes = per_name(dtype, columns, "dtype")
@@ -143,7 +146,8 @@ def from_dataframe(
         for name in columns
     }
     coords = {
-        name: scatter(dim_values[name], positions, dimensions.shape) for name in natural_names
+        name: scatter(dim_values[name], positions, dimensions.shape)
+        for name in natural_names
     }
 
     # Positions are unique, so the array is fully populated exactly when there

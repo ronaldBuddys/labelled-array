@@ -8,7 +8,8 @@ type checkers, editors and :mod:`pydoc` can see them.
 from __future__ import annotations
 
 import operator
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 __all__ = ["ArithmeticMixin"]
 
@@ -71,7 +72,9 @@ class ArithmeticMixin:
             mask = self.mask
 
         data = {
-            name: op(operands[name], left[name]) if reflected else op(left[name], operands[name])
+            name: op(operands[name], left[name])
+            if reflected
+            else op(left[name], operands[name])
             for name in left.variables
         }
         return left._replace(data=data, mask=mask)

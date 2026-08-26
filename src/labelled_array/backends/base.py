@@ -88,7 +88,7 @@ class ArrayBackend(Plugin):
         indexers : mapping of int to ndarray of int
             Indices to keep, per axis. Axes not named are kept whole.
 
-        Notes
+        Notes:
         -----
         The default applies one axis at a time, materialising an intermediate
         array per axis. A backend able to gather several axes in one pass --
@@ -142,7 +142,7 @@ class ArrayBackend(Plugin):
         and one axis of length ``window`` appended, so reducing over ``-1``
         gives one value per complete window.
 
-        Notes
+        Notes:
         -----
         The default builds the windows by stacking shifted copies, which costs
         ``window`` times the memory of the input. A backend that can express
@@ -151,7 +151,9 @@ class ArrayBackend(Plugin):
         """
         length = self.shape(arr)[axis]
         if window > length:
-            raise ValueError(f"window {window} is longer than axis {axis} of length {length}")
+            raise ValueError(
+                f"window {window} is longer than axis {axis} of length {length}"
+            )
         kept = length - window + 1
         parts = []
         for offset in range(window):
