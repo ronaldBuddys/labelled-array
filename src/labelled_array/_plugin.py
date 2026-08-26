@@ -10,13 +10,13 @@ from __future__ import annotations
 import importlib
 import importlib.util
 from abc import ABC, abstractmethod
-from functools import lru_cache
+from functools import cache
 from typing import Any, Generic, TypeVar
 
 __all__ = ["Plugin", "Registry"]
 
 
-@lru_cache(maxsize=None)
+@cache
 def _is_installed(library: str) -> bool:
     """Whether ``library`` can be imported. Cached: installs do not change."""
     return importlib.util.find_spec(library) is not None
@@ -29,7 +29,7 @@ class Plugin(ABC):
     import is deferred until something is actually done with it, so a library
     that is not installed costs nothing but a failed availability check.
 
-    Attributes
+    Attributes:
     ----------
     name : str
         Registry key, e.g. ``"numpy"``.
@@ -88,7 +88,9 @@ class Registry(Generic[P]):
         Name returned when a lookup is given None.
     """
 
-    def __init__(self, base: type[P], noun: str, error: type[Exception], default: str) -> None:
+    def __init__(
+        self, base: type[P], noun: str, error: type[Exception], default: str
+    ) -> None:
         self.base = base
         self.noun = noun
         self.error = error
@@ -116,12 +118,14 @@ class Registry(Generic[P]):
 
     def available(self) -> tuple[str, ...]:
         """Names of entries whose library can be imported."""
-        return tuple(name for name, entry in self.entries.items() if entry.is_available())
+        return tuple(
+            name for name, entry in self.entries.items() if entry.is_available()
+        )
 
     def get(self, key: str | P | None = None) -> P:
         """Return an entry by name, passing instances through.
 
-        Raises
+        Raises:
         ------
         error
             If the name is unknown, or its library is not installed.
@@ -143,7 +147,7 @@ class Registry(Generic[P]):
     def resolve(self, obj: Any) -> P:
         """Return the entry that handles ``obj``.
 
-        Raises
+        Raises:
         ------
         error
             If no registered entry recognises ``obj``.

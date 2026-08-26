@@ -7,7 +7,6 @@ import pytest
 
 from labelled_array import BackendDtypeError, DimensionError, Dimensions, LabelledArray
 
-
 # -- construction ---------------------------------------------------------------
 
 
@@ -62,7 +61,9 @@ def test_variable_names_must_be_str():
 
 
 def test_shape_mismatch_raises():
-    with pytest.raises(DimensionError, match=r"variable 'w' has shape \(3,\), expected \(2,\)"):
+    with pytest.raises(
+        DimensionError, match=r"variable 'w' has shape \(3,\), expected \(2,\)"
+    ):
         LabelledArray({"w": np.zeros(3)}, {"a": [1, 2]})
 
 
@@ -95,7 +96,10 @@ def test_coord_shape_is_checked():
 def test_density_reflects_the_mask(simple):
     assert simple.density == pytest.approx(5 / 6)
     assert LabelledArray({"w": np.zeros(2)}, {"a": [1, 2]}).density == 1.0
-    assert LabelledArray({"w": np.zeros(0)}, {"a": []}, mask=np.zeros(0, bool)).density == 0.0
+    assert (
+        LabelledArray({"w": np.zeros(0)}, {"a": []}, mask=np.zeros(0, bool)).density
+        == 0.0
+    )
 
 
 # -- backend handling -----------------------------------------------------------
@@ -139,7 +143,7 @@ def test_dtypes_are_reported_as_numpy_dtypes(simple):
 
 def test_values_requires_a_single_variable(simple):
     with pytest.raises(ValueError, match="single variable"):
-        simple.values
+        _ = simple.values
     np.testing.assert_array_equal(simple[["w"]].values, simple["w"])
 
 
@@ -292,7 +296,9 @@ def test_assign_adds_and_replaces(simple):
     assigned = simple.assign(y=np.ones((2, 3)))
     assert assigned.variables == ("w", "x", "y")
     assert simple.variables == ("w", "x")
-    np.testing.assert_array_equal(simple.assign(w=np.ones((2, 3)))["w"], np.ones((2, 3)))
+    np.testing.assert_array_equal(
+        simple.assign(w=np.ones((2, 3)))["w"], np.ones((2, 3))
+    )
 
 
 def test_assign_checks_the_shape(simple):
@@ -371,8 +377,12 @@ class FinancialArray(LabelledArray):
 def financial():
     return FinancialArray(
         {"price": np.arange(6, dtype=float).reshape(3, 2)},
-        {"date": np.array(["2024-01-01", "2024-01-02", "2024-01-03"], dtype="datetime64[D]"),
-         "ticker": ["AAA", "BBB"]},
+        {
+            "date": np.array(
+                ["2024-01-01", "2024-01-02", "2024-01-03"], dtype="datetime64[D]"
+            ),
+            "ticker": ["AAA", "BBB"],
+        },
     )
 
 

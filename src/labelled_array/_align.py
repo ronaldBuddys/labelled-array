@@ -53,7 +53,7 @@ def join_labels(name: str, label_sets: Sequence[np.ndarray], join: str) -> np.nd
         allows it; ``'left'`` and ``'right'`` take the first or last array's
         labels as they are; ``'exact'`` refuses to join at all.
 
-    Raises
+    Raises:
     ------
     ValueError
         If ``join`` is not one of the modes above.
@@ -73,7 +73,9 @@ def join_labels(name: str, label_sets: Sequence[np.ndarray], join: str) -> np.nd
     if join == "outer":
         # factorize sorts where the dtype allows it and falls back to first-seen
         # order otherwise, which is how from_dataframe orders labels too.
-        return factorize(np.concatenate([np.asarray(labels) for labels in label_sets]))[0]
+        return factorize(np.concatenate([np.asarray(labels) for labels in label_sets]))[
+            0
+        ]
 
     keep = np.ones(len(label_sets[0]), dtype=bool)
     for other in label_sets[1:]:
@@ -118,7 +120,9 @@ def reindex(array: Any, indexers: Mapping[str, Any], fill_value: Any = None) -> 
         name: backend.where(
             valid,
             value,
-            default_fill_value(backend.dtype(value)) if fills[name] is None else fills[name],
+            default_fill_value(backend.dtype(value))
+            if fills[name] is None
+            else fills[name],
         )
         for name, value in cells["data"].items()
     }
@@ -160,7 +164,8 @@ def align(
             continue
         first = label_sets[0]
         if all(
-            other.dtype == first.dtype and np.array_equal(other, first) for other in label_sets[1:]
+            other.dtype == first.dtype and np.array_equal(other, first)
+            for other in label_sets[1:]
         ):
             continue
         targets[name] = join_labels(name, label_sets, join)
@@ -230,10 +235,13 @@ def concat(
     is_new = _check_concat_inputs(arrays, dim)
     order = arrays[0].dims.names
     aligned = [
-        array if array.dims.names == order else array.transpose(order) for array in arrays
+        array if array.dims.names == order else array.transpose(order)
+        for array in arrays
     ]
     aligned = list(
-        align(aligned, join=join, fill_value=fill_value, exclude=() if is_new else [dim])
+        align(
+            aligned, join=join, fill_value=fill_value, exclude=() if is_new else [dim]
+        )
     )
 
     first = aligned[0]

@@ -104,7 +104,9 @@ def test_matching_labels_are_left_untouched(left):
 
 
 def test_dimensions_the_other_array_does_not_have_are_kept(left):
-    other = LabelledArray({"w": np.arange(6.0).reshape(3, 2)}, {"b": ["x", "y", "z"], "t": [0, 1]})
+    other = LabelledArray(
+        {"w": np.arange(6.0).reshape(3, 2)}, {"b": ["x", "y", "z"], "t": [0, 1]}
+    )
     a, b = left.align(other)
     assert a.dims.names == ("b",)
     assert b.dims.names == ("b", "t")
@@ -148,7 +150,9 @@ def test_arithmetic_aligns_on_the_shared_labels(left, right):
 
 
 def test_arithmetic_aligns_a_transposed_operand():
-    a = LabelledArray({"w": np.arange(6.0).reshape(2, 3)}, {"b": ["x", "y"], "t": [0, 1, 2]})
+    a = LabelledArray(
+        {"w": np.arange(6.0).reshape(2, 3)}, {"b": ["x", "y"], "t": [0, 1, 2]}
+    )
     doubled = a + a.transpose("t", "b")
     assert doubled.dims.names == ("b", "t")
     np.testing.assert_array_equal(doubled["w"], a["w"] * 2)

@@ -19,7 +19,9 @@ def jan():
 
 @pytest.fixture
 def feb(jan):
-    return LabelledArray({"v": np.arange(4.0).reshape(2, 2) + 10}, {"day": [3, 4], "g": ["a", "b"]})
+    return LabelledArray(
+        {"v": np.arange(4.0).reshape(2, 2) + 10}, {"day": [3, 4], "g": ["a", "b"]}
+    )
 
 
 # -- an existing dimension ------------------------------------------------------
@@ -75,7 +77,9 @@ def test_transposed_arrays_are_put_in_the_first_array_order(jan, feb):
 def test_a_new_dimension_becomes_the_first_axis(jan, feb):
     stacked = LabelledArray.concat([jan, feb], dim="month")
     assert stacked.dims.names == ("month", "day", "g")
-    assert stacked.shape == (2, 4, 2), "the day labels are joined by the outer alignment"
+    assert stacked.shape == (2, 4, 2), (
+        "the day labels are joined by the outer alignment"
+    )
     assert stacked.dims["month"].tolist() == [0, 1]
     assert stacked.dims.is_natural("month")
 
@@ -102,7 +106,9 @@ def test_stacking_one_array_adds_the_axis(jan):
 
 
 def test_the_other_dimensions_are_joined_outward_by_default(jan):
-    other = LabelledArray({"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]})
+    other = LabelledArray(
+        {"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]}
+    )
     joined = LabelledArray.concat([jan, other], dim="day")
     assert joined.dims["g"].tolist() == ["a", "b", "c"]
     assert joined.mask.tolist() == [
@@ -113,20 +119,26 @@ def test_the_other_dimensions_are_joined_outward_by_default(jan):
 
 
 def test_the_other_dimensions_can_be_joined_inward(jan):
-    other = LabelledArray({"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]})
+    other = LabelledArray(
+        {"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]}
+    )
     joined = LabelledArray.concat([jan, other], dim="day", join="inner")
     assert joined.dims["g"].tolist() == ["b"]
     assert joined.mask is None
 
 
 def test_an_exact_join_refuses_to_invent_cells(jan):
-    other = LabelledArray({"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]})
+    other = LabelledArray(
+        {"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]}
+    )
     with pytest.raises(DimensionError, match="join='exact'"):
         LabelledArray.concat([jan, other], dim="day", join="exact")
 
 
 def test_fill_value_reaches_the_cells_the_join_invents(jan):
-    other = LabelledArray({"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]})
+    other = LabelledArray(
+        {"v": np.arange(2.0).reshape(1, 2)}, {"day": [3], "g": ["b", "c"]}
+    )
     joined = LabelledArray.concat([jan, other], dim="day", fill_value=-1.0)
     assert joined["v"][0, 2] == -1.0
 
@@ -151,7 +163,9 @@ def test_no_mask_at_all_stays_no_mask(jan, feb):
 
 def test_coordinates_are_joined():
     dates = np.array([["2024-01-01", "2024-01-02"]], "datetime64[D]")
-    first = LabelledArray({"v": np.zeros((1, 2))}, {"g": ["a"], "i": [0, 1]}, coords={"d": dates})
+    first = LabelledArray(
+        {"v": np.zeros((1, 2))}, {"g": ["a"], "i": [0, 1]}, coords={"d": dates}
+    )
     second = first._replace(dims=first.dims.replace("g", ["b"]))
     joined = LabelledArray.concat([first, second], dim="g")
     assert joined.coords["d"].shape == (2, 2)
@@ -169,7 +183,9 @@ def test_attributes_and_subclass_come_from_the_first_array(jan, feb):
 
 
 def test_concat_runs_on_every_backend(jan, feb, backend):
-    joined = LabelledArray.concat([jan.to_backend(backend), feb.to_backend(backend)], dim="day")
+    joined = LabelledArray.concat(
+        [jan.to_backend(backend), feb.to_backend(backend)], dim="day"
+    )
     assert joined.backend.name == backend.name
     np.testing.assert_array_equal(
         backend.to_numpy(joined["v"]), np.concatenate([jan["v"], feb["v"]])
@@ -201,7 +217,9 @@ def test_different_variables_are_refused(jan, feb):
 
 def test_different_coordinates_are_refused(jan, feb):
     with pytest.raises(DimensionError, match="same coordinates"):
-        LabelledArray.concat([jan, feb._replace(coords={"c": np.zeros((2, 2))})], dim="day")
+        LabelledArray.concat(
+            [jan, feb._replace(coords={"c": np.zeros((2, 2))})], dim="day"
+        )
 
 
 def test_different_backends_are_refused(jan, feb):
@@ -210,7 +228,9 @@ def test_different_backends_are_refused(jan, feb):
 
 
 def test_a_dimension_only_some_arrays_have_is_refused(jan):
-    other = LabelledArray({"v": np.zeros((2, 2, 1))}, {"day": [3, 4], "g": ["a", "b"], "x": [0]})
+    other = LabelledArray(
+        {"v": np.zeros((2, 2, 1))}, {"day": [3, 4], "g": ["a", "b"], "x": [0]}
+    )
     with pytest.raises(DimensionError, match="share their dimensions"):
         LabelledArray.concat([jan, other], dim="day")
 

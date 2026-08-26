@@ -11,7 +11,6 @@ from numpy import array  # noqa: F401  (needed to eval reprs)
 
 from labelled_array import DimensionError, Dimensions, LabelledArray  # noqa: F401
 
-
 # -- mapping-like access --------------------------------------------------------
 
 
@@ -130,7 +129,9 @@ def test_array_protocol_honours_copy(simple):
 
 
 def test_array_protocol_on_other_backends(simple, backend):
-    np.testing.assert_array_equal(np.asarray(simple[["x"]].to_backend(backend)), simple["x"])
+    np.testing.assert_array_equal(
+        np.asarray(simple[["x"]].to_backend(backend)), simple["x"]
+    )
 
 
 # -- copying and pickling -------------------------------------------------------
@@ -154,7 +155,11 @@ def test_pickle_round_trip(simple):
 
 
 def test_pickle_round_trip_with_coords_and_backend(simple, backend):
-    la = simple[["x"]].to_backend(backend)._replace(coords={"d": np.arange(6).reshape(2, 3)})
+    la = (
+        simple[["x"]]
+        .to_backend(backend)
+        ._replace(coords={"d": np.arange(6).reshape(2, 3)})
+    )
     restored = pickle.loads(pickle.dumps(la))
     assert restored.equals(la)
     assert restored.backend.name == backend.name

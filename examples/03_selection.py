@@ -82,7 +82,8 @@ assert lenient.dims["product"].tolist() == ["AAA"]
 assert sales.select(region="north").equals(sales.select({"region": "north"}))
 assert sales[{"region": "north"}].equals(sales.select({"region": "north"}))
 assert (
-    sales.select({"region": "north"}).select({"year": 2024})
+    sales.select({"region": "north"})
+    .select({"year": 2024})
     .equals(sales.select({"region": "north", "year": 2024}))
 )
 
@@ -92,7 +93,10 @@ assert (
 # ``isel`` is the positional counterpart, and takes slices and boolean masks.
 
 assert sales.isel(product=slice(0, 2)).shape == (2, 2, 2)
-assert sales.isel(product=[True, False, True]).dims["product"].tolist() == ["AAA", "CCC"]
+assert sales.isel(product=[True, False, True]).dims["product"].tolist() == [
+    "AAA",
+    "CCC",
+]
 assert sales.isel(year=-1).dims["year"].tolist() == [2024]
 assert sales.select({"product": ["CCC", "AAA"]}).equals(sales.isel({"product": [2, 0]}))
 

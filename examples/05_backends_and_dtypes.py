@@ -26,7 +26,9 @@ df = pd.DataFrame(
         "price": [1.5, 2.5, 3.5],
     }
 )
-prices = LabelledArray.from_dataframe(df, cols=["price"], dims=["region", "product"], dtype="float32")
+prices = LabelledArray.from_dataframe(
+    df, cols=["price"], dims=["region", "product"], dtype="float32"
+)
 
 for name in available_backends():
     moved = prices.to_backend(name)
@@ -68,7 +70,13 @@ if "jax" in available_backends():
     import jax
 
     on_jax = prices.astype("float64").to_backend("jax")
-    print("float64 became", on_jax.dtypes["price"], "(x64:", jax.config.read("jax_enable_x64"), ")")
+    print(
+        "float64 became",
+        on_jax.dtypes["price"],
+        "(x64:",
+        jax.config.read("jax_enable_x64"),
+        ")",
+    )
 
 # %%
 # Dtypes through a round trip
@@ -100,8 +108,15 @@ print(kept.dtypes)
 # dtype underneath. README.md has the full table.
 
 categorical = pd.DataFrame(
-    {"a": [1, 2], "grade": pd.Categorical(["high", "low"], categories=["low", "high"], ordered=True)}
+    {
+        "a": [1, 2],
+        "grade": pd.Categorical(
+            ["high", "low"], categories=["low", "high"], ordered=True
+        ),
+    }
 )
 graded = LabelledArray.from_dataframe(categorical, cols=["grade"], dims=["a"])
 print("category ->", graded.dtypes["grade"], "->", graded.to_dataframe()["grade"].dtype)
-assert graded.to_dataframe()["grade"].tolist() == ["high", "low"], "values survive, categories do not"
+assert graded.to_dataframe()["grade"].tolist() == ["high", "low"], (
+    "values survive, categories do not"
+)

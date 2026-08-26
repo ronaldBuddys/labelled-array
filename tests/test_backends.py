@@ -7,8 +7,8 @@ import pytest
 
 from labelled_array import BackendDtypeError, BackendError
 from labelled_array.backends import (
-    ArrayBackend,
     DEFAULT_BACKEND,
+    ArrayBackend,
     NumpyBackend,
     available_backends,
     get_backend,
@@ -152,7 +152,9 @@ def test_reshape(backend, source):
 
 
 def test_take_multi_gathers_several_axes(backend, source):
-    arr = backend.take_multi(backend.asarray(source), {0: np.array([1]), 1: np.array([2, 0])})
+    arr = backend.take_multi(
+        backend.asarray(source), {0: np.array([1]), 1: np.array([2, 0])}
+    )
     np.testing.assert_array_equal(backend.to_numpy(arr), source[np.ix_([1], [2, 0])])
 
 
@@ -180,7 +182,9 @@ def test_full(backend):
 def test_where_takes_the_condition_from_numpy(backend, source):
     condition = source > 2
     arr = backend.where(condition, backend.asarray(source), -1.0)
-    np.testing.assert_array_equal(backend.to_numpy(arr), np.where(condition, source, -1.0))
+    np.testing.assert_array_equal(
+        backend.to_numpy(arr), np.where(condition, source, -1.0)
+    )
 
 
 def test_where_broadcasts_the_condition(backend, source):
@@ -195,13 +199,17 @@ def test_where_accepts_a_read_only_condition(backend, source):
     condition = source > 2
     condition.flags.writeable = False
     arr = backend.where(condition, backend.asarray(source), 0.0)
-    np.testing.assert_array_equal(backend.to_numpy(arr), np.where(condition, source, 0.0))
+    np.testing.assert_array_equal(
+        backend.to_numpy(arr), np.where(condition, source, 0.0)
+    )
 
 
 def test_concatenate(backend, source):
     arr = backend.asarray(source)
     joined = backend.concatenate([arr, arr], axis=1)
-    np.testing.assert_array_equal(backend.to_numpy(joined), np.concatenate([source, source], 1))
+    np.testing.assert_array_equal(
+        backend.to_numpy(joined), np.concatenate([source, source], 1)
+    )
 
 
 @pytest.mark.parametrize("op", ["sum", "min", "max"])
@@ -327,7 +335,9 @@ def test_jax_narrows_64_bit_by_default():
 
     backend = get_backend("jax")
     arr = backend.asarray(np.arange(3, dtype=np.int64))
-    expected = np.dtype("int64") if jax.config.read("jax_enable_x64") else np.dtype("int32")
+    expected = (
+        np.dtype("int64") if jax.config.read("jax_enable_x64") else np.dtype("int32")
+    )
     assert backend.dtype(arr) == expected
 
 

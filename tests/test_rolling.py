@@ -78,7 +78,9 @@ def test_rolling_agrees_with_pandas(series, op, window):
 
 @pytest.mark.parametrize("op", ["sum", "mean", "min", "max"])
 def test_rolling_agrees_with_pandas_on_partial_windows(series, op):
-    expected = getattr(pd.DataFrame(series["w"].T).rolling(3, min_periods=1), op)().to_numpy()
+    expected = getattr(
+        pd.DataFrame(series["w"].T).rolling(3, min_periods=1), op
+    )().to_numpy()
     rolled = getattr(series.rolling("t", 3, min_periods=1), op)()
     np.testing.assert_allclose(rolled["w"].T, expected, equal_nan=True)
 
@@ -120,16 +122,21 @@ def test_rolling_over_a_natural_index_dimension():
         {
             "g": ["a", "a", "a", "b"],
             "date": np.array(
-                ["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"], "datetime64[D]"
+                ["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"],
+                "datetime64[D]",
             ),
             "v": [1.0, 2.0, 3.0, 4.0],
         }
     )
-    array = LabelledArray.from_dataframe(panel, cols=["v"], dims=["g", "date"], natural=["date"])
+    array = LabelledArray.from_dataframe(
+        panel, cols=["v"], dims=["g", "date"], natural=["date"]
+    )
     rolled = array.rolling("date_idx", 2, min_periods=1).mean()
     assert rolled.dims.names == ("g", "date_idx")
     assert rolled["v"][0].tolist() == [1.0, 1.5, 2.5]
-    assert rolled["v"][1][:2].tolist() == [4.0, 4.0], "b's second window still holds one date"
+    assert rolled["v"][1][:2].tolist() == [4.0, 4.0], (
+        "b's second window still holds one date"
+    )
     assert rolled.mask[1].tolist() == [True, True, False]
     assert np.isnan(rolled["v"][1][2]), "the last window of b holds nothing at all"
 

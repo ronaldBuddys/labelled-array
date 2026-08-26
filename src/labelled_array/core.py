@@ -12,12 +12,18 @@ import numpy as np
 
 from labelled_array import _align, _convert, _ops
 from labelled_array._arithmetic import ArithmeticMixin
-from labelled_array._utils import array_repr, arrays_equal, as_name_list, is_null, per_name
+from labelled_array._utils import (
+    array_repr,
+    arrays_equal,
+    as_name_list,
+    is_null,
+    per_name,
+)
 from labelled_array.backends import (
     DEFAULT_BACKEND,
     ArrayBackend,
-    get_backend,
     _resolve_or_none,
+    get_backend,
 )
 from labelled_array.dimensions import Dimensions
 from labelled_array.exceptions import DimensionError
@@ -53,18 +59,18 @@ class LabelledArray(ArithmeticMixin):
         Array backend for the variables. Defaults to the backend of the first
         variable that a registered backend recognises, else numpy.
 
-    Raises
+    Raises:
     ------
     DimensionError
         If a variable, mask or coordinate does not match ``dims.shape``, or if a
         variable, coordinate and dimension name collide.
 
-    Notes
+    Notes:
     -----
     Variable, coordinate and dimension names share one namespace, because a
     DataFrame column can only carry one of each.
 
-    Examples
+    Examples:
     --------
     >>> import numpy as np
     >>> la = LabelledArray({"w": np.arange(6).reshape(2, 3)},
@@ -102,7 +108,9 @@ class LabelledArray(ArithmeticMixin):
                 raise TypeError(f"variable names must be str, got {name!r}")
 
         self._backend = self._resolve_backend(data, backend)
-        self._data = {name: self._backend.asarray(value) for name, value in data.items()}
+        self._data = {
+            name: self._backend.asarray(value) for name, value in data.items()
+        }
         self._dims = self._resolve_dims(dims)
         self._mask = _as_mask(mask, self._dims.shape)
         self._coords = {
@@ -206,9 +214,15 @@ class LabelledArray(ArithmeticMixin):
 
     def _cells(self) -> dict[str, Any]:
         """Return the arrays indexed by the dimensions, as constructor fields."""
-        return {"data": dict(self._data), "coords": dict(self._coords), "mask": self._mask}
+        return {
+            "data": dict(self._data),
+            "coords": dict(self._coords),
+            "mask": self._mask,
+        }
 
-    def _map_cells(self, apply: Any, cells: dict[str, Any] | None = None) -> dict[str, Any]:
+    def _map_cells(
+        self, apply: Any, cells: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Apply ``apply(backend, array)`` to every array of the array's shape.
 
         The variables, the coordinates and the mask are all indexed by the same
@@ -221,9 +235,13 @@ class LabelledArray(ArithmeticMixin):
         numpy_backend = get_backend("numpy")
         mask = cells["mask"]
         return {
-            "data": {name: apply(self._backend, value) for name, value in cells["data"].items()},
+            "data": {
+                name: apply(self._backend, value)
+                for name, value in cells["data"].items()
+            },
             "coords": {
-                name: apply(numpy_backend, value) for name, value in cells["coords"].items()
+                name: apply(numpy_backend, value)
+                for name, value in cells["coords"].items()
             },
             "mask": None if mask is None else apply(numpy_backend, mask),
         }
@@ -289,7 +307,7 @@ class LabelledArray(ArithmeticMixin):
     def values(self) -> Any:
         """The sole variable's array.
 
-        Raises
+        Raises:
         ------
         ValueError
             If there is not exactly one variable.
@@ -357,20 +375,20 @@ class LabelledArray(ArithmeticMixin):
         **kwargs
             Alternative to ``indexers``, as keyword arguments.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             An instance of this class holding the selection, with the
             dimensions ordered as the labels were requested.
 
-        Raises
+        Raises:
         ------
         DimensionError
             If a dimension is unknown, or the same label is requested twice.
         LabelNotFoundError
             If a label is absent and ``missing`` is ``'raise'``.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.arange(6).reshape(2, 3)},
@@ -386,20 +404,30 @@ class LabelledArray(ArithmeticMixin):
             self._resolve(
                 indexers,
                 kwargs,
-                lambda name, labels: self._dims.get_indexer(name, labels, missing=missing),
+                lambda name, labels: self._dims.get_indexer(
+                    name, labels, missing=missing
+                ),
             ),
             drop=drop,
         )
 
     def _resolve(
-        self, indexers: Mapping[str, Any] | None, kwargs: Mapping[str, Any], to_positions: Any
+        self,
+        indexers: Mapping[str, Any] | None,
+        kwargs: Mapping[str, Any],
+        to_positions: Any,
     ) -> dict[str, np.ndarray]:
         """Merge and validate indexers, turning each into integer positions."""
         indexers = {**(indexers or {}), **kwargs}
         self._dims._require(indexers)
         return {name: to_positions(name, value) for name, value in indexers.items()}
 
-    def isel(self, indexers: Mapping[str, Any] | None = None, drop: bool = False, **kwargs: Any):
+    def isel(
+        self,
+        indexers: Mapping[str, Any] | None = None,
+        drop: bool = False,
+        **kwargs: Any,
+    ):
         """Select along dimensions by integer position.
 
         Parameters
@@ -412,12 +440,12 @@ class LabelledArray(ArithmeticMixin):
         **kwargs
             Alternative to ``indexers``, as keyword arguments.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             An instance of this class holding the selection.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.arange(6).reshape(2, 3)})
@@ -453,7 +481,9 @@ class LabelledArray(ArithmeticMixin):
             {k: v for k, v in mapping.items() if k in self._dims or k in sources}
         )
         data = {mapping.get(name, name): value for name, value in self._data.items()}
-        coords = {mapping.get(name, name): value for name, value in self._coords.items()}
+        coords = {
+            mapping.get(name, name): value for name, value in self._coords.items()
+        }
         return self._replace(dims=dims, data=data, coords=coords)
 
     def transpose(self, *order: str | Sequence[str]):
@@ -489,7 +519,9 @@ class LabelledArray(ArithmeticMixin):
         """
         dtypes = per_name(dtype, self.variables, "dtype", "variables")
         data = {
-            name: value if dtypes[name] is None else self._backend.astype(value, dtypes[name])
+            name: value
+            if dtypes[name] is None
+            else self._backend.astype(value, dtypes[name])
             for name, value in self._data.items()
         }
         return self._replace(data=data)
@@ -497,7 +529,7 @@ class LabelledArray(ArithmeticMixin):
     def to_backend(self, backend: str | ArrayBackend):
         """Return the array held on another array backend.
 
-        Raises
+        Raises:
         ------
         BackendDtypeError
             If the target backend cannot hold one of the variable dtypes.
@@ -521,7 +553,9 @@ class LabelledArray(ArithmeticMixin):
         if unknown:
             raise KeyError(f"unknown variables: {unknown}")
         return self._replace(
-            data={name: value for name, value in self._data.items() if name not in names}
+            data={
+                name: value for name, value in self._data.items() if name not in names
+            }
         )
 
     def copy(self, deep: bool = True):
@@ -536,7 +570,10 @@ class LabelledArray(ArithmeticMixin):
     # -- combining ---------------------------------------------------------------
 
     def reindex(
-        self, indexers: Mapping[str, Any] | None = None, fill_value: Any = None, **kwargs: Any
+        self,
+        indexers: Mapping[str, Any] | None = None,
+        fill_value: Any = None,
+        **kwargs: Any,
     ):
         """Return the array on a different label set for the named dimensions.
 
@@ -555,17 +592,17 @@ class LabelledArray(ArithmeticMixin):
         **kwargs
             Alternative to ``indexers``, as keyword arguments.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             An instance of this class on the new labels.
 
-        Raises
+        Raises:
         ------
         DimensionError
             If a dimension is unknown, or the new labels are not unique.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.arange(3.0)}, {"b": ["x", "y", "z"]})
@@ -575,11 +612,13 @@ class LabelledArray(ArithmeticMixin):
         >>> wider.mask.tolist()
         [True, True, False]
 
-        See Also
+        See Also:
         --------
         align : put two arrays onto one label set.
         """
-        return _align.reindex(self, {**(indexers or {}), **kwargs}, fill_value=fill_value)
+        return _align.reindex(
+            self, {**(indexers or {}), **kwargs}, fill_value=fill_value
+        )
 
     def reindex_like(self, other: LabelledArray, fill_value: Any = None):
         """Return the array on ``other``'s labels, for the dimensions they share.
@@ -591,10 +630,14 @@ class LabelledArray(ArithmeticMixin):
         fill_value : scalar or mapping of str to scalar, optional
             Value for cells ``other`` has and this array does not.
         """
-        shared = {name: other.dims[name] for name in other.dims.names if name in self._dims}
+        shared = {
+            name: other.dims[name] for name in other.dims.names if name in self._dims
+        }
         return _align.reindex(self, shared, fill_value=fill_value)
 
-    def align(self, *others: LabelledArray, join: str = "inner", fill_value: Any = None):
+    def align(
+        self, *others: LabelledArray, join: str = "inner", fill_value: Any = None
+    ):
         """Return this array and ``others`` on one label set per shared dimension.
 
         Dimensions no other array has are left alone, and no array is
@@ -612,12 +655,12 @@ class LabelledArray(ArithmeticMixin):
         fill_value : scalar or mapping of str to scalar, optional
             Value for cells an array gains, as in :meth:`reindex`.
 
-        Returns
+        Returns:
         -------
         tuple of LabelledArray
             This array first, then ``others``, all on the joined labels.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> left = LabelledArray({"w": np.arange(3.0)}, {"b": ["x", "y", "z"]})
@@ -657,19 +700,19 @@ class LabelledArray(ArithmeticMixin):
         fill_value : scalar or mapping of str to scalar, optional
             Value for cells an array gains from that join.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             An instance of the first array's class.
 
-        Raises
+        Raises:
         ------
         DimensionError
             If the arrays disagree on their variables, coordinates, backend or
             dimensions, if ``dim`` is a dimension of only some of them, or if
             the joined labels are not unique.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> jan = LabelledArray({"w": np.arange(2.0)}, {"day": [1, 2]})
@@ -679,7 +722,9 @@ class LabelledArray(ArithmeticMixin):
         >>> LabelledArray.concat([jan, feb], dim="month").shape  # 'day' is joined too
         (2, 4)
         """
-        return _align.concat(arrays, dim, labels=labels, join=join, fill_value=fill_value)
+        return _align.concat(
+            arrays, dim, labels=labels, join=join, fill_value=fill_value
+        )
 
     def fillna(self, value: Any):
         """Return the array with unpopulated and null cells filled.
@@ -694,7 +739,7 @@ class LabelledArray(ArithmeticMixin):
             Fill value, for every variable or per named variable. Variables a
             mapping leaves out keep their nulls, and the mask is then kept too.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.array([1.0, np.nan])}, {"b": ["x", "y"]})
@@ -733,7 +778,7 @@ class LabelledArray(ArithmeticMixin):
             Dimensions to reduce over; defaults to all of them, which gives a
             zero-dimensional array.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             An instance of this class without the reduced dimensions. Cells
@@ -742,13 +787,13 @@ class LabelledArray(ArithmeticMixin):
             along a reduced dimension are dropped, since there is no longer a
             cell for them to label.
 
-        Raises
+        Raises:
         ------
         TypeError
             If a variable's dtype cannot be reduced: strings and objects have
             no ordering the backends share, and dates cannot be summed.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.arange(6.0).reshape(2, 3)},
@@ -758,7 +803,7 @@ class LabelledArray(ArithmeticMixin):
         >>> la.mean().values.tolist()
         2.5
 
-        See Also
+        See Also:
         --------
         groupby : reduce within groups of one dimension.
         rolling : reduce over trailing windows along one dimension.
@@ -798,20 +843,20 @@ class LabelledArray(ArithmeticMixin):
             Dimension to group. Required when ``by`` is an array; checked
             against the coordinate when ``by`` names one.
 
-        Returns
+        Returns:
         -------
         GroupBy
             Supporting ``sum``, ``mean``, ``min`` and ``max``, each returning
             an array whose grouping dimension is labelled by group value.
 
-        Raises
+        Raises:
         ------
         DimensionError
             If ``by`` names a dimension rather than a coordinate, if a
             coordinate varies along more than one dimension, or if an array of
             group values is the wrong length.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.arange(4.0)}, {"asset": ["a", "b", "c", "d"]})
@@ -842,12 +887,12 @@ class LabelledArray(ArithmeticMixin):
             positions, and any window overlapping absent cells -- are marked
             absent rather than being computed from less data than asked for.
 
-        Returns
+        Returns:
         -------
         Rolling
             Supporting ``sum``, ``mean``, ``min`` and ``max``.
 
-        Examples
+        Examples:
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.arange(5.0)}, {"t": [0, 1, 2, 3, 4]})
@@ -913,24 +958,24 @@ class LabelledArray(ArithmeticMixin):
         engine : str, optional
             Force a DataFrame engine instead of detecting it from ``df``.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             An instance of this class.
 
-        Raises
+        Raises:
         ------
         DuplicateIndexError
             If two rows map to the same cell, making the conversion ambiguous.
         KeyError
             If a named column is not in the frame.
 
-        Notes
+        Notes:
         -----
         Labels come from the values actually present, so a filtered frame never
         produces an array padded out to labels that no row uses.
 
-        Examples
+        Examples:
         --------
         >>> import pandas as pd
         >>> df = pd.DataFrame({"a": [1, 1, 2], "b": ["x", "y", "x"], "w": [1.0, 2.0, 3.0]})
@@ -940,7 +985,7 @@ class LabelledArray(ArithmeticMixin):
         >>> la.density
         0.75
 
-        See Also
+        See Also:
         --------
         to_dataframe : the inverse conversion.
         """
@@ -982,18 +1027,18 @@ class LabelledArray(ArithmeticMixin):
             Write a natural index dimension out as the values it stands in for,
             taken from its coordinate, instead of as the index itself.
 
-        Returns
+        Returns:
         -------
         pandas.DataFrame or polars.DataFrame
             Dimension columns first, then any remaining coordinates, then the
             variables.
 
-        Notes
+        Notes:
         -----
         Rows come out ordered by the dimension labels, so a round trip
         reproduces the source frame up to that ordering.
 
-        See Also
+        See Also:
         --------
         from_dataframe : the inverse conversion.
         """
@@ -1022,12 +1067,14 @@ class LabelledArray(ArithmeticMixin):
         if set(self._coords) != set(other._coords):
             return False
         if not all(
-            arrays_equal(value, other._coords[name]) for name, value in self._coords.items()
+            arrays_equal(value, other._coords[name])
+            for name, value in self._coords.items()
         ):
             return False
         return all(
             arrays_equal(
-                self._backend.to_numpy(value), other._backend.to_numpy(other._data[name])
+                self._backend.to_numpy(value),
+                other._backend.to_numpy(other._data[name]),
             )
             for name, value in self._data.items()
         )
@@ -1050,7 +1097,9 @@ class LabelledArray(ArithmeticMixin):
                 ) from None
         if isinstance(key, Mapping):
             return self.select(key)
-        if isinstance(key, (list, tuple)) and all(isinstance(name, str) for name in key):
+        if isinstance(key, (list, tuple)) and all(
+            isinstance(name, str) for name in key
+        ):
             missing = [name for name in key if name not in self._data]
             if missing:
                 raise KeyError(f"unknown variables: {missing}")
@@ -1109,7 +1158,8 @@ class LabelledArray(ArithmeticMixin):
         """Return the pickled state, recording the backend by name."""
         return {
             "data": {
-                name: self._backend.to_numpy(value) for name, value in self._data.items()
+                name: self._backend.to_numpy(value)
+                for name, value in self._data.items()
             },
             "dims": self._dims,
             "mask": self._mask,
@@ -1186,7 +1236,8 @@ class LabelledArray(ArithmeticMixin):
             width = max(len(name) for name in self._coords)
             lines.append("Coordinates:")
             lines.extend(
-                f"  {name:<{width}} {value.dtype}" for name, value in self._coords.items()
+                f"  {name:<{width}} {value.dtype}"
+                for name, value in self._coords.items()
             )
         if self._mask is not None:
             populated = int(self._mask.sum())
@@ -1215,5 +1266,7 @@ def _as_coord(name: str, value: Any, shape: tuple[int, ...]) -> np.ndarray:
     """Return coordinate ``value`` as a numpy array of ``shape``."""
     array = np.asarray(value)
     if array.shape != shape:
-        raise DimensionError(f"coordinate {name!r} has shape {array.shape}, expected {shape}")
+        raise DimensionError(
+            f"coordinate {name!r} has shape {array.shape}, expected {shape}"
+        )
     return array

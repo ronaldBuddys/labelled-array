@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from helpers import assert_frames_equal, build_both, build_frame, sort_frame
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
+from helpers import assert_frames_equal, build_both, build_frame, sort_frame
 from labelled_array import LabelledArray
 
 SETTINGS = settings(
@@ -20,7 +20,9 @@ SETTINGS = settings(
 LABELS = {
     "int": st.integers(min_value=-1000, max_value=1000),
     "str": st.text(alphabet="abcdefgxyz", min_size=1, max_size=4),
-    "float": st.floats(min_value=-1e6, max_value=1e6, allow_nan=False, allow_infinity=False),
+    "float": st.floats(
+        min_value=-1e6, max_value=1e6, allow_nan=False, allow_infinity=False
+    ),
 }
 
 #: Value column dtypes, all of which must survive a sparse round trip exactly.
@@ -48,7 +50,9 @@ def frames(draw, max_dims=3, max_variables=2):
     cells = [()]
     for labels in label_sets:
         cells = [cell + (label,) for cell in cells for label in labels]
-    rows = draw(st.lists(st.sampled_from(cells), min_size=1, max_size=len(cells), unique=True))
+    rows = draw(
+        st.lists(st.sampled_from(cells), min_size=1, max_size=len(cells), unique=True)
+    )
 
     data = {name: [row[axis] for row in rows] for axis, name in enumerate(dim_names)}
     n_variables = draw(st.integers(min_value=1, max_value=max_variables))
@@ -56,7 +60,9 @@ def frames(draw, max_dims=3, max_variables=2):
         dtype = np.dtype(draw(st.sampled_from(VALUE_DTYPES)))
         values = draw(
             st.lists(
-                st.booleans() if dtype.kind == "b" else st.integers(min_value=-100, max_value=100),
+                st.booleans()
+                if dtype.kind == "b"
+                else st.integers(min_value=-100, max_value=100),
                 min_size=len(rows),
                 max_size=len(rows),
             )
@@ -138,6 +144,7 @@ def test_transposing_twice_is_a_no_op(engine, frame):
 @given(frame=frames())
 def test_repr_round_trips(engine, frame):
     from numpy import array  # noqa: F401
+
     from labelled_array import Dimensions  # noqa: F401
 
     data, dim_names = frame

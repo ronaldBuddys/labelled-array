@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from helpers import build_frame, column, columns, n_rows
 
-from labelled_array import AdapterError, DimensionError, DuplicateIndexError, LabelledArray
+from helpers import build_frame, column, columns, n_rows
+from labelled_array import (
+    AdapterError,
+    DimensionError,
+    DuplicateIndexError,
+    LabelledArray,
+)
 from labelled_array.adapters import (
-    DataFrameAdapter,
     DEFAULT_ADAPTER,
+    DataFrameAdapter,
     PandasAdapter,
     available_adapters,
     get_adapter,
@@ -17,7 +22,6 @@ from labelled_array.adapters import (
     registered_adapters,
     resolve_adapter,
 )
-
 
 # -- registry -------------------------------------------------------------------
 
@@ -99,7 +103,9 @@ def test_column_values_are_numpy(engine, sales_data):
 
 def test_build_frame_round_trips_columns(engine):
     built = get_adapter(engine).build_frame(
-        {"a": np.array([1, 2]), "w": np.array([1.5, 2.5])}, index_names=["a"], index=False
+        {"a": np.array([1, 2]), "w": np.array([1.5, 2.5])},
+        index_names=["a"],
+        index=False,
     )
     assert columns(built) == ["a", "w"]
     assert column(built, "w").tolist() == [1.5, 2.5]
@@ -131,20 +137,26 @@ def test_labels_come_from_the_values_present_not_from_stale_categories(engine):
 
 
 def test_cols_default_to_every_non_dimension_column(engine, sales_data):
-    la = LabelledArray.from_dataframe(build_frame(engine, sales_data), dims=["region", "product"])
+    la = LabelledArray.from_dataframe(
+        build_frame(engine, sales_data), dims=["region", "product"]
+    )
     assert la.variables == ("units", "price")
 
 
 def test_cols_and_dims_accept_a_single_name(engine):
     data = {"region": ["north", "south"], "units": [10, 20], "price": [1.5, 2.5]}
-    la = LabelledArray.from_dataframe(build_frame(engine, data), cols="units", dims="region")
+    la = LabelledArray.from_dataframe(
+        build_frame(engine, data), cols="units", dims="region"
+    )
     assert la.variables == ("units",)
     assert la.dims.names == ("region",)
 
 
 def test_cols_order_is_respected(engine, sales_data):
     la = LabelledArray.from_dataframe(
-        build_frame(engine, sales_data), cols=["price", "units"], dims=["region", "product"]
+        build_frame(engine, sales_data),
+        cols=["price", "units"],
+        dims=["region", "product"],
     )
     assert la.variables == ("price", "units")
 
@@ -153,7 +165,9 @@ def test_dims_order_sets_the_axis_order(engine, sales_data):
     df = build_frame(engine, sales_data)
     la = LabelledArray.from_dataframe(df, dims=["product", "region"])
     assert la.shape == (3, 2)
-    transposed = LabelledArray.from_dataframe(df, dims=["region", "product"]).transpose()
+    transposed = LabelledArray.from_dataframe(
+        df, dims=["region", "product"]
+    ).transpose()
     assert la.equals(transposed)
 
 
@@ -184,7 +198,9 @@ def test_duplicate_rows_raise_with_a_useful_message(engine):
 
 def test_more_rows_than_a_zero_dimensional_array_can_hold(engine, sales_data):
     with pytest.raises(DuplicateIndexError, match="zero-dimensional"):
-        LabelledArray.from_dataframe(build_frame(engine, sales_data), cols=["units"], dims=[])
+        LabelledArray.from_dataframe(
+            build_frame(engine, sales_data), cols=["units"], dims=[]
+        )
 
 
 def test_fill_value_scalar_and_per_column(engine, sales_data):
@@ -205,7 +221,9 @@ def test_dtype_scalar_and_per_column(engine, sales_data):
     assert LabelledArray.from_dataframe(
         df, dims=["region", "product"], dtype="float32"
     ).dtypes == {"units": np.dtype("float32"), "price": np.dtype("float32")}
-    la = LabelledArray.from_dataframe(df, dims=["region", "product"], dtype={"units": "float64"})
+    la = LabelledArray.from_dataframe(
+        df, dims=["region", "product"], dtype={"units": "float64"}
+    )
     assert la.dtypes["units"] == np.dtype("float64")
     assert np.isnan(la["units"][1, 1]), "a float dtype gets a NaN fill"
 
@@ -228,7 +246,10 @@ def test_mask_false_omits_the_mask(engine, sales_data):
 
 def test_mask_is_dropped_when_every_cell_is_populated(engine):
     data = {"a": [1, 1, 2, 2], "b": ["x", "y", "x", "y"], "w": [1.0, 2.0, 3.0, 4.0]}
-    assert LabelledArray.from_dataframe(build_frame(engine, data), dims=["a", "b"]).mask is None
+    assert (
+        LabelledArray.from_dataframe(build_frame(engine, data), dims=["a", "b"]).mask
+        is None
+    )
 
 
 def test_attrs_and_backend_arguments(engine, sales_data, backend):
@@ -255,7 +276,9 @@ def test_from_dataframe_returns_the_subclass(engine, sales_data):
     class Sales(LabelledArray):
         pass
 
-    la = Sales.from_dataframe(build_frame(engine, sales_data), dims=["region", "product"])
+    la = Sales.from_dataframe(
+        build_frame(engine, sales_data), dims=["region", "product"]
+    )
     assert type(la) is Sales
 
 
@@ -311,7 +334,9 @@ def test_zero_dimensional(engine):
 
 
 def test_to_dataframe_emits_one_row_per_populated_cell(engine, sales_data):
-    la = LabelledArray.from_dataframe(build_frame(engine, sales_data), dims=["region", "product"])
+    la = LabelledArray.from_dataframe(
+        build_frame(engine, sales_data), dims=["region", "product"]
+    )
     out = la.to_dataframe(engine, index=False)
     assert n_rows(engine, out) == 4
     assert columns(out) == ["region", "product", "units", "price"]
@@ -350,7 +375,9 @@ def test_to_dataframe_rows_are_ordered_by_the_dimension_labels(engine):
 
 
 def test_to_dataframe_of_an_empty_selection(engine, sales_data):
-    la = LabelledArray.from_dataframe(build_frame(engine, sales_data), dims=["region", "product"])
+    la = LabelledArray.from_dataframe(
+        build_frame(engine, sales_data), dims=["region", "product"]
+    )
     assert n_rows(engine, la.isel(region=[]).to_dataframe(engine, index=False)) == 0
 
 

@@ -4,8 +4,15 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from helpers import assert_frames_equal, build_both, build_frame, column, columns, sort_frame
 
+from helpers import (
+    assert_frames_equal,
+    build_both,
+    build_frame,
+    column,
+    columns,
+    sort_frame,
+)
 from labelled_array import DimensionError, LabelledArray
 
 
@@ -80,47 +87,64 @@ def test_ragged_groups_use_the_largest_and_mask_the_rest(engine):
     """Groups of different length still fit, with the short ones masked."""
     data = {
         "A": [1, 1, 1, 2],
-        "date": np.array(["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"], "datetime64[D]"),
+        "date": np.array(
+            ["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"], "datetime64[D]"
+        ),
         "w": [1.0, 2.0, 3.0, 4.0],
     }
     df = build_frame(engine, data)
-    natural = LabelledArray.from_dataframe(df, cols=["w"], dims=["A", "date"], natural=["date"])
+    natural = LabelledArray.from_dataframe(
+        df, cols=["w"], dims=["A", "date"], natural=["date"]
+    )
     assert natural.shape == (2, 3)
     assert natural.mask.tolist() == [[True, True, True], [True, False, False]]
     assert_frames_equal(
-        engine, sort_frame(engine, df, ["A", "date"]), natural.to_dataframe(engine, index=False)
+        engine,
+        sort_frame(engine, df, ["A", "date"]),
+        natural.to_dataframe(engine, index=False),
     )
 
 
 def test_natural_index_numbers_rows_within_each_group(engine):
     data = {
         "A": [1, 1, 2, 2],
-        "date": np.array(["2024-01-02", "2024-01-01", "2024-03-01", "2024-02-01"], "datetime64[D]"),
+        "date": np.array(
+            ["2024-01-02", "2024-01-01", "2024-03-01", "2024-02-01"], "datetime64[D]"
+        ),
         "w": [1.0, 2.0, 3.0, 4.0],
     }
     natural = LabelledArray.from_dataframe(
         build_frame(engine, data), cols=["w"], dims=["A", "date"], natural=["date"]
     )
     assert natural.shape == (2, 2)
-    assert natural["w"].tolist() == [[2.0, 1.0], [4.0, 3.0]], "ordered by date within group"
+    assert natural["w"].tolist() == [[2.0, 1.0], [4.0, 3.0]], (
+        "ordered by date within group"
+    )
 
 
 def test_a_single_natural_dimension_becomes_a_global_rank(engine):
-    data = {"date": np.array(["2024-01-02", "2024-01-01"], "datetime64[D]"), "w": [1.0, 2.0]}
+    data = {
+        "date": np.array(["2024-01-02", "2024-01-01"], "datetime64[D]"),
+        "w": [1.0, 2.0],
+    }
     natural = LabelledArray.from_dataframe(
         build_frame(engine, data), cols=["w"], dims=["date"], natural=["date"]
     )
     assert natural.shape == (2,)
     assert natural["w"].tolist() == [2.0, 1.0]
     expected = np.array(["2024-01-01", "2024-01-02"], "datetime64[D]")
-    np.testing.assert_array_equal(natural.coords["date"], expected.astype(natural.coords["date"].dtype))
+    np.testing.assert_array_equal(
+        natural.coords["date"], expected.astype(natural.coords["date"].dtype)
+    )
 
 
 def test_several_natural_dimensions(engine):
     data = {
         "A": [1, 1, 2, 2],
         "b": ["p", "q", "r", "s"],
-        "date": np.array(["2024-01-01", "2024-01-02", "2024-02-01", "2024-02-02"], "datetime64[D]"),
+        "date": np.array(
+            ["2024-01-01", "2024-01-02", "2024-02-01", "2024-02-02"], "datetime64[D]"
+        ),
         "w": [1.0, 2.0, 3.0, 4.0],
     }
     df = build_frame(engine, data)
@@ -131,7 +155,9 @@ def test_several_natural_dimensions(engine):
     assert sorted(natural.coords) == ["b", "date"]
     assert natural.size < 4 * 4 * 4
     assert_frames_equal(
-        engine, sort_frame(engine, df, ["A", "b", "date"]), natural.to_dataframe(engine, index=False)
+        engine,
+        sort_frame(engine, df, ["A", "b", "date"]),
+        natural.to_dataframe(engine, index=False),
     )
 
 
@@ -178,7 +204,9 @@ def test_selection_takes_the_coordinate_along(engine, panel):
     assert selected.coords["date"].tolist() == natural.coords["date"][:1].tolist()
     assert_frames_equal(
         engine,
-        sort_frame(engine, build_frame(engine, {k: v[:4] for k, v in panel.items()}), DIMS),
+        sort_frame(
+            engine, build_frame(engine, {k: v[:4] for k, v in panel.items()}), DIMS
+        ),
         selected.to_dataframe(engine, index=False),
     )
 
@@ -186,10 +214,14 @@ def test_selection_takes_the_coordinate_along(engine, panel):
 def test_string_labels_can_be_made_natural(engine):
     data = {"A": [1, 1, 2], "tag": ["z", "y", "x"], "w": [1.0, 2.0, 3.0]}
     df = build_frame(engine, data)
-    natural = LabelledArray.from_dataframe(df, cols=["w"], dims=["A", "tag"], natural=["tag"])
+    natural = LabelledArray.from_dataframe(
+        df, cols=["w"], dims=["A", "tag"], natural=["tag"]
+    )
     assert natural.shape == (2, 2)
     assert_frames_equal(
-        engine, sort_frame(engine, df, ["A", "tag"]), natural.to_dataframe(engine, index=False)
+        engine,
+        sort_frame(engine, df, ["A", "tag"]),
+        natural.to_dataframe(engine, index=False),
     )
 
 
@@ -200,6 +232,7 @@ def test_engines_agree_on_natural_indices(panel):
 
 def test_repr_of_a_natural_array_round_trips(engine, panel):
     from numpy import array  # noqa: F401
+
     from labelled_array import Dimensions  # noqa: F401
 
     natural = LabelledArray.from_dataframe(
@@ -216,7 +249,9 @@ def test_renaming_keeps_the_natural_index_pointing_at_its_coordinate(engine, pan
     renamed_dim = natural.rename({"date_idx": "position"})
     assert renamed_dim.dims.source("position") == "date"
     assert_frames_equal(
-        engine, sort_frame(engine, df, DIMS), renamed_dim.to_dataframe(engine, index=False)
+        engine,
+        sort_frame(engine, df, DIMS),
+        renamed_dim.to_dataframe(engine, index=False),
     )
 
     renamed_coord = natural.rename({"date": "day"})

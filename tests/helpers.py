@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -16,7 +17,9 @@ def build_frame(engine: str, data: Mapping[str, Any]) -> Any:
     if engine == "polars":
         import polars as pl
 
-        return pl.DataFrame({name: pl.Series(name, values) for name, values in data.items()})
+        return pl.DataFrame(
+            {name: pl.Series(name, values) for name, values in data.items()}
+        )
     raise ValueError(f"unknown engine {engine!r}")
 
 

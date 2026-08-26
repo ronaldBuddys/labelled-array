@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from helpers import assert_frames_equal, build_frame, n_rows, sort_frame
 
-from labelled_array import DimensionError, LabelNotFoundError, LabelledArray
+from helpers import assert_frames_equal, build_frame, n_rows, sort_frame
+from labelled_array import DimensionError, LabelledArray, LabelNotFoundError
 
 
 @pytest.fixture
@@ -81,7 +81,9 @@ def test_chained_selections_match_a_single_call(cube):
 
 
 def test_selection_is_independent_of_dimension_order_in_the_mapping(cube):
-    assert cube.select({"b": ["y"], "a": [2]}).equals(cube.select({"a": [2], "b": ["y"]}))
+    assert cube.select({"b": ["y"], "a": [2]}).equals(
+        cube.select({"a": [2], "b": ["y"]})
+    )
 
 
 def test_empty_selection(cube):
@@ -135,7 +137,9 @@ def test_an_unknown_dimension_raises(cube):
 
 
 def test_a_repeated_label_raises(cube):
-    with pytest.raises(DimensionError, match="requested more than once for dimension 'b'"):
+    with pytest.raises(
+        DimensionError, match="requested more than once for dimension 'b'"
+    ):
         cube.select({"b": ["x", "x"]})
 
 
@@ -225,10 +229,18 @@ def test_a_selection_still_round_trips(engine, sales_data):
     df = build_frame(engine, sales_data)
     la = LabelledArray.from_dataframe(df, dims=["region", "product"])
     out = la.select({"region": "north"}).to_dataframe(engine, index=False)
-    expected = {name: [v for v, r in zip(values, sales_data["region"]) if r == "north"]
-                for name, values in sales_data.items()}
+    expected = {
+        name: [
+            v
+            for v, r in zip(values, sales_data["region"], strict=False)
+            if r == "north"
+        ]
+        for name, values in sales_data.items()
+    }
     assert_frames_equal(
-        engine, sort_frame(engine, build_frame(engine, expected), ["region", "product"]), out
+        engine,
+        sort_frame(engine, build_frame(engine, expected), ["region", "product"]),
+        out,
     )
 
 

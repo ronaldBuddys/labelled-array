@@ -9,7 +9,7 @@ records, and a NaN that is masked in is data.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
@@ -42,7 +42,7 @@ def identity(op: str, dtype: Any) -> Any:
     Zero for a sum, and the largest or smallest representable value for a
     minimum or a maximum, so the reduction itself has nothing to skip.
 
-    Raises
+    Raises:
     ------
     TypeError
         If the dtype has no such value: strings and objects cannot be reduced
@@ -97,7 +97,9 @@ def _reduce_coords(array: Any, axes: Sequence[int]) -> dict[str, np.ndarray]:
     reduced to an arbitrary cell.
     """
     axes = set(axes)
-    first = tuple(slice(0, 1) if axis in axes else slice(None) for axis in range(array.ndim))
+    first = tuple(
+        slice(0, 1) if axis in axes else slice(None) for axis in range(array.ndim)
+    )
     kept = {}
     for name, coord in array.coords.items():
         head = coord[first]
@@ -106,7 +108,9 @@ def _reduce_coords(array: Any, axes: Sequence[int]) -> dict[str, np.ndarray]:
     return kept
 
 
-def reduce(array: Any, op: str, dim: str | Sequence[str] | None = None, keepdims: bool = False):
+def reduce(
+    array: Any, op: str, dim: str | Sequence[str] | None = None, keepdims: bool = False
+):
     """Reduce ``array`` over the named dimensions. See :meth:`LabelledArray.reduce`."""
     _check_op(op)
     names = list(array.dims.names) if dim is None else as_name_list(dim)
@@ -150,7 +154,7 @@ def _restore(array: Any, reduced: Any, names: Sequence[str]):
     reduced_names = set(names)
     shape = tuple(
         1 if name in reduced_names else length
-        for name, length in zip(array.dims.names, array.shape)
+        for name, length in zip(array.dims.names, array.shape, strict=False)
     )
     labels = {
         name: array.dims[name][:1] if name in reduced_names else reduced.dims[name]
@@ -160,7 +164,9 @@ def _restore(array: Any, reduced: Any, names: Sequence[str]):
     backend = array.backend
     return reduced._replace(
         dims=dims,
-        data={name: backend.reshape(value, shape) for name, value in reduced.data.items()},
+        data={
+            name: backend.reshape(value, shape) for name, value in reduced.data.items()
+        },
         coords={name: coord.reshape(shape) for name, coord in reduced.coords.items()},
         mask=None if reduced.mask is None else reduced.mask.reshape(shape),
     )
@@ -175,7 +181,12 @@ def _coord_grouping(array: Any, name: str) -> tuple[np.ndarray, int]:
         if not arrays_equal(
             coord,
             np.broadcast_to(
-                coord[tuple(slice(0, 1) if a == axis else slice(None) for a in range(array.ndim))],
+                coord[
+                    tuple(
+                        slice(0, 1) if a == axis else slice(None)
+                        for a in range(array.ndim)
+                    )
+                ],
                 coord.shape,
             ),
         )
@@ -230,7 +241,10 @@ class GroupBy:
     def __iter__(self):
         """Iterate over ``(group value, sub-array)`` pairs."""
         for position, label in enumerate(self._labels.tolist()):
-            yield label, self._array.isel({self._dim: np.flatnonzero(self._codes == position)})
+            yield (
+                label,
+                self._array.isel({self._dim: np.flatnonzero(self._codes == position)}),
+            )
 
     def __repr__(self) -> str:
         return (
@@ -246,27 +260,32 @@ class GroupBy:
         op : {'sum', 'mean', 'min', 'max'}
             Reduction to apply within each group.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             The array with the grouping dimension relabelled by group value.
         """
         _check_op(op)
         pieces = []
-        for position, label in enumerate(self._labels):
+        for position, _label in enumerate(self._labels):
             positions = np.flatnonzero(self._codes == position)
             group = self._array.isel({self._dim: positions})
             reduced = reduce(group, op, [self._dim], keepdims=True)
             pieces.append(
                 reduced._replace(
-                    dims=reduced.dims.replace(self._dim, self._labels[position : position + 1],
-                                              natural=False)
+                    dims=reduced.dims.replace(
+                        self._dim, self._labels[position : position + 1], natural=False
+                    )
                 )
             )
         shared = set.intersection(*(set(piece.coords) for piece in pieces))
         pieces = [
             piece._replace(
-                coords={name: value for name, value in piece.coords.items() if name in shared}
+                coords={
+                    name: value
+                    for name, value in piece.coords.items()
+                    if name in shared
+                }
             )
             for piece in pieces
         ]
@@ -305,10 +324,14 @@ def groupby(array: Any, by: Any, dim: str | None = None) -> GroupBy:
                 f"{by!r} is a dimension, and its labels are unique, so grouping by them "
                 "would leave every group one entry long; pass the group of each label instead"
             )
-        raise DimensionError(f"unknown coordinate {by!r}, known: {sorted(array.coords)}")
+        raise DimensionError(
+            f"unknown coordinate {by!r}, known: {sorted(array.coords)}"
+        )
 
     if dim is None:
-        raise DimensionError("dim must be given when grouping by an array of group values")
+        raise DimensionError(
+            "dim must be given when grouping by an array of group values"
+        )
     array.dims._require([dim])
     values = as_1d(by, dim, "group values")
     if len(values) != len(array.dims[dim]):
@@ -328,7 +351,9 @@ class Rolling:
     coordinates of the array it came from.
     """
 
-    def __init__(self, array: Any, dim: str, window: int, min_periods: int | None = None) -> None:
+    def __init__(
+        self, array: Any, dim: str, window: int, min_periods: int | None = None
+    ) -> None:
         array.dims._require([dim])
         length = len(array.dims[dim])
         if window < 1 or window > length:
@@ -337,7 +362,9 @@ class Rolling:
                 f"({length}), got {window}"
             )
         if min_periods is not None and not 1 <= min_periods <= window:
-            raise ValueError(f"min_periods must be between 1 and {window}, got {min_periods}")
+            raise ValueError(
+                f"min_periods must be between 1 and {window}, got {min_periods}"
+            )
         self._array = array
         self._dim = dim
         self._window = window
@@ -373,7 +400,9 @@ class Rolling:
             return values
         shape = list(backend.shape(values))
         shape[axis] = self._window - 1
-        return backend.concatenate([backend.full(shape, fill, dtype), values], axis=axis)
+        return backend.concatenate(
+            [backend.full(shape, fill, dtype), values], axis=axis
+        )
 
     def reduce(self, op: str):
         """Reduce each trailing window.
@@ -383,7 +412,7 @@ class Rolling:
         op : {'sum', 'mean', 'min', 'max'}
             Reduction to apply within each window.
 
-        Returns
+        Returns:
         -------
         LabelledArray
             The array's shape and labels, with each cell holding the reduction
@@ -416,7 +445,9 @@ class Rolling:
 
         if enough.all():
             return array._replace(data=data, mask=None)
-        return array._replace(data=data, mask=np.broadcast_to(enough, array.shape).copy())
+        return array._replace(
+            data=data, mask=np.broadcast_to(enough, array.shape).copy()
+        )
 
     def sum(self):
         """Sum each window. See :meth:`reduce`."""
@@ -442,6 +473,8 @@ def _numpy_backend():
     return get_backend("numpy")
 
 
-def rolling(array: Any, dim: str, window: int, min_periods: int | None = None) -> Rolling:
+def rolling(
+    array: Any, dim: str, window: int, min_periods: int | None = None
+) -> Rolling:
     """Return trailing windows along ``dim``. See :meth:`LabelledArray.rolling`."""
     return Rolling(array, dim, window, min_periods=min_periods)

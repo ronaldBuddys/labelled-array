@@ -16,7 +16,7 @@ __all__ = ["TorchBackend"]
 class TorchBackend(ArrayBackend):
     """Backend for :class:`torch.Tensor`.
 
-    Notes
+    Notes:
     -----
     Torch has no string, object or datetime dtypes; :meth:`supports_dtype`
     reports what the installed torch build actually accepts, so conversion of an
@@ -75,7 +75,9 @@ class TorchBackend(ArrayBackend):
 
     def take(self, arr: Any, indices: np.ndarray, axis: int) -> Any:
         torch = self._torch
-        return torch.index_select(arr, axis, torch.as_tensor(np.asarray(indices, np.int64)))
+        return torch.index_select(
+            arr, axis, torch.as_tensor(np.asarray(indices, np.int64))
+        )
 
     def transpose(self, arr: Any, axes: Sequence[int]) -> Any:
         return arr.permute(tuple(axes)).contiguous()
@@ -85,7 +87,9 @@ class TorchBackend(ArrayBackend):
 
     def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> Any:
         torch_dtype = self._as_torch_dtype(dtype)
-        return self._torch.full(tuple(shape), np.asarray(fill_value).item(), dtype=torch_dtype)
+        return self._torch.full(
+            tuple(shape), np.asarray(fill_value).item(), dtype=torch_dtype
+        )
 
     def where(self, condition: np.ndarray, arr: Any, other: Any) -> Any:
         torch = self._torch
@@ -103,7 +107,11 @@ class TorchBackend(ArrayBackend):
     def reduce(self, arr: Any, op: str, axes: Sequence[int]) -> Any:
         if not axes:
             return arr
-        reduction = {"sum": self._torch.sum, "min": self._torch.amin, "max": self._torch.amax}[op]
+        reduction = {
+            "sum": self._torch.sum,
+            "min": self._torch.amin,
+            "max": self._torch.amax,
+        }[op]
         return reduction(arr, dim=tuple(axes))
 
     def sliding_window(self, arr: Any, axis: int, window: int) -> Any:

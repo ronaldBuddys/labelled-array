@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from helpers import build_both as _build_both, build_frame
 
+from helpers import build_both as _build_both
+from helpers import build_frame
 from labelled_array import LabelledArray
 
 DIMS = ["region", "product"]
@@ -23,7 +24,12 @@ DATASETS = {
         "units": [1, 2, 3, 4],
         "price": [1.5, 2.5, 3.5, 4.5],
     },
-    "single_row": {"region": ["north"], "product": ["AAA"], "units": [1], "price": [1.5]},
+    "single_row": {
+        "region": ["north"],
+        "product": ["AAA"],
+        "units": [1],
+        "price": [1.5],
+    },
     "numeric_labels": {
         "region": [2, 1, 1],
         "product": [20, 10, 20],
@@ -76,7 +82,9 @@ def test_engines_agree_on_variable_dtypes(dataset):
 
 
 def test_engines_agree_with_options(dataset):
-    from_pandas, from_polars = build_both(dataset, fill_value=-1, dtype="float64", mask=False)
+    from_pandas, from_polars = build_both(
+        dataset, fill_value=-1, dtype="float64", mask=False
+    )
     assert from_pandas.equals(from_polars)
 
 

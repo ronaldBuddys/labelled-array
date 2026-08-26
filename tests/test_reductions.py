@@ -88,7 +88,9 @@ def test_absent_cells_do_not_contribute(sales):
     array, frame = sales
     totals = array.sum("product")
     expected = frame.groupby("region")["units"].sum()
-    assert totals["units"].tolist() == expected.loc[array.dims["region"].tolist()].tolist()
+    assert (
+        totals["units"].tolist() == expected.loc[array.dims["region"].tolist()].tolist()
+    )
 
 
 @pytest.mark.parametrize("op", ["sum", "mean", "min", "max"])
@@ -226,7 +228,9 @@ def test_a_natural_index_coordinate_survives_a_reduction_over_the_other_dimensio
             "v": [1.0, 2.0, 3.0, 4.0],
         }
     )
-    array = LabelledArray.from_dataframe(panel, cols=["v"], dims=["g", "date"], natural=["date"])
+    array = LabelledArray.from_dataframe(
+        panel, cols=["v"], dims=["g", "date"], natural=["date"]
+    )
     reduced = array.sum("g")
     assert reduced.dims.names == ("date_idx",)
     assert reduced.coords["date"].tolist() == panel["date"].unique().tolist()

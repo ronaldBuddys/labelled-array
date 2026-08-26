@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
