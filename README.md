@@ -8,21 +8,25 @@ and hold their data on numpy, JAX or torch.
 import pandas as pd
 from labelled_array import LabelledArray
 
-df = pd.DataFrame({
-    "region":  ["north", "north", "south", "north"],
-    "product": ["AAA",   "BBB",   "AAA",   "CCC"],
-    "units":   [10, 20, 30, 40],
-    "price":   [1.5, 2.5, 3.5, 4.5],
-})
+df = pd.DataFrame(
+    {
+        "region": ["north", "north", "south", "north"],
+        "product": ["AAA", "BBB", "AAA", "CCC"],
+        "units": [10, 20, 30, 40],
+        "price": [1.5, 2.5, 3.5, 4.5],
+    }
+)
 
-sales = LabelledArray.from_dataframe(df, cols=["units", "price"], dims=["region", "product"])
+sales = LabelledArray.from_dataframe(
+    df, cols=["units", "price"], dims=["region", "product"]
+)
 
-sales.shape                          # (2, 3)
-sales.dims["product"].tolist()       # ['AAA', 'BBB', 'CCC']
-sales.density                        # 0.666...  -- ('south', 'BBB') has no row
-sales.select({"region": "north"})    # length-1 'region' dimension
-sales.select({"region": "north"}, drop=True)   # 'region' removed
-sales.to_dataframe(index=False)      # back to the original four rows
+sales.shape  # (2, 3)
+sales.dims["product"].tolist()  # ['AAA', 'BBB', 'CCC']
+sales.density  # 0.666...  -- ('south', 'BBB') has no row
+sales.select({"region": "north"})  # length-1 'region' dimension
+sales.select({"region": "north"}, drop=True)  # 'region' removed
+sales.to_dataframe(index=False)  # back to the original four rows
 ```
 
 ## What it is
@@ -55,9 +59,9 @@ or picking a sentinel, the array keeps the column's dtype, fills the gap with
 something the dtype can hold, and records the gap in a boolean mask:
 
 ```python
-sales["units"].dtype   # int64 -- not widened to float
-sales["units"][1, 1]   # 0     -- a placeholder, not data
-sales.mask[1, 1]       # False -- this is what says the cell is empty
+sales["units"].dtype  # int64 -- not widened to float
+sales["units"][1, 1]  # 0     -- a placeholder, not data
+sales.mask[1, 1]  # False -- this is what says the cell is empty
 ```
 
 `to_dataframe` emits only the masked-in cells, which is why `int`, `bool`,
@@ -74,8 +78,9 @@ so the round trip still returns the original column:
 LabelledArray.from_dataframe(panel, cols=["value"], dims=["group", "item", "date"])
 # shape (3, 4, 12), 8% populated
 
-LabelledArray.from_dataframe(panel, cols=["value"], dims=["group", "item", "date"],
-                             natural=["date"])
+LabelledArray.from_dataframe(
+    panel, cols=["value"], dims=["group", "item", "date"], natural=["date"]
+)
 # shape (3, 4, 1), 100% populated, dims ('group', 'item', 'date_idx')
 ```
 
@@ -88,18 +93,20 @@ is: a cell with no source row does not contribute, and a result with nothing
 behind it is filled and marked absent rather than being invented.
 
 ```python
-book.sum("date")                              # sum / mean / min / max over named dimensions
-book.groupby(sectors, dim="asset").mean()     # or groupby("sector"), a coordinate per label
-book.rolling("date_idx", 20).mean()           # trailing windows; min_periods= for partial ones
+book.sum("date")  # sum / mean / min / max over named dimensions
+book.groupby(
+    sectors, dim="asset"
+).mean()  # or groupby("sector"), a coordinate per label
+book.rolling("date_idx", 20).mean()  # trailing windows; min_periods= for partial ones
 ```
 
 Combining two arrays is a question about their labels first:
 
 ```python
-book.reindex(date=week)                       # onto another label set, filling what is new
-book.fillna(0.0)                              # fill the absent cells and drop the mask
-book.align(other, join="outer")               # one label set per shared dimension
-book - other                                  # arithmetic aligns on its own (inner join)
+book.reindex(date=week)  # onto another label set, filling what is new
+book.fillna(0.0)  # fill the absent cells and drop the mask
+book.align(other, join="outer")  # one label set per shared dimension
+book - other  # arithmetic aligns on its own (inner join)
 LabelledArray.concat([jan, feb], dim="date")  # extend a dimension, or stack a new one
 ```
 
@@ -168,7 +175,8 @@ class FinancialArray(LabelledArray):
         if "date" not in self.dims:
             raise DimensionError("a FinancialArray needs a 'date' dimension")
 
-book.select({"ticker": "AAA"})   # still a FinancialArray
+
+book.select({"ticker": "AAA"})  # still a FinancialArray
 ```
 
 See `examples/06_subclassing.py`, and `register_backend` / `register_adapter`
@@ -191,3 +199,7 @@ pytest --cov=labelled_array --cov-report=term-missing
 frame — what dominates `from_dataframe`, what a `select` costs, what the
 operations above cost, and what sparsity costs in memory rather than in time.
 Set `LABELLED_ARRAY_SCALE=2` to run it on four times the cells.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
