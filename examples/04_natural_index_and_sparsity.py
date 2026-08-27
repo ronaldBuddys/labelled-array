@@ -165,8 +165,9 @@ assert held.base.nbytes == tau.nbytes
 # ----------------------------------------------------------
 # A broadcast coordinate is a zero-stride view, so it is read-only -- writing
 # through one would update every cell sharing the element. It survives
-# ``transpose``, ``copy`` and ``equals`` compactly, but the first ``select`` or
-# ``reindex`` fancy-indexes it and numpy materialises the full array there.
+# ``transpose``, ``copy(deep=False)`` and ``equals`` compactly, but the first
+# ``select`` or ``reindex`` fancy-indexes it -- and a deep ``copy()``, the
+# default, copies it -- and numpy materialises the full array there.
 
 assert chain.coords["time_to_expiry"].flags.writeable is False
 assert (

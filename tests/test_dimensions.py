@@ -463,8 +463,17 @@ def test_equality_compares_the_alternatives():
 
 
 def test_repr_round_trips_with_an_alternative():
-    dims = Dimensions({"a": [1, 2]}, natural=["a"], alt={"g": ("a", ["x", "y"])})
+    dims = Dimensions(
+        {"a": [1, 2], "n": [0, 1]}, natural=["n"], alt={"g": ("a", ["x", "y"])}
+    )
     assert eval(repr(dims)) == dims
+
+
+def test_an_alternative_cannot_be_tied_to_a_natural_index():
+    # from_dataframe already refused this; the constructor now agrees, so an
+    # object that could not round-trip cannot be built either way.
+    with pytest.raises(DimensionError, match="cannot be tied to a natural index"):
+        Dimensions({"a": [0, 1]}, natural={"a": "date"}, alt={"g": ("a", ["x", "y"])})
 
 
 def test_str_flags_an_alternative():

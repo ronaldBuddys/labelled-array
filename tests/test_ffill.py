@@ -146,3 +146,26 @@ def test_the_staleness_recipe_reports_how_old_each_carried_curve_is(backend):
     assert np.isnat(ages[0]), "nothing precedes the first date"
     assert ages[1:].astype("timedelta64[D]").astype(int).tolist() == [0, 1, 2, 0]
     assert filled.mask[:, 0].tolist() == [False, True, True, True, True]
+
+
+def test_a_natural_index_dimension_is_refused():
+    # The padding cells of a natural axis were never rows. Filling them would
+    # give each the label of its source, and the result could not round-trip:
+    # from_dataframe would refuse the duplicate (grp, d) rows.
+    import pandas as pd
+
+    df = pd.DataFrame(
+        {
+            "grp": ["a", "a", "a", "b"],
+            "d": pd.to_datetime(
+                ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-01"]
+            ),
+            "v": [1.0, 2.0, 3.0, 4.0],
+        }
+    )
+    la = LabelledArray.from_dataframe(df, cols=["v"], dims=["grp", "d"], natural="d")
+    assert la.dims.source("d_idx") == "d"
+    with pytest.raises(DimensionError, match="natural index standing in for 'd'"):
+        la.ffill("d_idx")
+    # The real dimension is still fillable.
+    assert la.ffill("grp").mask.all()

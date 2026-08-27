@@ -12,6 +12,8 @@ from typing import Any
 
 import numpy as np
 
+from labelled_array.exceptions import DimensionError
+
 __all__ = ["ffill"]
 
 
@@ -28,6 +30,18 @@ def ffill(array: Any, dim: str, limit: int | None = None) -> Any:
     See :meth:`~labelled_array.LabelledArray.ffill`.
     """
     array.dims._require([dim])
+    source_dim = array.dims.source(dim)
+    if source_dim is not None:
+        # A natural index stands in for a coordinate, and the fill gathers
+        # coordinates along with values: the padding cells it would populate
+        # were never rows, and each would come back carrying its source's
+        # label. That is a frame from_dataframe refuses as duplicate rows.
+        raise DimensionError(
+            f"cannot ffill along {dim!r}: it is a natural index standing in for "
+            f"{source_dim!r}, so filled cells would repeat {source_dim!r} labels "
+            f"and the result could not round-trip through to_dataframe. Fill "
+            f"along a real dimension, or build the array without natural="
+        )
     if limit is not None and limit < 1:
         raise ValueError(f"limit must be at least 1, got {limit}")
     if array.mask is None:

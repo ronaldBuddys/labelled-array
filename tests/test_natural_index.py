@@ -13,7 +13,7 @@ from helpers import (
     columns,
     sort_frame,
 )
-from labelled_array import DimensionError, LabelledArray
+from labelled_array import DimensionError, DuplicateIndexError, LabelledArray
 
 
 @pytest.fixture
@@ -276,3 +276,63 @@ def test_a_natural_dimension_without_a_coordinate_writes_out_its_index(engine, p
         "date_idx",
         "w",
     ]
+
+
+def test_labels_repeating_within_a_group_are_refused(engine):
+    # A long option chain: one row per strike, so the expiry repeats within a
+    # trade date. Making *both* axes natural -- the surface shape -- groups the
+    # expiry by trade_date alone, where it repeats once per strike. The index
+    # counts rows, not distinct labels, so it would number every strike as its
+    # own expiry: a plausible, wrong ladder of six rungs instead of two.
+    chain = {
+        "trade_date": ["2024-06-03"] * 6,
+        "expiry": ["2024-06-21"] * 3 + ["2024-07-19"] * 3,
+        "strike": [90.0, 100.0, 110.0] * 2,
+        "vol": [0.2, 0.19, 0.21, 0.22, 0.2, 0.23],
+    }
+    df = build_frame(engine, chain)
+    dims = ["trade_date", "expiry", "strike"]
+    with pytest.raises(DuplicateIndexError, match="natural index 'expiry'") as info:
+        LabelledArray.from_dataframe(
+            df, cols=["vol"], dims=dims, natural=["expiry", "strike"]
+        )
+    message = str(info.value)
+    assert "unique within ['trade_date']" in message
+    assert "2024-06-21" in message
+
+    # Declared the other way round, the strike is the one grouped by trade_date
+    # alone, and it repeats too.
+    with pytest.raises(DuplicateIndexError, match="natural index 'strike'"):
+        LabelledArray.from_dataframe(
+            df, cols=["vol"], dims=dims, natural=["strike", "expiry"]
+        )
+
+    # One natural axis is fine: the expiry is unique within (trade_date, strike)
+    # and the strike within (trade_date, expiry), so either builds alone.
+    one = LabelledArray.from_dataframe(df, cols=["vol"], dims=dims, natural=["expiry"])
+    assert one.shape == (1, 2, 3)
+    other = LabelledArray.from_dataframe(
+        df, cols=["vol"], dims=dims, natural=["strike"]
+    )
+    assert other.shape == (1, 2, 3)
+
+
+def test_a_forward_ladder_is_unique_per_group_and_builds(engine):
+    # One row per (trade_date, expiry): the shape a forward curve has.
+    ladder = {
+        "trade_date": ["2024-06-03", "2024-06-03", "2024-06-04"],
+        "expiry": ["2024-06-21", "2024-07-19", "2024-06-21"],
+        "fwd": [100.0, 101.0, 100.5],
+    }
+    df = build_frame(engine, ladder)
+    array = LabelledArray.from_dataframe(
+        df, cols=["fwd"], dims=["trade_date", "expiry"], natural=["expiry"]
+    )
+    assert array.shape == (2, 2)
+    assert array.mask.sum() == 3
+
+
+def test_repeated_labels_with_no_grouping_dimension_are_refused(engine):
+    df = build_frame(engine, {"d": [1, 1, 2], "v": [1.0, 2.0, 3.0]})
+    with pytest.raises(DuplicateIndexError, match="natural index 'd'"):
+        LabelledArray.from_dataframe(df, cols=["v"], dims=["d"], natural=["d"])

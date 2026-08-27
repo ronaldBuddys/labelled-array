@@ -21,7 +21,7 @@ from labelled_array._reshape import (
 from labelled_array._utils import as_name_list, is_null, per_name
 from labelled_array.adapters import DataFrameAdapter, get_adapter, resolve_adapter
 from labelled_array.dimensions import Dimensions
-from labelled_array.exceptions import DimensionError
+from labelled_array.exceptions import DimensionError, DuplicateIndexError
 
 __all__ = ["from_dataframe", "to_dataframe"]
 
@@ -56,13 +56,59 @@ def _natural_codes(
     non-natural dimension plus the natural dimensions declared before it, so
     where a dimension sits in the axis order does not affect the result.
     """
-    grouping = [factorized[name][1] for name in dim_names if name not in natural_names]
+    grouping_names = [name for name in dim_names if name not in natural_names]
+    grouping = [factorized[name][1] for name in grouping_names]
     indices = {}
     for name in natural_names:
         codes = factorized[name][1]
+        _check_natural_unique(name, grouping_names, grouping, codes, factorized)
         indices[name] = natural_index([*grouping, codes])
         grouping.append(codes)
+        grouping_names.append(name)
     return indices
+
+
+def _check_natural_unique(
+    name: str,
+    grouping_names: Sequence[str],
+    grouping: Sequence[np.ndarray],
+    codes: np.ndarray,
+    factorized: Mapping[str, tuple[np.ndarray, np.ndarray]],
+) -> None:
+    """Refuse a natural index whose labels repeat within a group.
+
+    :func:`~labelled_array._reshape.natural_index` numbers *rows*, so a label
+    seen twice in one group would get two positions and the coordinate the
+    index stands in for would carry that label twice. That is not a slower
+    answer, it is a wrong one -- a ladder with more rungs than there are
+    labels -- so it is refused the same way a duplicate cell is.
+    """
+    if codes.size < 2:
+        return
+    stacked = np.stack([*grouping, codes]) if grouping else codes[None, :]
+    order = np.lexsort(stacked[::-1])
+    ordered = stacked[:, order]
+    repeated = np.all(ordered[:, 1:] == ordered[:, :-1], axis=0)
+    if not repeated.any():
+        return
+    rows = order[1:][repeated]
+    seen: list[dict[str, Any]] = []
+    for row in rows.tolist():
+        example = {
+            group: factorized[group][0][factorized[group][1][row]]
+            for group in grouping_names
+        }
+        example[name] = factorized[name][0][codes[row]]
+        if example not in seen:
+            seen.append(example)
+        if len(seen) == 5:
+            break
+    within = f" within {list(grouping_names)}" if grouping_names else ""
+    raise DuplicateIndexError(
+        f"natural index {name!r} needs labels that are unique{within}: "
+        f"{int(repeated.sum())} row(s) repeat a label and would be numbered as "
+        f"separate positions. First offending rows: {seen}"
+    )
 
 
 def _alt_labels(
@@ -78,6 +124,13 @@ def _alt_labels(
     saying two different things about one entry has no single description to
     fold in, and is refused rather than having one of them picked for it.
     """
+    if is_null(values).any():
+        # Checked before constancy: NaN != NaN, so a null column would otherwise
+        # be reported as "not constant", which names the wrong problem.
+        raise DimensionError(
+            f"labels for alternative dimension {name!r} must not be null: a null "
+            f"label can never be selected, as it does not compare equal to itself"
+        )
     labels = np.empty(len(ref_labels), dtype=values.dtype)
     # Scatter keeps the last row per entry; any row disagreeing with the winner
     # means the column is not constant within that entry.

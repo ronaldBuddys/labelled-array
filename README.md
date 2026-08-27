@@ -95,9 +95,10 @@ Two things follow, and are limitations rather than bugs:
 - **A stored coordinate is read-only.** A broadcast one has a zero stride, and
   one assignment through it would silently update every cell sharing the
   underlying element.
-- **The saving ends at the first slice.** `select`, `isel` and `reindex` fancy-
-  index the view, and numpy materialises the full array there. The saving is
-  real at construction and through `transpose`, `copy`, `equals` and `repr`.
+- **The saving ends at the first slice, or the first deep copy.** `select`,
+  `isel` and `reindex` fancy-index the view, and numpy materialises the full
+  array there; so does `copy()` (the default is deep). The saving is real at
+  construction and through `transpose`, `copy(deep=False)`, `equals` and `repr`.
 
 Variables are not extended this way: they live on a backend, and arithmetic and
 `__setitem__` write to them. Call `np.broadcast_to(...).copy()` yourself if you
@@ -261,6 +262,18 @@ Beyond dtypes:
   building an array with a label you cannot reach.
 - **Duplicate rows are refused.** Two rows for one cell are ambiguous;
   `DuplicateIndexError` names the offending labels.
+- **A natural index needs labels unique within the other dimensions.** The
+  index counts rows, not distinct labels, so `natural="expiry"` on a long
+  option chain (one row per strike, expiries repeating) would number every
+  strike as its own expiry. `from_dataframe` raises `DuplicateIndexError`
+  rather than build that ladder.
+- **`ffill` refuses a natural-index dimension.** The padding cells it would
+  fill were never rows, and each would carry its source's label, so the
+  result could not come back through `from_dataframe`. Fill along a real
+  dimension instead.
+- **Stored coordinates are read-only.** `array.coords["x"][...] = value`
+  raises; build a new coordinate and `_replace` it, or write to your own array
+  before passing it in.
 - **JAX narrows 64-bit dtypes to 32-bit** unless `jax_enable_x64` is set, and
   neither JAX nor torch can hold strings, objects or datetimes.
 - **An explicit fixed-width string dtype truncates** (`dtype="<U3"`); the
