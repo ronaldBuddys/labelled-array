@@ -380,3 +380,104 @@ def test_get_indexer_on_a_datetime_dimension_with_an_uncastable_label():
     with pytest.raises(LabelNotFoundError):
         dims.get_indexer("d", ["not-a-date"])
     assert dims.get_indexer("d", ["not-a-date"], missing="ignore").tolist() == []
+
+
+# -- alternative dimensions -----------------------------------------------------
+
+
+def test_alternative_labels_may_repeat_where_a_dimension_may_not():
+    dims = Dimensions({"a": [1, 2, 3]}, alt={"g": ("a", ["x", "x", "y"])})
+    assert dims.alt["g"].tolist() == ["x", "x", "y"]
+    with pytest.raises(DimensionError, match="must be unique"):
+        Dimensions({"a": ["x", "x", "y"]})
+
+
+def test_alt_indexer_orders_by_request_and_ascends_within_a_label():
+    dims = Dimensions({"a": [1, 2, 3, 4]}, alt={"g": ("a", ["x", "y", "x", "y"])})
+    assert dims.alt_indexer("g", ["y", "x"]).tolist() == [1, 3, 0, 2]
+
+
+def test_alt_indexer_honours_the_missing_mode():
+    dims = Dimensions({"a": [1, 2]}, alt={"g": ("a", ["x", "y"])})
+    with pytest.raises(LabelNotFoundError, match="'g'"):
+        dims.alt_indexer("g", "z")
+    assert dims.alt_indexer("g", ["z", "y"], missing="ignore").tolist() == [1]
+    with pytest.raises(ValueError, match="missing must be one of"):
+        dims.alt_indexer("g", "x", missing="drop")
+
+
+def test_alt_indexer_matches_a_datetime_label_across_units():
+    dims = Dimensions(
+        {"a": [1, 2]},
+        alt={
+            "g": ("a", np.array(["2020-01-01", "2020-01-01"], dtype="datetime64[ns]"))
+        },
+    )
+    assert dims.alt_indexer("g", np.datetime64("2020-01-01", "D")).tolist() == [0, 1]
+
+
+def test_subset_carries_the_alternative_labels():
+    dims = Dimensions({"a": [1, 2, 3]}, alt={"g": ("a", ["x", "y", "z"])})
+    assert dims.subset({"a": np.array([2, 0])}).alt["g"].tolist() == ["z", "x"]
+
+
+def test_a_subset_alternative_stays_read_only():
+    dims = Dimensions({"a": [1, 2, 3]}, alt={"g": ("a", ["x", "y", "z"])})
+    with pytest.raises(ValueError):
+        dims.subset({"a": np.array([0])}).alt["g"][0] = "q"
+
+
+def test_drop_removes_the_alternatives_of_the_dropped_dimension():
+    dims = Dimensions(
+        {"a": [1, 2], "b": [3, 4]},
+        alt={"g": ("a", ["x", "y"]), "h": ("b", ["p", "q"])},
+    )
+    assert set(dims.drop("a").alt) == {"h"}
+
+
+def test_transpose_leaves_the_alternatives_alone():
+    dims = Dimensions({"a": [1, 2], "b": [3, 4]}, alt={"g": ("a", ["x", "y"])})
+    flipped = dims.transpose(["b", "a"])
+    assert flipped.alt["g"].tolist() == ["x", "y"]
+    assert flipped.alt_ref("g") == "a"
+
+
+def test_rename_remaps_both_the_alternative_and_its_dimension():
+    dims = Dimensions({"a": [1, 2]}, alt={"g": ("a", ["x", "y"])})
+    renamed = dims.rename({"a": "asset", "g": "group"})
+    assert renamed.alt_ref("group") == "asset"
+
+
+def test_renaming_an_alternative_onto_a_dimension_raises():
+    dims = Dimensions({"a": [1, 2], "b": [3, 4]}, alt={"g": ("a", ["x", "y"])})
+    with pytest.raises(DimensionError, match="unique after renaming"):
+        dims.rename({"g": "b"})
+
+
+def test_equality_compares_the_alternatives():
+    plain = Dimensions({"a": [1, 2]})
+    tagged = Dimensions({"a": [1, 2]}, alt={"g": ("a", ["x", "y"])})
+    assert plain != tagged
+    assert tagged != Dimensions({"a": [1, 2]}, alt={"g": ("a", ["x", "z"])})
+    assert tagged == Dimensions({"a": [1, 2]}, alt={"g": ("a", ["x", "y"])})
+
+
+def test_repr_round_trips_with_an_alternative():
+    dims = Dimensions({"a": [1, 2]}, natural=["a"], alt={"g": ("a", ["x", "y"])})
+    assert eval(repr(dims)) == dims
+
+
+def test_str_flags_an_alternative():
+    text = str(Dimensions({"a": [1, 2]}, alt={"g": ("a", ["x", "y"])}))
+    assert "[alt for 'a']" in text
+
+
+def test_drop_alt_removes_only_the_named_alternatives():
+    dims = Dimensions(
+        {"a": [1, 2], "b": [3, 4]},
+        alt={"g": ("a", ["x", "y"]), "h": ("b", ["p", "q"])},
+    )
+    assert set(dims.drop_alt("g").alt) == {"h"}
+    assert set(dims.drop_alt(["g", "h"]).alt) == set()
+    with pytest.raises(DimensionError, match="unknown alternative dimensions"):
+        dims.drop_alt("nope")

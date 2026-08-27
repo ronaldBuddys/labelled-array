@@ -160,7 +160,15 @@ def _restore(array: Any, reduced: Any, names: Sequence[str]):
         name: array.dims[name][:1] if name in reduced_names else reduced.dims[name]
         for name in array.dims.names
     }
-    dims = type(array.dims)(labels, natural=array.dims.natural)
+    # The reduced dimensions come back one entry long, so an alternative
+    # dimension on one of them no longer describes anything; only those on the
+    # surviving dimensions are restored.
+    alt = {
+        name: (array.dims.alt_ref(name), values)
+        for name, values in array.dims.alt.items()
+        if array.dims.alt_ref(name) not in reduced_names
+    }
+    dims = type(array.dims)(labels, natural=array.dims.natural, alt=alt)
     backend = array.backend
     return reduced._replace(
         dims=dims,
@@ -311,6 +319,16 @@ class GroupBy:
 def groupby(array: Any, by: Any, dim: str | None = None) -> GroupBy:
     """Group one dimension. See :meth:`LabelledArray.groupby`."""
     if isinstance(by, str):
+        if array.dims.is_alt(by):
+            # An alternative dimension already holds one value per label of the
+            # dimension it describes, which is exactly what a grouping is. No
+            # shape analysis is needed, unlike a coordinate given at full shape.
+            found = array.dims.alt_ref(by)
+            if dim is not None and dim != found:
+                raise DimensionError(
+                    f"alternative dimension {by!r} describes {found!r}, not {dim!r}"
+                )
+            return GroupBy(array, found, array.dims.alt[by])
         if by in array.coords:
             values, axis = _coord_grouping(array, by)
             found = array.dims.names[axis]
@@ -325,7 +343,8 @@ def groupby(array: Any, by: Any, dim: str | None = None) -> GroupBy:
                 "would leave every group one entry long; pass the group of each label instead"
             )
         raise DimensionError(
-            f"unknown coordinate {by!r}, known: {sorted(array.coords)}"
+            f"unknown coordinate or alternative dimension {by!r}, known: "
+            f"{sorted([*array.coords, *array.dims.alt])}"
         )
 
     if dim is None:
