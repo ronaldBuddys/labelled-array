@@ -10,7 +10,7 @@ from typing import Any
 
 import numpy as np
 
-from labelled_array import _align, _convert, _ops
+from labelled_array import _align, _convert, _fill, _ops
 from labelled_array._arithmetic import ArithmeticMixin
 from labelled_array._utils import (
     array_repr,
@@ -760,6 +760,83 @@ class LabelledArray(ArithmeticMixin):
         filled_all = all(values[name] is not None for name in self.variables)
         return self._replace(data=data, mask=None if filled_all else self._mask)
 
+    def ffill(self, dim: str, limit: int | None = None):
+        """Return the array with the last present position carried forward along ``dim``.
+
+        A cell the mask marks absent takes the value of the nearest present
+        cell before it along ``dim``, in label order, and becomes present
+        itself. Filled cells have to become present: were they left absent,
+        :meth:`to_dataframe` would drop the very rows the fill was performed to
+        create.
+
+        The fill is over the mask, not over NaN. A masked-in NaN is a real
+        observation of nothing and is left alone, as everywhere else here.
+
+        Parameters
+        ----------
+        dim : str
+            Dimension to carry along.
+        limit : int, optional
+            Carry at most this many positions past a present cell. Cells
+            further than that stay absent. Unlimited by default.
+
+        Returns:
+        -------
+        LabelledArray
+            An instance of this class with the same dimensions and labels.
+            Cells before the first present position along ``dim`` are
+            untouched, and stay absent at their fill value. An array with no
+            mask is fully populated, so it comes back unchanged.
+
+        Raises:
+        ------
+        DimensionError
+            If ``dim`` is not a dimension of this array.
+        ValueError
+            If ``limit`` is less than 1.
+
+        Notes:
+        -----
+        Variables, coordinates and the mask are gathered together, so a filled
+        cell's coordinates name the cell its value came from rather than
+        itself. That is usually what you want -- it is what says how stale the
+        carried value is -- but it does mean a coordinate varying along ``dim``
+        no longer matches that dimension's label at a filled cell.
+
+        The age of a carried value needs no new concept: take the mask before
+        the fill, derive the age from it, and store it as a coordinate, which
+        costs nothing because the age varies along ``dim`` alone::
+
+            present = curve.mask.any(axis=-1)
+            pos = np.arange(len(dates))
+            last = np.maximum.accumulate(np.where(present, pos, -1))
+            age = np.where(last >= 0, dates - dates[last], np.timedelta64("NaT"))
+            curve = curve.ffill("date")._replace(
+                coords={**curve.coords, "fill_age": age[:, None]}
+            )
+
+        ``examples/09_ffill_and_staleness.py`` works this through end to end.
+
+        Examples:
+        --------
+        >>> import numpy as np
+        >>> la = LabelledArray(
+        ...     {"w": np.array([1.0, 0.0, 0.0])},
+        ...     {"b": ["x", "y", "z"]},
+        ...     mask=np.array([True, False, False]),
+        ... )
+        >>> la.ffill("b")["w"].tolist()
+        [1.0, 1.0, 1.0]
+        >>> la.ffill("b", limit=1).mask.tolist()
+        [True, True, False]
+
+        See Also:
+        --------
+        fillna : fill every absent cell with one value and drop the mask.
+        reindex : put the array on another label set, marking what is new absent.
+        """
+        return _fill.ffill(self, dim, limit)
+
     # -- reductions ----------------------------------------------------------------
 
     def reduce(self, op: str, dim: str | Sequence[str] | None = None):
@@ -1263,10 +1340,29 @@ def _as_mask(mask: Any, shape: tuple[int, ...]) -> np.ndarray | None:
 
 
 def _as_coord(name: str, value: Any, shape: tuple[int, ...]) -> np.ndarray:
-    """Return coordinate ``value`` as a numpy array of ``shape``."""
+    """Return coordinate ``value`` as a read-only numpy array of ``shape``.
+
+    A coordinate that does not vary along every dimension may be given at any
+    broadcastable shape -- ``(n, 1)`` against ``(n, m)``, or ``(m,)`` against
+    the trailing axis. It is stored broadcast, so every consumer still reads a
+    full-shape array, but the values behind it are held once.
+
+    Notes:
+    -----
+    The result is frozen through a fresh view rather than in place, so freezing
+    it does not make the caller's own array read-only. It has to be frozen: a
+    broadcast coordinate has a zero stride, and one assignment through it would
+    silently update every cell sharing the underlying element.
+    """
     array = np.asarray(value)
     if array.shape != shape:
-        raise DimensionError(
-            f"coordinate {name!r} has shape {array.shape}, expected {shape}"
-        )
+        try:
+            array = np.broadcast_to(array, shape)
+        except ValueError as exc:
+            raise DimensionError(
+                f"coordinate {name!r} has shape {array.shape}, "
+                f"which is not broadcastable to {shape}"
+            ) from exc
+    array = array.view()
+    array.flags.writeable = False
     return array

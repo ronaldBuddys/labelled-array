@@ -85,6 +85,16 @@ class TorchBackend(ArrayBackend):
     def reshape(self, arr: Any, shape: Sequence[int]) -> Any:
         return arr.reshape(tuple(shape))
 
+    def take_along_axis(self, arr: Any, indices: np.ndarray, axis: int) -> Any:
+        """Gather per cell; ``gather`` needs a contiguous int64 index of equal rank."""
+        index = np.ascontiguousarray(indices, np.int64)
+        if not index.flags.writeable:
+            # as_tensor would share memory with a read-only buffer, which torch
+            # warns about and cannot safely write to. An index derived from the
+            # presence mask is read-only exactly this way.
+            index = index.copy()
+        return self._torch.gather(arr, axis, self._torch.as_tensor(index))
+
     def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> Any:
         torch_dtype = self._as_torch_dtype(dtype)
         return self._torch.full(

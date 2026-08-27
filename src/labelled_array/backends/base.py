@@ -98,6 +98,28 @@ class ArrayBackend(Plugin):
             arr = self.take(arr, indices, axis)
         return arr
 
+    def take_along_axis(self, arr: Any, indices: np.ndarray, axis: int) -> Any:
+        """Return the entry of ``arr`` that each cell of ``indices`` names.
+
+        Parameters
+        ----------
+        arr : array
+            Array to gather from.
+        indices : ndarray of int
+            One index per cell, into ``axis``. Numpy, full-rank and the same
+            shape as ``arr`` -- which is the contract all three libraries
+            agree on, and what a per-cell gather such as a forward fill needs.
+        axis : int
+            Axis the indices address.
+
+        Notes:
+        -----
+        The default goes through numpy. A backend with a native per-cell
+        gather -- ``jnp.take_along_axis``, torch's ``gather`` -- should
+        override this.
+        """
+        return self.asarray(np.take_along_axis(self.to_numpy(arr), indices, axis))
+
     def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> Any:
         """Return a new array of ``shape`` filled with ``fill_value``."""
         return self.asarray(np.full(tuple(shape), fill_value, dtype=np.dtype(dtype)))

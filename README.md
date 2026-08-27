@@ -38,7 +38,7 @@ A `LabelledArray` holds:
 | **variables** | one or more equally shaped arrays | the array backend |
 | **dims** | ordered name → unique labels, one per axis | always numpy |
 | **mask** | bool array, True where a source row existed | always numpy |
-| **coords** | full-shape labels a natural index stands in for | always numpy |
+| **coords** | full-shape labels a natural index stands in for; given at any broadcastable shape | always numpy |
 | **attrs** | free-form metadata | plain dict |
 
 Dimension, variable and coordinate names share one namespace, because a
@@ -66,6 +66,39 @@ sales.mask[1, 1]  # False -- this is what says the cell is empty
 
 `to_dataframe` emits only the masked-in cells, which is why `int`, `bool`,
 `str` and `datetime` columns all survive a sparse round trip unchanged.
+
+## Coordinates that do not vary along every dimension
+
+A coordinate labels every cell, but it need not be *given* that way. Anything
+broadcastable to the array's shape is accepted and stored broadcast, so the
+values behind it are held once:
+
+```python
+chain = LabelledArray(
+    {"price": prices},  # (3, 100)
+    {"expiry": expiries, "strike": strikes},
+    coords={"time_to_expiry": tau[:, None]},  # (3, 1) -- one per expiry
+)
+
+chain.coords["time_to_expiry"].shape  # (3, 100) -- every consumer reads it full
+chain.coords["time_to_expiry"].base.nbytes  # 24 -- three floats, held once
+```
+
+Every strike on one expiry shares its time to expiry by definition, so storing
+it full-shape would repeat each value a hundred times and carry no information.
+
+Two things follow, and are limitations rather than bugs:
+
+- **A stored coordinate is read-only.** A broadcast one has a zero stride, and
+  one assignment through it would silently update every cell sharing the
+  underlying element.
+- **The saving ends at the first slice.** `select`, `isel` and `reindex` fancy-
+  index the view, and numpy materialises the full array there. The saving is
+  real at construction and through `transpose`, `copy`, `equals` and `repr`.
+
+Variables are not extended this way: they live on a backend, and arithmetic and
+`__setitem__` write to them. Call `np.broadcast_to(...).copy()` yourself if you
+want one, and the explicit copy is the point.
 
 ## Natural index dimensions
 
@@ -104,6 +137,7 @@ Combining two arrays is a question about their labels first:
 
 ```python
 book.reindex(date=week)  # onto another label set, filling what is new
+book.ffill("date")  # carry the last present value forward; limit= caps how far
 book.fillna(0.0)  # fill the absent cells and drop the mask
 book.align(other, join="outer")  # one label set per shared dimension
 book - other  # arithmetic aligns on its own (inner join)
@@ -119,10 +153,12 @@ The operations are deliberately narrow, and say so rather than guessing:
 - **Windows are trailing**, never centred.
 - **There is no `skipna`.** Absence is what the mask records; a NaN that is
   masked in is data, and propagates.
+- **`ffill` carries over the mask, not over NaN**, for the same reason, and
+  forward only. A cell it fills becomes present, so `to_dataframe` emits it.
 
-See `examples/08_combining_and_reducing.py`, and
-`examples/07_timings_at_scale.py` for what each of them costs on a million
-cells.
+See `examples/08_combining_and_reducing.py`,
+`examples/09_ffill_and_staleness.py`, and `examples/07_timings_at_scale.py` for
+what each of them costs on a million cells.
 
 ## Round trip gotchas
 

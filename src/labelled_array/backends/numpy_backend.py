@@ -61,6 +61,11 @@ class NumpyBackend(ArrayBackend):
         ]
         return arr[np.ix_(*grids)]
 
+    def take_along_axis(
+        self, arr: np.ndarray, indices: np.ndarray, axis: int
+    ) -> np.ndarray:
+        return np.take_along_axis(arr, indices, axis)
+
     def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> np.ndarray:
         return np.full(tuple(shape), fill_value, dtype=np.dtype(dtype))
 
