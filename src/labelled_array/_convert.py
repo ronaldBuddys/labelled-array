@@ -65,6 +65,33 @@ def _natural_codes(
     return indices
 
 
+def _alt_labels(
+    name: str,
+    ref: str,
+    values: np.ndarray,
+    codes: np.ndarray,
+    ref_labels: np.ndarray,
+) -> np.ndarray:
+    """Return one label per entry of ``ref``, checking the column is constant there.
+
+    An alternative dimension describes the *entries* of a dimension, so a column
+    saying two different things about one entry has no single description to
+    fold in, and is refused rather than having one of them picked for it.
+    """
+    labels = np.empty(len(ref_labels), dtype=values.dtype)
+    # Scatter keeps the last row per entry; any row disagreeing with the winner
+    # means the column is not constant within that entry.
+    labels[codes] = values
+    disagree = values != labels[codes]
+    if disagree.any():
+        offenders = sorted({str(label) for label in ref_labels[codes[disagree]]})
+        raise DimensionError(
+            f"column {name!r} is not constant within dimension {ref!r}: {offenders[:5]}"
+        )
+    labels.flags.writeable = False
+    return labels
+
+
 def from_dataframe(
     cls: type,
     df: Any,
@@ -72,6 +99,7 @@ def from_dataframe(
     dims: str | Sequence[str] | None = None,
     *,
     natural: str | Sequence[str] | None = None,
+    alt: Mapping[str, str] | None = None,
     fill_value: Any = None,
     dtype: Any = None,
     mask: bool = True,
@@ -106,6 +134,22 @@ def from_dataframe(
             f"columns cannot be both dimensions and variables: {overlap}"
         )
 
+    alt = dict(alt or {})
+    clashing = sorted(set(alt) & (set(dim_names) | set(columns)))
+    if clashing:
+        raise DimensionError(
+            f"columns cannot be both alternative dimensions and dimensions or "
+            f"variables: {clashing}"
+        )
+    for name, ref in alt.items():
+        if name not in available:
+            raise KeyError(f"column not in the frame: {name!r}, available: {available}")
+        if ref not in dim_names:
+            raise DimensionError(
+                f"alternative dimension {name!r} refers to {ref!r}, which is not one "
+                f"of the dimensions {dim_names}"
+            )
+
     fill_values = per_name(fill_value, columns, "fill_value")
     dtypes = per_name(dtype, columns, "dtype")
 
@@ -113,6 +157,15 @@ def from_dataframe(
     unknown_natural = [name for name in natural_names if name not in dim_names]
     if unknown_natural:
         raise DimensionError(f"natural names are not dimensions: {unknown_natural}")
+    on_natural = sorted(name for name, ref in alt.items() if ref in natural_names)
+    if on_natural:
+        # A natural index numbers rows by position within the other dimensions,
+        # so its labels are 0, 1, 2 ... and carry no identity for a description
+        # to attach to. The column belongs as a coordinate instead.
+        raise DimensionError(
+            f"alternative dimensions cannot be tied to a natural index: {on_natural}; "
+            f"pass the column as a coordinate instead"
+        )
 
     dim_values = {name: adapter.column_values(df, name) for name in dim_names}
     factorized = {name: factorize(values) for name, values in dim_values.items()}
@@ -131,7 +184,20 @@ def from_dataframe(
         labels[axis_name] = dim_labels
         codes.append(dim_codes)
 
-    dimensions = Dimensions(labels, natural=natural_sources)
+    alt_dims = {
+        name: (
+            ref,
+            _alt_labels(
+                name,
+                ref,
+                adapter.column_values(df, name),
+                factorized[ref][1],
+                factorized[ref][0],
+            ),
+        )
+        for name, ref in alt.items()
+    }
+    dimensions = Dimensions(labels, natural=natural_sources, alt=alt_dims)
     positions = flat_positions(codes, dimensions, adapter.n_rows(df))
 
     data = {
@@ -223,6 +289,16 @@ def to_dataframe(
     for name, coord in array.coords.items():
         if name not in columns:
             columns[name] = take_flat(coord, positions)
+
+    # An alternative dimension is stored once per entry of the dimension it is
+    # tied to, so it is gathered at that axis's position for each emitted cell
+    # rather than read cell by cell.
+    if array.ndim:
+        for name, alt_labels in array.dims.alt.items():
+            if name not in columns:
+                axis = array.dims.axis(array.dims.alt_ref(name))
+                columns[name] = alt_labels[cells[axis]]
+
     columns.update(values)
 
     return adapter.build_frame(columns, index_names=index_names, index=index)

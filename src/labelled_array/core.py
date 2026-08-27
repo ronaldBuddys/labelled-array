@@ -96,6 +96,7 @@ class LabelledArray(ArithmeticMixin):
         coords: Mapping[str, Any] | None = None,
         attrs: Mapping[str, Any] | None = None,
         backend: str | ArrayBackend | None = None,
+        alt_dims: Mapping[str, Any] | None = None,
     ) -> None:
         if not isinstance(data, Mapping):
             raise TypeError(
@@ -111,7 +112,7 @@ class LabelledArray(ArithmeticMixin):
         self._data = {
             name: self._backend.asarray(value) for name, value in data.items()
         }
-        self._dims = self._resolve_dims(dims)
+        self._dims = self._resolve_dims(dims, alt_dims)
         self._mask = _as_mask(mask, self._dims.shape)
         self._coords = {
             name: _as_coord(name, value, self._dims.shape)
@@ -135,16 +136,23 @@ class LabelledArray(ArithmeticMixin):
                 return owner
         return get_backend(self._default_backend)
 
-    def _resolve_dims(self, dims: Any) -> Dimensions:
-        """Return ``dims`` as :class:`Dimensions`, defaulting to a natural index."""
+    def _resolve_dims(self, dims: Any, alt_dims: Any = None) -> Dimensions:
+        """Return ``dims`` as :class:`Dimensions`, defaulting to a natural index.
+
+        ``alt_dims`` is layered on whatever ``dims`` resolves to, so alternative
+        dimensions can be given alongside a plain mapping, an existing
+        :class:`Dimensions` that already carries some, or no ``dims`` at all.
+        """
         if isinstance(dims, Dimensions):
-            return dims
-        if dims is not None:
-            return Dimensions(dims)
-        if not self._data:
+            resolved = dims
+        elif dims is not None:
+            resolved = Dimensions(dims)
+        elif not self._data:
             raise DimensionError("dims must be given when there are no variables")
-        first = next(iter(self._data.values()))
-        return Dimensions.from_shape(self._backend.shape(first))
+        else:
+            first = next(iter(self._data.values()))
+            resolved = Dimensions.from_shape(self._backend.shape(first))
+        return Dimensions(resolved, alt=alt_dims) if alt_dims else resolved
 
     def _validate(self) -> None:
         """Check shapes and names. Subclasses extend this to add requirements."""
@@ -155,11 +163,14 @@ class LabelledArray(ArithmeticMixin):
                     f"variable {name!r} has shape {self._backend.shape(value)}, "
                     f"expected {shape} from dimensions {list(self._dims.names)}"
                 )
-        counts = Counter([*self._dims.names, *self._data, *self._coords])
+        counts = Counter(
+            [*self._dims.names, *self._dims.alt, *self._data, *self._coords]
+        )
         clashes = sorted(name for name, count in counts.items() if count > 1)
         if clashes:
             raise DimensionError(
-                f"names must be unique across dimensions, variables and coordinates: {clashes}"
+                "names must be unique across dimensions, alternative dimensions, "
+                f"variables and coordinates: {clashes}"
             )
 
     @classmethod
@@ -359,12 +370,16 @@ class LabelledArray(ArithmeticMixin):
         missing: str = "raise",
         **kwargs: Any,
     ):
-        """Select along dimensions by label.
+        """Select along dimensions, or alternative dimensions, by label.
 
         Parameters
         ----------
         indexers : mapping of str to scalar or array_like, optional
             Labels to keep, per dimension. Dimensions not named are kept whole.
+            A name may also be an *alternative* dimension, in which case its
+            labels resolve to positions along the dimension it is tied to; the
+            two kinds mix freely in one call. Because alternative labels need
+            not be unique, one of them can keep several entries.
         drop : bool, default False
             Drop the selected dimensions that end up with a single entry.
             Without it a scalar label yields a length-one dimension, so the rank
@@ -384,7 +399,12 @@ class LabelledArray(ArithmeticMixin):
         Raises:
         ------
         DimensionError
-            If a dimension is unknown, or the same label is requested twice.
+            If a name is neither a dimension nor an alternative dimension, if
+            the same label is requested twice, or if two names in one call
+            select along the same dimension -- an alternative dimension and the
+            dimension it is tied to, say, or two alternative dimensions on it.
+            That is an intersection whose order neither request defines, so it
+            is asked for as two chained calls instead.
         LabelNotFoundError
             If a label is absent and ``missing`` is ``'raise'``.
 
@@ -392,24 +412,22 @@ class LabelledArray(ArithmeticMixin):
         --------
         >>> import numpy as np
         >>> la = LabelledArray({"w": np.arange(6).reshape(2, 3)},
-        ...                    {"a": [1, 2], "b": ["x", "y", "z"]})
+        ...                    {"a": [1, 2], "b": ["x", "y", "z"]},
+        ...                    alt_dims={"g": ("b", ["odd", "even", "odd"])})
         >>> la.select({"a": 1}).shape
         (1, 3)
         >>> la.select({"a": 1}, drop=True).shape
         (3,)
         >>> la.select(b=["z", "x"]).dims["b"].tolist()
         ['z', 'x']
+        >>> la.select(g="odd").dims["b"].tolist()
+        ['x', 'z']
+
+        See Also:
+        --------
+        isel : select by integer position, which alternative dimensions have none.
         """
-        return self._take(
-            self._resolve(
-                indexers,
-                kwargs,
-                lambda name, labels: self._dims.get_indexer(
-                    name, labels, missing=missing
-                ),
-            ),
-            drop=drop,
-        )
+        return self._take(self._resolve_alt(indexers, kwargs, missing), drop=drop)
 
     def _resolve(
         self,
@@ -422,6 +440,50 @@ class LabelledArray(ArithmeticMixin):
         self._dims._require(indexers)
         return {name: to_positions(name, value) for name, value in indexers.items()}
 
+    def _resolve_alt(
+        self,
+        indexers: Mapping[str, Any] | None,
+        kwargs: Mapping[str, Any],
+        missing: str,
+    ) -> dict[str, np.ndarray]:
+        """Merge indexers, resolving alternative dimensions onto their own.
+
+        Names are unique across dimensions, alternative dimensions, variables
+        and coordinates, so a name needs no disambiguation: it is looked up as a
+        dimension first and as an alternative dimension second. An alternative
+        dimension resolves to positions along the dimension it is tied to, which
+        is the key its positions land under.
+        """
+        indexers = {**(indexers or {}), **kwargs}
+        alt = self._dims.alt
+        if not alt.keys() & indexers.keys():
+            self._dims._require(indexers)
+            return {
+                name: self._dims.get_indexer(name, labels, missing=missing)
+                for name, labels in indexers.items()
+            }
+
+        positions: dict[str, np.ndarray] = {}
+        claimed: dict[str, str] = {}
+        for name, labels in indexers.items():
+            if name in alt:
+                ref = self._dims.alt_ref(name)
+                found = self._dims.alt_indexer(name, labels, missing=missing)
+            else:
+                self._dims._require([name])
+                ref, found = name, self._dims.get_indexer(name, labels, missing=missing)
+            if ref in claimed:
+                # Two selections along one axis is an intersection, and the order
+                # of the result is not defined by either request. Chained calls
+                # say which order is wanted, so ask for that rather than guess.
+                raise DimensionError(
+                    f"{name!r} and {claimed[ref]!r} both select along dimension "
+                    f"{ref!r}; select on one of them and then the other"
+                )
+            claimed[ref] = name
+            positions[ref] = found
+        return positions
+
     def isel(
         self,
         indexers: Mapping[str, Any] | None = None,
@@ -433,7 +495,10 @@ class LabelledArray(ArithmeticMixin):
         Parameters
         ----------
         indexers : mapping of str to int, slice or array_like of int, optional
-            Positions to keep, per dimension. Dimensions not named are kept whole.
+            Positions to keep, per dimension. Dimensions not named are kept
+            whole. Only real dimensions can be named: an alternative dimension
+            has no axis of its own, so it has no positions to index by. Its
+            labels are carried along with the dimension it is tied to.
         drop : bool, default False
             Drop the selected dimensions that end up with a single entry;
             otherwise a scalar position yields a length-one dimension.
@@ -465,12 +530,14 @@ class LabelledArray(ArithmeticMixin):
         ----------
         mapping : mapping of str to str, optional
             Current name to new name. Names are unique across dimensions,
-            variables and coordinates, so no disambiguation is needed.
+            alternative dimensions, variables and coordinates, so no
+            disambiguation is needed.
         **kwargs
             Alternative to ``mapping``, as keyword arguments.
         """
         mapping = {**(mapping or {}), **kwargs}
-        known = set(self._dims.names) | set(self._data) | set(self._coords)
+        alt = set(self._dims.alt)
+        known = set(self._dims.names) | alt | set(self._data) | set(self._coords)
         unknown = sorted(set(mapping) - known)
         if unknown:
             raise DimensionError(f"unknown names: {unknown}")
@@ -478,7 +545,11 @@ class LabelledArray(ArithmeticMixin):
         # keeps pointing at the coordinate it stands in for.
         sources = set(self._dims.natural.values())
         dims = self._dims.rename(
-            {k: v for k, v in mapping.items() if k in self._dims or k in sources}
+            {
+                k: v
+                for k, v in mapping.items()
+                if k in self._dims or k in alt or k in sources
+            }
         )
         data = {mapping.get(name, name): value for name, value in self._data.items()}
         coords = {
@@ -913,12 +984,15 @@ class LabelledArray(ArithmeticMixin):
         ----------
         by : str or array_like
             The group each label of the dimension belongs to. Given as a name,
-            it is a coordinate that varies along exactly one dimension -- a
-            sector per asset, say -- and that dimension is the one grouped.
-            Given as an array, it holds one group value per label of ``dim``.
+            it is either an alternative dimension -- which is already one value
+            per label of the dimension it describes -- or a coordinate that
+            varies along exactly one dimension; either way that dimension is the
+            one grouped. Given as an array, it holds one group value per label
+            of ``dim``.
         dim : str, optional
             Dimension to group. Required when ``by`` is an array; checked
-            against the coordinate when ``by`` names one.
+            against the alternative dimension or coordinate when ``by`` names
+            one.
 
         Returns:
         -------
@@ -929,9 +1003,9 @@ class LabelledArray(ArithmeticMixin):
         Raises:
         ------
         DimensionError
-            If ``by`` names a dimension rather than a coordinate, if a
-            coordinate varies along more than one dimension, or if an array of
-            group values is the wrong length.
+            If ``by`` names a dimension rather than an alternative dimension or
+            a coordinate, if a coordinate varies along more than one dimension,
+            or if an array of group values is the wrong length.
 
         Examples:
         --------
@@ -939,6 +1013,17 @@ class LabelledArray(ArithmeticMixin):
         >>> la = LabelledArray({"w": np.arange(4.0)}, {"asset": ["a", "b", "c", "d"]})
         >>> la.groupby(["tech", "tech", "banks", "banks"], dim="asset").sum()["w"].tolist()
         [5.0, 1.0]
+        >>> tagged = la._replace(
+        ...     dims=Dimensions(la.dims, alt={"sector": ("asset", ["t", "t", "b", "b"])})
+        ... )
+        >>> tagged.groupby("sector").sum()["w"].tolist()
+        [5.0, 1.0]
+
+        Notes:
+        -----
+        The grouping dimension comes back labelled by group value, so an
+        alternative dimension on it describes labels that are gone and is
+        dropped.
         """
         return _ops.groupby(self, by, dim)
 
@@ -988,6 +1073,7 @@ class LabelledArray(ArithmeticMixin):
         dims: str | Sequence[str] | None = None,
         *,
         natural: str | Sequence[str] | None = None,
+        alt: Mapping[str, str] | None = None,
         fill_value: Any = None,
         dtype: Any = None,
         mask: bool = True,
@@ -1019,6 +1105,14 @@ class LabelledArray(ArithmeticMixin):
             coordinate so the round trip restores the original column. This is
             what keeps a dimension whose labels are near-unique per group --
             dates, typically -- from blowing the array up.
+        alt : mapping of str to str, optional
+            Columns to fold in as *alternative* dimensions, each mapped to the
+            dimension it describes. The column must say one thing per entry of
+            that dimension, and is stored once per entry rather than once per
+            cell -- which is what keeps a descriptive column from becoming a
+            dimension of its own and leaving the array mostly empty. It cannot
+            be tied to a dimension named in ``natural``, whose labels are
+            positions rather than values.
         fill_value : scalar or mapping of str to scalar, optional
             Value for unpopulated cells, per variable. Defaults to NaN, NaT,
             empty string, False, None or 0, whichever the dtype can hold.
@@ -1072,6 +1166,7 @@ class LabelledArray(ArithmeticMixin):
             cols=cols,
             dims=dims,
             natural=natural,
+            alt=alt,
             fill_value=fill_value,
             dtype=dtype,
             mask=mask,

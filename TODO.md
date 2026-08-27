@@ -64,6 +64,12 @@ them and `examples/07_timings_at_scale.py` times them. What they left behind:
   result's dimensions are not obvious.
 - **`concat` of arrays holding different variables**, taking the union and
   marking the cells the other array never had.
+- **Carrying an alternative dimension through a widening `reindex`.** A label
+  the array never had has no description; carrying one would mean a null
+  alternative label, which could never be selected. `concat` along the described
+  dimension joins them, so the gap is only the reindex case.
+- **Alternative dimensions built from more than one column**, the way a
+  composite dimension would be.
 
 ## Storage
 

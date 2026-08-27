@@ -26,6 +26,7 @@ sales.dims["product"].tolist()  # ['AAA', 'BBB', 'CCC']
 sales.density  # 0.666...  -- ('south', 'BBB') has no row
 sales.select({"region": "north"})  # length-1 'region' dimension
 sales.select({"region": "north"}, drop=True)  # 'region' removed
+sales.select({"region": "north", "product": ["CCC", "AAA"]})  # several at once
 sales.to_dataframe(index=False)  # back to the original four rows
 ```
 
@@ -37,12 +38,14 @@ A `LabelledArray` holds:
 | --- | --- | --- |
 | **variables** | one or more equally shaped arrays | the array backend |
 | **dims** | ordered name → unique labels, one per axis | always numpy |
+| **alt_dims** | extra, repeatable labels for one dimension's entries; no axis of their own | always numpy |
 | **mask** | bool array, True where a source row existed | always numpy |
 | **coords** | full-shape labels a natural index stands in for; given at any broadcastable shape | always numpy |
 | **attrs** | free-form metadata | plain dict |
 
-Dimension, variable and coordinate names share one namespace, because a
-DataFrame column can only be one of them.
+Dimension, alternative dimension, variable and coordinate names share one
+namespace, because a DataFrame column can only be one of them. That is what lets
+`select` take any of them without being told which kind it was given.
 
 ## Install
 
@@ -119,6 +122,69 @@ LabelledArray.from_dataframe(
 
 See `examples/04_natural_index_and_sparsity.py`.
 
+## Alternative dimensions
+
+A descriptive column often varies along one dimension and only that one: a
+sector per asset, a currency per book. As a dimension of its own it spans every
+combination and leaves the array mostly empty; as a coordinate it is stored at
+the array's shape and cannot be selected on. An **alternative dimension** labels
+the *entries* of a dimension the array already has:
+
+```python
+book = LabelledArray.from_dataframe(
+    panel, cols=["px"], dims=["asset", "date"], alt={"sector": "asset"}
+)
+# or, given directly:
+LabelledArray(
+    {"px": prices},
+    dims={"asset": assets, "date": dates},
+    alt_dims={
+        "sector": {"ref_dim": "asset", "labels": sectors}
+    },  # or ("asset", sectors)
+)
+
+book.shape  # (4, 3) -- still two axes, and fully populated
+book.dims.alt["sector"]  # 4 labels, one per asset, held once
+book.select({"sector": "tech"})  # 3 assets x 3 dates
+book.select({"sector": "fin", "date": "d2"})  # mixes with a real dimension
+book.groupby("sector").mean()  # 'asset' comes back labelled by sector
+```
+
+Its labels **need not be unique** — that is the point, since several entries
+usually share a description — so one of them keeps every entry carrying it, in
+the order requested and ascending within each label. Names resolve as a
+dimension first and an alternative dimension second, so `select` needs no extra
+argument.
+
+An alternative dimension describes the entries of its dimension, so it is
+carried by whatever keeps those entries and dropped by whatever replaces them:
+
+| Operation | What happens |
+| --- | --- |
+| `select`, `isel`, `transpose`, `rename`, `copy`, pickle, arithmetic | carried, subset alongside its dimension |
+| `select(..., drop=True)` reducing its dimension away | dropped with it |
+| `reindex` onto a subset or a permutation | carried |
+| `reindex` onto labels the array did not have | dropped — a new label has no description, and a null one could never be selected |
+| `groupby("sector")` | groups its own dimension; the result is labelled by group value, so it is dropped |
+| a reduction or a `groupby` over its dimension | dropped — the entries are gone |
+| `concat` along its dimension | joined, like that dimension's own labels |
+| `concat` along another dimension | carried, and the operands must agree on it |
+| `to_dataframe` | written out as an ordinary column |
+
+Two things it deliberately is not:
+
+- **It has no axis**, so `isel` cannot name it. It has no positions of its own,
+  only the ones it points at.
+- **Two names cannot select along one dimension in a single call** — an
+  alternative dimension and its own dimension, say. That is an intersection
+  whose order neither request defines, so it is asked for as two chained calls.
+
+`from_dataframe(..., alt={"sector": "asset"})` folds a column in, and refuses one
+that says two different things about a single asset, or one tied to a `natural=`
+dimension whose labels are positions rather than values.
+
+See `examples/10_alternative_dimensions.py`.
+
 ## Operations
 
 Reductions, groups and windows are mask-aware in the same way the round trip
@@ -129,7 +195,7 @@ behind it is filled and marked absent rather than being invented.
 book.sum("date")  # sum / mean / min / max over named dimensions
 book.groupby(
     sectors, dim="asset"
-).mean()  # or groupby("sector"), a coordinate per label
+).mean()  # or groupby("sector"), an alt dimension or a coordinate
 book.rolling("date_idx", 20).mean()  # trailing windows; min_periods= for partial ones
 ```
 
@@ -150,6 +216,9 @@ The operations are deliberately narrow, and say so rather than guessing:
   broadcasts one dimension onto another.
 - **`groupby` groups one dimension by one value per label.** A coordinate that
   varies along two dimensions is refused rather than flattened.
+- **An alternative dimension is dropped, not invented, when its labels go.** A
+  reduction, a `groupby`, or a `reindex` onto labels the array never had leaves
+  nothing for it to describe, and it is removed rather than null-filled.
 - **Windows are trailing**, never centred.
 - **There is no `skipna`.** Absence is what the mask records; a NaN that is
   masked in is data, and propagates.
@@ -226,7 +295,7 @@ copy for a sliding window.
 ## Examples and tests
 
 ```bash
-python examples/01_basics.py                # 01 basics ... 08 combining and reducing
+python examples/01_basics.py                # 01 basics ... 10 alternative dimensions
 pytest -q                                   # the full suite
 pytest --cov=labelled_array --cov-report=term-missing
 ```

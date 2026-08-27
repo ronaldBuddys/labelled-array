@@ -104,7 +104,16 @@ def reindex(array: Any, indexers: Mapping[str, Any], fill_value: Any = None) -> 
         # Missing labels gather from position 0 and are overwritten with the
         # fill below, which keeps the gather itself a single pass.
         positions[axis] = np.where(found >= 0, found, 0)
-        new_dims = new_dims.replace(name, wanted)
+        # An alternative dimension describes the entries of this one, so it can
+        # be carried only when every new label is an old one -- a subset or a
+        # permutation. A label the array did not have has no description, and
+        # inventing a null one would give it a label that can never be selected.
+        carried = (
+            {alt: values[found] for alt, values in dims.alt_on(name).items()}
+            if (found >= 0).all()
+            else None
+        )
+        new_dims = new_dims.replace(name, wanted, alt=carried)
         if (found < 0).any():
             spread = [1] * dims.ndim
             spread[axis] = found.size
@@ -196,6 +205,13 @@ def _check_concat_inputs(arrays: list, dim: str) -> bool:
                 f"arrays to concat must hold the same coordinates: "
                 f"{sorted(first.coords)} vs {sorted(other.coords)}"
             )
+        mine = {name: first.dims.alt_ref(name) for name in first.dims.alt}
+        theirs = {name: other.dims.alt_ref(name) for name in other.dims.alt}
+        if mine != theirs:
+            raise DimensionError(
+                f"arrays to concat must hold the same alternative dimensions, on the "
+                f"same dimensions: {sorted(mine)} vs {sorted(theirs)}"
+            )
         if other.backend.name != first.backend.name:
             raise DimensionError(
                 f"arrays to concat must be on one backend: {first.backend.name!r} vs "
@@ -213,6 +229,37 @@ def _check_concat_inputs(arrays: list, dim: str) -> bool:
                 f"{first.dims.names} vs {array.dims.names}"
             )
     return not any(holders)
+
+
+def _concat_alt(aligned: Sequence[Any], dim: str, is_new: bool) -> dict:
+    """Return the alternative dimensions the joined array keeps.
+
+    One tied to the dimension being joined is concatenated, the way that
+    dimension's own labels are. One tied to any other dimension describes labels
+    the operands now share, so they have to agree on it -- alignment puts them
+    on one label set, but not on one description of it. An alternative dimension
+    alignment has already dropped from an operand, because that operand gained
+    labels it had no description for, is dropped here too.
+    """
+    first = aligned[0]
+    kept = {}
+    for name, values in first.dims.alt.items():
+        others = [array.dims.alt.get(name) for array in aligned[1:]]
+        if any(other is None for other in others):
+            continue
+        if not is_new and first.dims.alt_ref(name) == dim:
+            kept[name] = np.concatenate([values, *others])
+            continue
+        disagreeing = next(
+            (other for other in others if not np.array_equal(values, other)), None
+        )
+        if disagreeing is not None:
+            raise DimensionError(
+                f"arrays to concat disagree on alternative dimension {name!r}: "
+                f"{values.tolist()} vs {disagreeing.tolist()}"
+            )
+        kept[name] = values
+    return kept
 
 
 def concat(
@@ -245,6 +292,7 @@ def concat(
     )
 
     first = aligned[0]
+    kept_alt = _concat_alt(aligned, dim, is_new)
     backend = first.backend
     axis = 0 if is_new else first.dims.axis(dim)
     shape = first.shape
@@ -289,7 +337,11 @@ def concat(
             raise DimensionError(
                 f"got {len(labels)} labels for {len(aligned)} arrays along new dimension {dim!r}"
             )
-        dims = Dimensions({dim: labels, **dict(first.dims)}, natural=natural)
+        alt = {
+            name: (first.dims.alt_ref(name), values)
+            for name, values in kept_alt.items()
+        }
+        dims = Dimensions({dim: labels, **dict(first.dims)}, natural=natural, alt=alt)
     else:
         length = sum(len(array.dims[dim]) for array in aligned)
         if labels is not None:
@@ -304,6 +356,14 @@ def concat(
             joined = np.arange(length)
         else:
             joined = np.concatenate([array.dims[dim] for array in aligned])
-        dims = first.dims.replace(dim, joined)
+        # An operand may have lost an alternative dimension to alignment, and one
+        # that no longer describes every operand cannot survive the join.
+        base = first.dims.drop_alt(set(first.dims.alt) - set(kept_alt))
+        on_dim = {
+            name: values
+            for name, values in kept_alt.items()
+            if base.alt_ref(name) == dim
+        }
+        dims = base.replace(dim, joined, alt=on_dim)
 
     return first._replace(dims=dims, data=data, coords=coords, mask=mask)
