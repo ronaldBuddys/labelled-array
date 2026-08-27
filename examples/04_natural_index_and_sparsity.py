@@ -132,6 +132,53 @@ pd.testing.assert_frame_equal(
 )
 
 # %%
+# Coordinates that do not vary along every dimension
+# --------------------------------------------------
+# A natural index shrinks a *dimension*. The other half of the saving is a
+# *coordinate* that does not vary along every dimension: give it at any shape
+# that broadcasts to the array's, and it is stored once rather than repeated.
+# An option chain is the case that hurts -- time to expiry is a property of the
+# expiry, and every strike on that expiry shares it by definition.
+
+expiries = np.array(["2024-03-15", "2024-06-21", "2024-09-20"], "datetime64[D]")
+strikes = np.arange(4000, 4500, 5.0)
+tau = (expiries - np.datetime64("2024-01-02")).astype(float) / 365.0
+
+chain = LabelledArray(
+    {"price": np.zeros((len(expiries), len(strikes)))},
+    {"expiry": expiries, "strike": strikes},
+    coords={"time_to_expiry": tau[:, None]},  # (3, 1) against (3, 100)
+)
+
+# Every consumer still reads a full-shape coordinate...
+assert chain.coords["time_to_expiry"].shape == chain.shape
+assert chain.coords["time_to_expiry"][1, 7] == tau[1]
+
+# ...but the values behind it are held once.
+held = chain.coords["time_to_expiry"]
+print("read as :", held.shape, held.nbytes, "bytes")
+print("held as :", held.base.shape, held.base.nbytes, "bytes")
+assert held.base.nbytes == tau.nbytes
+
+# %%
+# The saving is at construction, and ends at the first slice
+# ----------------------------------------------------------
+# A broadcast coordinate is a zero-stride view, so it is read-only -- writing
+# through one would update every cell sharing the element. It survives
+# ``transpose``, ``copy`` and ``equals`` compactly, but the first ``select`` or
+# ``reindex`` fancy-indexes it and numpy materialises the full array there.
+
+assert chain.coords["time_to_expiry"].flags.writeable is False
+assert (
+    chain.transpose("strike", "expiry").coords["time_to_expiry"].base.nbytes
+    == tau.nbytes
+)
+
+sliced = chain.select({"strike": strikes[:10]})
+assert sliced.coords["time_to_expiry"][2, 3] == tau[2], "values are intact"
+print("after select:", sliced.coords["time_to_expiry"].nbytes, "bytes, materialised")
+
+# %%
 # When sparsity is unavoidable
 # ----------------------------
 # ``density`` is the number to watch: it is the fraction of cells a row

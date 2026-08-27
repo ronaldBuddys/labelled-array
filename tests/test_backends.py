@@ -173,6 +173,31 @@ def test_take_multi_can_select_nothing(backend, source):
     assert backend.shape(arr) == (0, 3)
 
 
+def test_take_along_axis_gathers_one_entry_per_cell(backend, source):
+    indices = np.array([[2, 0, 1], [1, 1, 2]])
+    gathered = backend.to_numpy(
+        backend.take_along_axis(backend.asarray(source), indices, 1)
+    )
+    np.testing.assert_array_equal(gathered, np.take_along_axis(source, indices, 1))
+
+
+def test_take_along_axis_works_on_the_leading_axis(backend, source):
+    indices = np.array([[1, 1, 0], [0, 1, 1]])
+    gathered = backend.to_numpy(
+        backend.take_along_axis(backend.asarray(source), indices, 0)
+    )
+    np.testing.assert_array_equal(gathered, np.take_along_axis(source, indices, 0))
+
+
+def test_take_along_axis_accepts_a_read_only_index(backend, source):
+    indices = np.array([[2, 0, 1], [1, 1, 2]])
+    indices.flags.writeable = False
+    gathered = backend.to_numpy(
+        backend.take_along_axis(backend.asarray(source), indices, 1)
+    )
+    np.testing.assert_array_equal(gathered, np.take_along_axis(source, indices, 1))
+
+
 def test_full(backend):
     # float32 rather than a 64-bit dtype, which JAX would narrow and warn about.
     arr = backend.full((2, 2), 3, np.dtype("float32"))
@@ -278,6 +303,15 @@ def test_inherited_concatenate_and_reduce_match_the_overrides(source):
         numpy_backend.reduce(source, "sum", (1,)),
     )
     assert ArrayBackend.reduce(numpy_backend, source, "sum", ()) is source
+
+
+def test_inherited_take_along_axis_matches_the_override(source):
+    numpy_backend = get_backend("numpy")
+    indices = np.array([[2, 0, 1], [1, 1, 2]])
+    np.testing.assert_array_equal(
+        ArrayBackend.take_along_axis(numpy_backend, source, indices, 1),
+        numpy_backend.take_along_axis(source, indices, 1),
+    )
 
 
 def test_inherited_sliding_window_matches_the_override(source):

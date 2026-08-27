@@ -80,6 +80,10 @@ class JaxBackend(ArrayBackend):
         ]
         return arr[jnp.ix_(*grids)]
 
+    def take_along_axis(self, arr: Any, indices: np.ndarray, axis: int) -> Any:
+        jnp = self._jnp
+        return jnp.take_along_axis(arr, jnp.asarray(indices), axis=axis)
+
     def full(self, shape: Sequence[int], fill_value: Any, dtype: Any) -> Any:
         self.check_dtype(dtype)
         return self._jnp.full(tuple(shape), fill_value, dtype=np.dtype(dtype))

@@ -44,6 +44,19 @@ them and `examples/07_timings_at_scale.py` times them. What they left behind:
   NaN anywhere poisons every window after it, so it needs the NaN bookkeeping
   pandas does rather than a bare `cumsum`.
 - **Centred and expanding windows.** `rolling` is trailing only.
+- **`bfill`.** `ffill` carries forward only. Backward fill is the same gather
+  with a reversed running maximum, and was left out because nothing has needed
+  it yet.
+- **Compact coordinate storage.** A coordinate given at a broadcastable shape is
+  stored broadcast, so it is held once -- until the first `select`, `isel` or
+  `reindex` fancy-indexes the view and numpy materialises it. Keeping the saving
+  through slicing means storing coordinates compactly and recording which
+  dimensions each one spans, the way `xarray` does. That breaks the invariant
+  this package is built on -- that variables, coordinates and the mask are
+  indexed by the same dimensions and therefore move together through
+  `_map_cells` -- because every shape-changing operation would then need a
+  per-coordinate axis map. Deferred deliberately: let measured array sizes
+  decide whether it is worth that, rather than building it speculatively.
 - **Grouping by a multi-dimensional coordinate.** `groupby` needs a coordinate
   that varies along exactly one dimension. Grouping cells by a value that
   varies along several -- every cell of a given date, in a natural index panel
