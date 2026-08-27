@@ -99,7 +99,9 @@ def _as_alt_labels(name: str, labels: Any, length: int) -> np.ndarray:
 
 
 def _as_alt(
-    alt: Mapping[str, Any] | None, labels: Mapping[str, np.ndarray]
+    alt: Mapping[str, Any] | None,
+    labels: Mapping[str, np.ndarray],
+    natural: Mapping[str, str | None] | None = None,
 ) -> dict[str, tuple[str, np.ndarray]]:
     """Return the alternative dimensions as a ``name -> (ref_dim, labels)`` mapping.
 
@@ -130,6 +132,14 @@ def _as_alt(
             raise DimensionError(
                 f"alternative dimension {name!r} refers to unknown dimension {ref!r}, "
                 f"expected one of {list(labels)}"
+            )
+        if natural and ref in natural:
+            # Same refusal as from_dataframe: a natural index numbers rows by
+            # position, so its entries carry no identity for a description to
+            # attach to, and the object could not round-trip.
+            raise DimensionError(
+                f"alternative dimensions cannot be tied to a natural index: "
+                f"{name!r} refers to {ref!r}; pass the column as a coordinate instead"
             )
         resolved[name] = (ref, _as_alt_labels(name, values, len(labels[ref])))
     return resolved
@@ -245,10 +255,11 @@ class Dimensions(Mapping[str, np.ndarray]):
             )
 
         resolved = {name: _as_labels(name, labels) for name, labels in items}
+        natural_resolved = _as_natural(natural, names)
         self._init(
             resolved,
-            _as_natural(natural, names),
-            _as_alt(alt, resolved),
+            natural_resolved,
+            _as_alt(alt, resolved, natural_resolved),
         )
 
     def _init(
@@ -502,6 +513,15 @@ class Dimensions(Mapping[str, np.ndarray]):
         self._require_alt([name])
         lookup = self._alt_lookup(name)
         query = _comparable(self._alt[name][1], name, labels)
+        repeated = duplicates(query)
+        if repeated:
+            # Caught here, on the labels the caller typed: once expanded to
+            # positions the duplicate would be reported against the dimension
+            # this one is tied to, in labels the caller never mentioned.
+            raise DimensionError(
+                f"labels requested more than once for alternative dimension "
+                f"{name!r}: {repeated}"
+            )
 
         found, absent = [], []
         for label in query.tolist():

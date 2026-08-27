@@ -542,3 +542,40 @@ def test_layering_one_onto_existing_dimensions():
         "x",
         "y",
     ]
+
+
+def test_a_duplicate_request_names_the_alternative_dimension(book):
+    # Caught on the labels the caller typed, not after expansion to positions
+    # of the dimension it is tied to.
+    with pytest.raises(DimensionError, match="alternative dimension 'sector'") as info:
+        book.select(sector=["tech", "tech"])
+    assert "'tech'" in str(info.value)
+    assert "'asset'" not in str(info.value)
+
+
+def test_a_null_alternative_column_says_so(engine):
+    frame = build_frame(
+        engine,
+        {
+            "asset": ["A", "B", "B"],
+            "date": [1, 1, 2],
+            "sector": ["tech", None, None],
+            "px": [1.0, 2.0, 3.0],
+        },
+    )
+    with pytest.raises(DimensionError, match="must not be null"):
+        LabelledArray.from_dataframe(
+            frame, cols=["px"], dims=["asset", "date"], alt={"sector": "asset"}
+        )
+
+
+def test_the_constructor_refuses_an_alternative_on_a_natural_index():
+    with pytest.raises(DimensionError, match="cannot be tied to a natural index"):
+        LabelledArray(
+            {"v": np.zeros((1, 2))},
+            dims=Dimensions(
+                {"g": ["x"], "date_idx": [0, 1]}, natural={"date_idx": "date"}
+            ),
+            coords={"date": np.array([[1, 2]])},
+            alt_dims={"lbl": ("date_idx", ["p", "q"])},
+        )

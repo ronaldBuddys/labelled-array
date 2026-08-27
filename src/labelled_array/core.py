@@ -862,7 +862,10 @@ class LabelledArray(ArithmeticMixin):
         Raises:
         ------
         DimensionError
-            If ``dim`` is not a dimension of this array.
+            If ``dim`` is not a dimension of this array, or is a natural
+            index: the padding cells a natural axis holds were never rows, and
+            filling them would give each the label of its source, so the
+            result could not round-trip through :meth:`to_dataframe`.
         ValueError
             If ``limit`` is less than 1.
 
@@ -870,9 +873,12 @@ class LabelledArray(ArithmeticMixin):
         -----
         Variables, coordinates and the mask are gathered together, so a filled
         cell's coordinates name the cell its value came from rather than
-        itself. That is usually what you want -- it is what says how stale the
-        carried value is -- but it does mean a coordinate varying along ``dim``
-        no longer matches that dimension's label at a filled cell.
+        itself. For a real coordinate that is usually what you want -- it is
+        what says how stale the carried value is -- but it does mean a
+        coordinate varying along ``dim`` no longer matches that dimension's
+        label at a filled cell. For the coordinate a natural index stands in
+        for it would be the cell's whole identity, which is why a natural
+        ``dim`` is refused.
 
         The age of a carried value needs no new concept: take the mask before
         the fill, derive the age from it, and store it as a coordinate, which

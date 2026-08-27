@@ -39,7 +39,12 @@ def default_fill_value(dtype: Any) -> Any:
     if kind in "fc":
         return np.nan
     if kind in "Mm":
-        return np.datetime64("NaT") if kind == "M" else np.timedelta64("NaT")
+        # A unit-less timedelta64("NaT") is deprecated by numpy; take the unit
+        # of the array being filled so the sentinel matches it exactly.
+        unit = np.datetime_data(np.dtype(dtype))[0]
+        return (
+            np.datetime64("NaT", unit) if kind == "M" else np.timedelta64("NaT", unit)
+        )
     if kind == "b":
         return False
     if kind in "US":
@@ -184,6 +189,13 @@ def natural_index(codes: list[np.ndarray]) -> np.ndarray:
     replaced. This is what collapses a dimension whose labels are unique per
     group (typically dates) from "every label seen anywhere" down to "the most
     labels any one group has".
+
+    The labels of the dimension being replaced **must be unique within each
+    group**. That is a correctness precondition, not a performance one: this
+    counts rows, not distinct labels, so a label repeated within a group gets
+    two positions and comes back as two rungs of the ladder -- finite,
+    plausible and wrong. ``from_dataframe`` checks it and raises
+    :class:`~labelled_array.DuplicateIndexError`; this function does not.
 
     Parameters
     ----------
