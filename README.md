@@ -321,3 +321,15 @@ Set `LABELLED_ARRAY_SCALE=2` to run it on four times the cells.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Documentation
+
+Sphinx docs -- getting started, an examples gallery built from `examples/`, and an API
+reference:
+
+```bash
+uv sync --extra docs && uv run make -C docs html
+```
+
+See `docs/building.rst` for the `DOCS_RUN_EXAMPLES` switch that controls whether the
+gallery executes the scripts.

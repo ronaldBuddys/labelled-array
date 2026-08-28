@@ -20,6 +20,7 @@ classifiers = [
 dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
+docs = ["sphinx>=7.0", "sphinx-gallery>=0.17", "furo>=2024.8"]
 pandas = ["pandas>=2.0"]
 polars = ["polars>=0.20"]
 jax = ["jax>=0.4"]
