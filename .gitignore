@@ -23,3 +23,8 @@ htmlcov/
 
 # OS
 .DS_Store
+
+# Sphinx / sphinx-gallery build output
+docs/_build/
+docs/auto_examples/
+docs/sg_execution_times.rst
