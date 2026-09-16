@@ -16,7 +16,7 @@ __all__ = ["TorchBackend"]
 class TorchBackend(ArrayBackend):
     """Backend for :class:`torch.Tensor`.
 
-    Notes:
+    Notes
     -----
     Torch has no string, object or datetime dtypes; :meth:`supports_dtype`
     reports what the installed torch build actually accepts, so conversion of an

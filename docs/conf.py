@@ -11,7 +11,6 @@ build failure rather than a page with a traceback on it.
 from __future__ import annotations
 
 import os
-import re
 import sys
 from pathlib import Path
 
@@ -35,7 +34,7 @@ html_title = project
 
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
-napoleon_google_docstring = True
+napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 # Objects are re-exported from the package root, so a bare :class:`X` reference has two
 # valid targets. That is not an error worth failing the build for.
@@ -56,24 +55,3 @@ sphinx_gallery_conf = {
     "remove_config_comments": True,
     "within_subsection_order": "FileNameSortKey",
 }
-
-
-_UNDERLINE = re.compile(r"^\s*-{3,}\s*$")
-
-
-def _strip_section_colons(app, what, name, obj, options, lines):
-    """Let napoleon see ``Notes:`` over a dashed underline as a numpy section.
-
-    The docstrings follow the Google convention ruff enforces (a section name ends
-    with a colon) but underline the name numpy-style. Neither napoleon parser accepts
-    the mix, and docutils then reports the dashes as a too-short title. Dropping the
-    colon where an underline follows makes it a plain numpy section.
-    """
-    for i in range(len(lines) - 1):
-        if lines[i].rstrip().endswith(":") and _UNDERLINE.match(lines[i + 1]):
-            lines[i] = lines[i].rstrip()[:-1]
-
-
-def setup(app):
-    """Register the docstring hook ahead of napoleon (priority 500)."""
-    app.connect("autodoc-process-docstring", _strip_section_colons, priority=400)

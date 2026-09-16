@@ -88,7 +88,7 @@ class ArrayBackend(Plugin):
         indexers : mapping of int to ndarray of int
             Indices to keep, per axis. Axes not named are kept whole.
 
-        Notes:
+        Notes
         -----
         The default applies one axis at a time, materialising an intermediate
         array per axis. A backend able to gather several axes in one pass --
@@ -112,7 +112,7 @@ class ArrayBackend(Plugin):
         axis : int
             Axis the indices address.
 
-        Notes:
+        Notes
         -----
         The default goes through numpy. A backend with a native per-cell
         gather -- ``jnp.take_along_axis``, torch's ``gather`` -- should
@@ -164,7 +164,7 @@ class ArrayBackend(Plugin):
         and one axis of length ``window`` appended, so reducing over ``-1``
         gives one value per complete window.
 
-        Notes:
+        Notes
         -----
         The default builds the windows by stacking shifted copies, which costs
         ``window`` times the memory of the input. A backend that can express

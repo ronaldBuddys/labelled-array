@@ -19,7 +19,7 @@ _UNSUPPORTED_KINDS = frozenset("USOVMm")
 class JaxBackend(ArrayBackend):
     """Backend for :class:`jax.Array`.
 
-    Notes:
+    Notes
     -----
     JAX arrays are immutable and, unless ``jax_enable_x64`` is set, silently
     narrow 64-bit dtypes to 32-bit; :meth:`dtype` therefore reports the dtype
