@@ -29,7 +29,7 @@ class Plugin(ABC):
     import is deferred until something is actually done with it, so a library
     that is not installed costs nothing but a failed availability check.
 
-    Attributes:
+    Attributes
     ----------
     name : str
         Registry key, e.g. ``"numpy"``.
@@ -125,7 +125,7 @@ class Registry(Generic[P]):
     def get(self, key: str | P | None = None) -> P:
         """Return an entry by name, passing instances through.
 
-        Raises:
+        Raises
         ------
         error
             If the name is unknown, or its library is not installed.
@@ -147,7 +147,7 @@ class Registry(Generic[P]):
     def resolve(self, obj: Any) -> P:
         """Return the entry that handles ``obj``.
 
-        Raises:
+        Raises
         ------
         error
             If no registered entry recognises ``obj``.

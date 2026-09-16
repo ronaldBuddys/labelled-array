@@ -120,7 +120,7 @@ def per_name(
     noun : str, default 'columns'
         What the names are, used in the error message.
 
-    Returns:
+    Returns
     -------
     dict
         One entry per name, None where a mapping did not name it.

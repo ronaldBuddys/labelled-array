@@ -195,7 +195,7 @@ class Dimensions(Mapping[str, np.ndarray]):
         usually share a description -- and :meth:`alt_indexer` maps one of
         them to every position that carries it.
 
-    Raises:
+    Raises
     ------
     DimensionError
         If a name is repeated or is not a string, if labels are not
@@ -204,7 +204,7 @@ class Dimensions(Mapping[str, np.ndarray]):
         collides with a dimension name, names an unknown ``ref_dim``, or has
         the wrong number of labels.
 
-    Examples:
+    Examples
     --------
     >>> dims = Dimensions({"a": [1, 2], "b": ["x", "y", "z"]})
     >>> dims.shape
@@ -443,7 +443,7 @@ class Dimensions(Mapping[str, np.ndarray]):
             Whether absent labels raise :class:`LabelNotFoundError` or are
             dropped from the result.
 
-        Returns:
+        Returns
         -------
         numpy.ndarray
             Integer positions, in the order the labels were given.
@@ -493,7 +493,7 @@ class Dimensions(Mapping[str, np.ndarray]):
             Whether absent labels raise :class:`LabelNotFoundError` or are
             dropped from the result.
 
-        Returns:
+        Returns
         -------
         numpy.ndarray
             Integer positions along ``alt_ref(name)``. Because the labels need
@@ -502,7 +502,7 @@ class Dimensions(Mapping[str, np.ndarray]):
             label. The blocks cannot overlap, since every position carries
             exactly one alternative label.
 
-        Examples:
+        Examples
         --------
         >>> dims = Dimensions({"a": [1, 2, 3]}, alt={"g": ("a", ["x", "y", "x"])})
         >>> dims.alt_indexer("g", ["y", "x"])
@@ -549,12 +549,12 @@ class Dimensions(Mapping[str, np.ndarray]):
         labels : scalar or array_like
             Labels to locate.
 
-        Returns:
+        Returns
         -------
         numpy.ndarray
             One integer position per label, ``-1`` where the label is absent.
 
-        Examples:
+        Examples
         --------
         >>> dims = Dimensions({"b": ["x", "y", "z"]})
         >>> dims.locate("b", ["z", "q"])
@@ -577,7 +577,7 @@ class Dimensions(Mapping[str, np.ndarray]):
             Positions to keep. A boolean array is taken as a mask over the
             dimension; negative positions count from the end.
 
-        Returns:
+        Returns
         -------
         numpy.ndarray
             Integer positions, in the order given.
@@ -617,13 +617,13 @@ class Dimensions(Mapping[str, np.ndarray]):
         indexers : mapping of str to array_like of int
             Positions to keep, per dimension. Dimensions not named are unchanged.
 
-        Raises:
+        Raises
         ------
         DimensionError
             If a dimension is unknown, or a position is asked for twice, which
             would make its label ambiguous.
 
-        Notes:
+        Notes
         -----
         Alternative dimensions are subset alongside the dimension they are tied
         to, so they keep describing the same entries.

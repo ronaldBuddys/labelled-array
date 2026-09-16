@@ -42,7 +42,7 @@ def identity(op: str, dtype: Any) -> Any:
     Zero for a sum, and the largest or smallest representable value for a
     minimum or a maximum, so the reduction itself has nothing to skip.
 
-    Raises:
+    Raises
     ------
     TypeError
         If the dtype has no such value: strings and objects cannot be reduced
@@ -243,7 +243,7 @@ class GroupBy:
         }
 
     def __len__(self) -> int:
-        """Number of groups."""
+        """Return the number of groups."""
         return len(self._labels)
 
     def __iter__(self):
@@ -268,7 +268,7 @@ class GroupBy:
         op : {'sum', 'mean', 'min', 'max'}
             Reduction to apply within each group.
 
-        Returns:
+        Returns
         -------
         LabelledArray
             The array with the grouping dimension relabelled by group value.
@@ -431,7 +431,7 @@ class Rolling:
         op : {'sum', 'mean', 'min', 'max'}
             Reduction to apply within each window.
 
-        Returns:
+        Returns
         -------
         LabelledArray
             The array's shape and labels, with each cell holding the reduction

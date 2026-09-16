@@ -66,7 +66,7 @@ def factorize(values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     values : numpy.ndarray
         One-dimensional column of dimension labels, one entry per row.
 
-    Returns:
+    Returns
     -------
     labels : numpy.ndarray
         The unique values.
@@ -110,7 +110,7 @@ def flat_positions(
     n_rows : int
         Number of rows, needed when there are no dimensions at all.
 
-    Raises:
+    Raises
     ------
     DuplicateIndexError
         If two rows map to the same cell, which would make the conversion
@@ -203,7 +203,7 @@ def natural_index(codes: list[np.ndarray]) -> np.ndarray:
         Codes of the preceding dimensions, then the codes of the dimension
         being replaced, as the last entry.
 
-    Returns:
+    Returns
     -------
     numpy.ndarray
         The within-group position of each row.

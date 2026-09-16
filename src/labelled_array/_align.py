@@ -53,7 +53,7 @@ def join_labels(name: str, label_sets: Sequence[np.ndarray], join: str) -> np.nd
         allows it; ``'left'`` and ``'right'`` take the first or last array's
         labels as they are; ``'exact'`` refuses to join at all.
 
-    Raises:
+    Raises
     ------
     ValueError
         If ``join`` is not one of the modes above.
