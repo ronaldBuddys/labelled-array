@@ -29,13 +29,41 @@ __all__ = [
 def default_fill_value(dtype: Any) -> Any:
     """Return the value used for cells no row populates.
 
-    Missing cells are recorded by the presence mask, so the fill only has to be
-    a value the dtype can hold: null-like where one exists, zero-like otherwise.
+    Missing cells are recorded by the presence mask, so the fill is never read
+    as data by this package. It is chosen to be unmistakable to anything that
+    reads the array *without* the mask -- a bare ``array["x"]``, another
+    library, or an array built with ``mask=False``:
+
+    ==========================  ===========================================
+    dtype                       fill
+    ==========================  ===========================================
+    float, complex              ``nan``
+    datetime64, timedelta64     ``NaT``, in the dtype's own unit
+    signed integer              the dtype's minimum, e.g. ``-2**63``
+    unsigned integer            the dtype's maximum, e.g. ``2**64 - 1``
+    object                      ``None``
+    str, bytes                  the empty string
+    bool                        ``False`` -- a bool has no value to spare
+    ==========================  ===========================================
+
+    Pass ``fill_value=`` wherever cells are invented to choose another.
 
     Parameters
     ----------
     dtype : numpy dtype
         Dtype of the array being filled.
+
+    Returns
+    -------
+    scalar
+        The fill for ``dtype``.
+
+    Examples
+    --------
+    >>> default_fill_value("int32")
+    -2147483648
+    >>> default_fill_value("uint8")
+    255
     """
     kind = np.dtype(dtype).kind
     if kind in "fc":
@@ -47,6 +75,12 @@ def default_fill_value(dtype: Any) -> Any:
         return (
             np.datetime64("NaT", unit) if kind == "M" else np.timedelta64("NaT", unit)
         )
+    if kind in "iu":
+        # An integer has no null, and a zero would pass for data. The extreme
+        # of the range cannot: it is what numpy itself uses for NaT, and a sum
+        # that includes one is wrong by enough to be noticed.
+        limits = np.iinfo(dtype)
+        return int(limits.min if kind == "i" else limits.max)
     if kind == "b":
         return False
     if kind in "US":

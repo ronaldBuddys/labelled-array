@@ -1124,8 +1124,13 @@ class LabelledArray(ArithmeticMixin):
             be tied to a dimension named in ``natural``, whose labels are
             positions rather than values.
         fill_value : scalar or mapping of str to scalar, optional
-            Value for unpopulated cells, per variable. Defaults to NaN, NaT,
-            empty string, False, None or 0, whichever the dtype can hold.
+            Value for unpopulated cells, per variable. Defaults to
+            :func:`~labelled_array.default_fill_value` of the dtype: NaN, NaT
+            or None where the dtype has a null, and otherwise a value that
+            cannot pass for data -- the minimum of a signed integer, the
+            maximum of an unsigned one. The mask is what marks the cell
+            absent; the fill is what anything reading the array without the
+            mask will see, which matters most under ``mask=False``.
         dtype : dtype or mapping of str to dtype, optional
             Dtype per variable; defaults to the dtype of the column.
         mask : bool, default True

@@ -67,9 +67,41 @@ assert north.density == 1.0
 # mask -- not the value -- is what says the cell is empty.
 
 assert sales.dtypes["units"] == np.dtype("int64"), "not widened to float"
-assert sales["units"][1, 1] == 0, "a placeholder, not a sale of nothing"
 assert np.isnan(sales["price"][1, 1]), "floats get NaN, but the mask still rules"
 assert not sales.mask[1, 1]
+
+# %%
+# What an absent cell holds
+# -------------------------
+# Nothing in this package reads an absent cell, but other code might: a bare
+# ``sales["units"]`` carries no mask with it. So the placeholder is chosen to
+# be unmistakable. Where the dtype has a null it is that; an integer has none,
+# and gets the extreme of its range -- as numpy itself does for ``NaT`` -- so
+# that a sum which wrongly includes one is wrong by enough to be noticed.
+# ``default_fill_value`` says what any dtype gets.
+
+from labelled_array import default_fill_value  # noqa: E402
+
+for dtype in ("float64", "int64", "int8", "uint8", "datetime64[D]", "bool", "U3"):
+    print(f"{dtype:>14}: {default_fill_value(dtype)!r}")
+
+assert sales["units"][1, 1] == default_fill_value("int64") == np.iinfo("int64").min
+assert default_fill_value("uint8") == 255
+assert default_fill_value("bool") is False, "a bool has no value to spare"
+
+# %%
+# Choosing the placeholder yourself
+# ---------------------------------
+# ``fill_value`` overrides it, for every variable or per variable, wherever
+# cells are invented: ``from_dataframe``, ``reindex``, ``align`` and
+# ``concat``. A sale of nothing really is zero units, so here a zero is right.
+
+zero_filled = LabelledArray.from_dataframe(
+    df, dims=["region", "product"], fill_value={"units": 0}
+)
+assert zero_filled["units"][1, 1] == 0
+assert np.isnan(zero_filled["price"][1, 1]), "unnamed variables keep the default"
+assert not zero_filled.mask[1, 1], "and the cell is still absent"
 
 # %%
 # Only present cells become rows
@@ -85,13 +117,19 @@ assert_frame_equal(df.sort(["region", "product"]), sales.to_dataframe())
 # ``mask=False`` saves the memory, and with it goes the knowledge of which
 # cells were real: six rows come back from four. ``dropna`` drops a row only
 # when *every* variable in it is null, so it recovers the four rows for floats
-# alone -- an integer placeholder is a zero like any other.
+# alone -- an integer has no null. This is where the unmistakable placeholder
+# earns its keep: the two invented rows can still be told apart and filtered.
 
 unmasked = LabelledArray.from_dataframe(df, dims=["region", "product"], mask=False)
 assert unmasked.mask is None
 assert len(unmasked.to_dataframe()) == 6
 assert len(unmasked.to_dataframe(dropna=True)) == 6, "units is never null"
 assert len(unmasked[["price"]].to_dataframe(dropna=True)) == 4
+
+invented = unmasked.to_dataframe().filter(
+    pl.col("units") == default_fill_value("int64")
+)
+assert invented["product"].to_list() == ["BBB", "CCC"]
 
 # %%
 # Arithmetic keeps what is present in both
