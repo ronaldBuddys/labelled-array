@@ -253,10 +253,8 @@ asserted in `tests/test_dtypes.py`, so none of it can change silently.
 
 Beyond dtypes:
 
-- **Row order is not preserved.** Rows come back in the array's stored layout,
-  which straight after `from_dataframe` is sorted by the dimension labels, so
-  compare against the source sorted by its dimension columns. A reordering
-  `select`, `reindex` or `concat` changes that layout, and the rows follow it.
+- **Row order is not preserved.** Rows come back ordered by the dimension
+  labels, so compare against the source sorted by its dimension columns.
 - **Labels are sorted.** Object columns whose values cannot be compared keep
   first-seen order instead.
 - **Null labels are refused.** A NaN or None label could never be selected, as
