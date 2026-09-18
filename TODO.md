@@ -8,6 +8,10 @@ workable today, and a natural index already covers the case that hurts most.
 - **Explicit label sets.** `from_dataframe(..., labels={"date": ...})` to force
   a dimension's labels and their order, for aligning several frames onto one
   layout instead of taking each frame's own values.
+- **Adapter-native factorize.** `_reshape.factorize` hashes object columns in a
+  Python loop. pandas and polars both have a native factorize that would be
+  faster still; the clean place for it is a method on `DataFrameAdapter`, with
+  the current numpy implementation as the fallback.
 - **More engines.** A `pyarrow` adapter, and `duckdb`/`ibis` relations.
 - **Streaming construction.** Building from a frame too large to hold in memory,
   scattering chunk by chunk into a preallocated array.

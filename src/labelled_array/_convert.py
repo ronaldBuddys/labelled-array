@@ -1,8 +1,7 @@
 """Conversion between DataFrames and labelled arrays.
 
-The orchestration here is shared by every DataFrame library: adapters read and
-write columns as numpy arrays, and may factorize a dimension column themselves
-where that is faster and provably the same.
+The orchestration here is shared by every DataFrame library: adapters only read
+and write columns as numpy arrays.
 """
 
 from __future__ import annotations
@@ -13,6 +12,7 @@ from typing import Any
 import numpy as np
 
 from labelled_array._reshape import (
+    factorize,
     flat_positions,
     natural_index,
     scatter,
@@ -220,7 +220,8 @@ def from_dataframe(
             f"pass the column as a coordinate instead"
         )
 
-    factorized = {name: adapter.factorize(df, name) for name in dim_names}
+    dim_values = {name: adapter.column_values(df, name) for name in dim_names}
+    factorized = {name: factorize(values) for name, values in dim_values.items()}
     natural_codes = _natural_codes(factorized, dim_names, natural_names)
 
     labels, codes, natural_sources = {}, [], {}
@@ -264,7 +265,7 @@ def from_dataframe(
         for name in columns
     }
     coords = {
-        name: scatter(adapter.column_values(df, name), positions, dimensions.shape)
+        name: scatter(dim_values[name], positions, dimensions.shape)
         for name in natural_names
     }
 
