@@ -118,14 +118,14 @@ only as efficient as its `density` — the fraction of cells a source row
 populates. When dimensions are close to independent, that fraction collapses:
 in `examples/04_natural_index_and_sparsity.py`, twelve rows span 144 cells.
 
-`natural=` is the current answer, and it applies only when one dimension's
-labels are *unique within* the others (dates, event ids). That is a correctness
-precondition, not a performance one — the index counts rows, so a repeated
+`natural=` is the current answer, in two modes. `"rows"`, the default, numbers
+rows and so needs labels that are *unique within* the others (dates, event
+ids); that is a correctness precondition, not a performance one — a repeated
 label would become two rungs — and `from_dataframe` raises
-`DuplicateIndexError` when it does not hold. A mode that ranks distinct labels
-instead of rows would lift it (a long option chain wants exactly that) and is
-not built. The unique case covers the common one, which is why the rest of this
-is a nice to have rather than a blocker:
+`DuplicateIndexError` when it does not hold. `"distinct"`, asked for with the
+mapping form, ranks distinct labels instead, which is what a long option chain
+wants for its expiries. Between them the common cases are covered, which is why
+the rest of this is a nice to have rather than a blocker:
 
 - **Sparse backends.** An `ArrayBackend` over `sparse`/COO or `scipy.sparse`,
   so the same object can hold a sparse buffer. The backend registry already

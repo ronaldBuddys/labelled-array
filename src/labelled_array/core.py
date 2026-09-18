@@ -1080,7 +1080,7 @@ class LabelledArray(ArithmeticMixin):
         cols: str | Sequence[str] | None = None,
         dims: str | Sequence[str] | None = None,
         *,
-        natural: str | Sequence[str] | None = None,
+        natural: str | Sequence[str] | Mapping[str, str] | None = None,
         alt: Mapping[str, str] | None = None,
         fill_value: Any = None,
         dtype: Any = None,
@@ -1108,13 +1108,27 @@ class LabelledArray(ArithmeticMixin):
         dims : str or sequence of str, optional
             Columns identifying a cell, in axis order; defaults to the names of
             the frame's index levels, which polars frames never have.
-        natural : str or sequence of str, optional
+        natural : str, sequence of str, or mapping of str to str, optional
             Dimensions to replace with a natural index. Each named dimension
             becomes ``<name>_idx``, labelled by position within the other
             dimensions rather than by value, and its values are kept as a
             coordinate so the round trip restores the original column. This is
             what keeps a dimension whose labels are near-unique per group --
             dates, typically -- from blowing the array up.
+
+            A position is counted within each combination of the dimensions
+            that are not natural plus the natural ones declared earlier. How it
+            is counted is the dimension's mode, given by the mapping form
+            ``{name: mode}``; a name or a sequence of names means ``"rows"``.
+
+            ``"rows"``
+                Number the rows. The labels must be unique within the group,
+                and a repeat raises rather than being numbered twice.
+            ``"distinct"``
+                Rank the distinct labels, so rows sharing a label share a
+                position. This is for a ladder shared by the rows beneath it:
+                the expiries of a long option chain, which repeat once per
+                strike.
         alt : mapping of str to str, optional
             Columns to fold in as *alternative* dimensions, each mapped to the
             dimension it describes. The column must say one thing per entry of
@@ -1152,9 +1166,12 @@ class LabelledArray(ArithmeticMixin):
         Raises
         ------
         DuplicateIndexError
-            If two rows map to the same cell, making the conversion ambiguous.
+            If two rows map to the same cell, making the conversion ambiguous,
+            or a ``"rows"`` natural dimension repeats a label within a group.
         KeyError
             If a named column is not in the frame.
+        ValueError
+            If ``natural`` names a mode other than ``"rows"`` or ``"distinct"``.
 
         Notes
         -----
@@ -1170,6 +1187,31 @@ class LabelledArray(ArithmeticMixin):
         (2, 2)
         >>> la.density
         0.75
+
+        A long option chain has one row per strike, so an expiry repeats within
+        its trade date. Ranking the distinct expiries and numbering the strikes
+        beneath each gives the ragged surface in one call:
+
+        >>> chain = pl.DataFrame(
+        ...     {
+        ...         "date": ["d0"] * 5,
+        ...         "expiry": [0.1, 0.1, 0.1, 0.5, 0.5],
+        ...         "strike": [90.0, 100.0, 110.0, 95.0, 105.0],
+        ...         "vol": [0.22, 0.20, 0.21, 0.19, 0.18],
+        ...     }
+        ... )
+        >>> surface = LabelledArray.from_dataframe(
+        ...     chain,
+        ...     cols="vol",
+        ...     dims=["date", "expiry", "strike"],
+        ...     natural={"expiry": "distinct", "strike": "rows"},
+        ... )
+        >>> surface.dims.names
+        ('date', 'expiry_idx', 'strike_idx')
+        >>> surface.shape
+        (1, 2, 3)
+        >>> surface.coords["strike"][0].tolist()
+        [[90.0, 100.0, 110.0], [95.0, 105.0, nan]]
 
         See Also
         --------

@@ -336,3 +336,141 @@ def test_repeated_labels_with_no_grouping_dimension_are_refused(engine):
     df = build_frame(engine, {"d": [1, 1, 2], "v": [1.0, 2.0, 3.0]})
     with pytest.raises(DuplicateIndexError, match="natural index 'd'"):
         LabelledArray.from_dataframe(df, cols=["v"], dims=["d"], natural=["d"])
+
+
+# -- ranking distinct labels ----------------------------------------------------
+
+
+@pytest.fixture
+def chain():
+    """A long option chain: one row per strike, so an expiry repeats per date.
+
+    Date 0 lists two expiries of three and two strikes; date 1 lists one expiry
+    of two strikes, at a tenor date 0 does not have.
+    """
+    return {
+        "trade_date": ["2024-06-03"] * 5 + ["2024-06-04"] * 2,
+        "expiry": [0.1, 0.1, 0.1, 0.5, 0.5, 0.4, 0.4],
+        "strike": [90.0, 100.0, 110.0, 95.0, 105.0, 80.0, 85.0],
+        "vol": [0.22, 0.20, 0.21, 0.19, 0.18, 0.30, 0.31],
+    }
+
+
+CHAIN_DIMS = ["trade_date", "expiry", "strike"]
+SURFACE = {"expiry": "distinct", "strike": "rows"}
+
+
+def test_distinct_mode_ranks_labels_not_rows(engine, chain):
+    surface = LabelledArray.from_dataframe(
+        build_frame(engine, chain), cols=["vol"], dims=CHAIN_DIMS, natural=SURFACE
+    )
+    # Two expiries at most on any date, not the five rows date 0 has; three
+    # distinct tenors overall, which labelling the expiry would have used.
+    assert surface.dims.names == ("trade_date", "expiry_idx", "strike_idx")
+    assert surface.shape == (2, 2, 3)
+    assert surface.dims.source("expiry_idx") == "expiry"
+    assert surface.mask.sum() == 7
+    np.testing.assert_array_equal(
+        surface["vol"][0], [[0.22, 0.20, 0.21], [0.19, 0.18, np.nan]]
+    )
+
+
+def test_distinct_mode_coordinate_is_constant_along_the_axes_beneath_it(engine, chain):
+    surface = LabelledArray.from_dataframe(
+        build_frame(engine, chain), cols=["vol"], dims=CHAIN_DIMS, natural=SURFACE
+    )
+    # The coordinate is full shape: the expiry wherever a row exists, the fill
+    # value where none does.
+    np.testing.assert_array_equal(
+        surface.coords["expiry"],
+        [
+            [[0.1, 0.1, 0.1], [0.5, 0.5, np.nan]],
+            [[0.4, 0.4, np.nan], [np.nan, np.nan, np.nan]],
+        ],
+    )
+
+
+def test_distinct_mode_round_trips_a_long_chain(engine, chain):
+    df = build_frame(engine, chain)
+    surface = LabelledArray.from_dataframe(
+        df, cols=["vol"], dims=CHAIN_DIMS, natural=SURFACE
+    )
+    back = surface.to_dataframe(engine=engine, index=False)
+    assert_frames_equal(
+        engine,
+        sort_frame(engine, back[columns(df)], CHAIN_DIMS),
+        sort_frame(engine, df, CHAIN_DIMS),
+    )
+
+
+def test_distinct_mode_equals_rows_mode_when_labels_are_unique(engine, panel):
+    df = build_frame(engine, panel)
+    rows = LabelledArray.from_dataframe(df, cols=["w"], dims=DIMS, natural=["date"])
+    distinct = LabelledArray.from_dataframe(
+        df, cols=["w"], dims=DIMS, natural={"date": "distinct"}
+    )
+    assert distinct.equals(rows)
+
+
+def test_distinct_mode_still_refuses_a_true_duplicate_cell(engine, chain):
+    # A call and a put at one strike: two rows for one cell, which no ranking
+    # can tell apart.
+    doubled = {name: [*values, values[0]] for name, values in chain.items()}
+    with pytest.raises(DuplicateIndexError, match="populated by more than one row"):
+        LabelledArray.from_dataframe(
+            build_frame(engine, doubled),
+            cols=["vol"],
+            dims=CHAIN_DIMS,
+            natural={"expiry": "distinct", "strike": "distinct"},
+        )
+    with pytest.raises(DuplicateIndexError, match="natural index 'strike'"):
+        LabelledArray.from_dataframe(
+            build_frame(engine, doubled), cols=["vol"], dims=CHAIN_DIMS, natural=SURFACE
+        )
+
+
+def test_rows_mode_error_points_at_distinct_mode(engine, chain):
+    with pytest.raises(DuplicateIndexError, match=r"natural=\{'expiry': 'distinct'\}"):
+        LabelledArray.from_dataframe(
+            build_frame(engine, chain),
+            cols=["vol"],
+            dims=CHAIN_DIMS,
+            natural=["expiry", "strike"],
+        )
+
+
+def test_unknown_natural_mode_raises(engine, chain):
+    with pytest.raises(ValueError, match="must be one of"):
+        LabelledArray.from_dataframe(
+            build_frame(engine, chain),
+            cols=["vol"],
+            dims=CHAIN_DIMS,
+            natural={"expiry": "dense"},
+        )
+
+
+def test_mapping_order_sets_the_grouping_order(engine, chain):
+    # Declared strike first, the strike is ranked within the trade date alone
+    # and the expiry within (trade_date, strike): a strike ladder per date with
+    # the expiries beneath it, so the axes keep their order but not their sizes.
+    swapped = LabelledArray.from_dataframe(
+        build_frame(engine, chain),
+        cols=["vol"],
+        dims=CHAIN_DIMS,
+        natural={"strike": "distinct", "expiry": "rows"},
+    )
+    assert swapped.dims.names == ("trade_date", "expiry_idx", "strike_idx")
+    assert swapped.shape == (2, 1, 5)
+
+
+def test_engines_agree_on_distinct_mode(chain):
+    built = build_both(chain, CHAIN_DIMS, cols=["vol"], natural=SURFACE)
+    assert built[0].equals(built[1])
+
+
+def test_natural_rank_with_no_grouping_is_a_global_dense_rank():
+    from labelled_array._reshape import natural_rank
+
+    codes = np.array([2, 0, 2, 1, 0])
+    assert natural_rank([codes]).tolist() == [2, 0, 2, 1, 0]
+    assert natural_rank([np.array([], dtype=np.intp)]).tolist() == []

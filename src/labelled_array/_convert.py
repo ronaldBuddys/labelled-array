@@ -15,6 +15,7 @@ import numpy as np
 from labelled_array._reshape import (
     flat_positions,
     natural_index,
+    natural_rank,
     scatter,
     take_flat,
 )
@@ -45,24 +46,56 @@ def _scatter_column(
         ) from error
 
 
+#: Number rows within the group; the labels must be unique there.
+NATURAL_ROWS = "rows"
+#: Rank distinct labels within the group; rows sharing a label share a position.
+NATURAL_DISTINCT = "distinct"
+_NATURAL_MODES = (NATURAL_ROWS, NATURAL_DISTINCT)
+
+
+def _natural_modes(
+    natural: str | Sequence[str] | Mapping[str, str] | None,
+) -> dict[str, str]:
+    """Return the mode of each natural dimension, in declaration order.
+
+    A name or a sequence of names means ``"rows"`` for each, which is what
+    ``natural`` meant before it could say otherwise.
+    """
+    if not isinstance(natural, Mapping):
+        return dict.fromkeys(as_name_list(natural), NATURAL_ROWS)
+    unknown = {
+        name: mode for name, mode in natural.items() if mode not in _NATURAL_MODES
+    }
+    if unknown:
+        raise ValueError(
+            f"natural index modes must be one of {list(_NATURAL_MODES)}: {unknown}"
+        )
+    return dict(natural)
+
+
 def _natural_codes(
     factorized: Mapping[str, tuple[np.ndarray, np.ndarray]],
     dim_names: Sequence[str],
-    natural_names: Sequence[str],
+    natural_modes: Mapping[str, str],
 ) -> dict[str, np.ndarray]:
     """Return the natural index of each dimension being replaced by one.
 
-    A natural index numbers the rows within each combination of every
+    A natural index numbers positions within each combination of every
     non-natural dimension plus the natural dimensions declared before it, so
     where a dimension sits in the axis order does not affect the result.
     """
-    grouping_names = [name for name in dim_names if name not in natural_names]
+    grouping_names = [name for name in dim_names if name not in natural_modes]
     grouping = [factorized[name][1] for name in grouping_names]
     indices = {}
-    for name in natural_names:
+    for name, mode in natural_modes.items():
         codes = factorized[name][1]
-        _check_natural_unique(name, grouping_names, grouping, codes, factorized)
-        indices[name] = natural_index([*grouping, codes])
+        if mode == NATURAL_DISTINCT:
+            # Repeats are the point of this mode, so there is no uniqueness to
+            # check; two rows landing in one *cell* still raise downstream.
+            indices[name] = natural_rank([*grouping, codes])
+        else:
+            _check_natural_unique(name, grouping_names, grouping, codes, factorized)
+            indices[name] = natural_index([*grouping, codes])
         grouping.append(codes)
         grouping_names.append(name)
     return indices
@@ -107,7 +140,9 @@ def _check_natural_unique(
     raise DuplicateIndexError(
         f"natural index {name!r} needs labels that are unique{within}: "
         f"{int(repeated.sum())} row(s) repeat a label and would be numbered as "
-        f"separate positions. First offending rows: {seen}"
+        f"separate positions. First offending rows: {seen}. If {name!r} is a "
+        f"ladder shared by the rows beneath it, pass "
+        f"natural={{{name!r}: 'distinct'}} to rank its distinct labels instead"
     )
 
 
@@ -151,7 +186,7 @@ def from_dataframe(
     cols: str | Sequence[str] | None = None,
     dims: str | Sequence[str] | None = None,
     *,
-    natural: str | Sequence[str] | None = None,
+    natural: str | Sequence[str] | Mapping[str, str] | None = None,
     alt: Mapping[str, str] | None = None,
     fill_value: Any = None,
     dtype: Any = None,
@@ -206,7 +241,8 @@ def from_dataframe(
     fill_values = per_name(fill_value, columns, "fill_value")
     dtypes = per_name(dtype, columns, "dtype")
 
-    natural_names = as_name_list(natural)
+    natural_modes = _natural_modes(natural)
+    natural_names = list(natural_modes)
     unknown_natural = [name for name in natural_names if name not in dim_names]
     if unknown_natural:
         raise DimensionError(f"natural names are not dimensions: {unknown_natural}")
@@ -221,7 +257,7 @@ def from_dataframe(
         )
 
     factorized = {name: adapter.factorize(df, name) for name in dim_names}
-    natural_codes = _natural_codes(factorized, dim_names, natural_names)
+    natural_codes = _natural_codes(factorized, dim_names, natural_modes)
 
     labels, codes, natural_sources = {}, [], {}
     for name in dim_names:

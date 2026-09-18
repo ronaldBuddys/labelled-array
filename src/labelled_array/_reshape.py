@@ -21,6 +21,7 @@ __all__ = [
     "factorize",
     "flat_positions",
     "natural_index",
+    "natural_rank",
     "scatter",
     "take_flat",
 ]
@@ -232,6 +233,7 @@ def natural_index(codes: list[np.ndarray]) -> np.ndarray:
     two positions and comes back as two rungs of the ladder -- finite,
     plausible and wrong. ``from_dataframe`` checks it and raises
     :class:`~labelled_array.DuplicateIndexError`; this function does not.
+    :func:`natural_rank` is the index for labels that are meant to repeat.
 
     Parameters
     ----------
@@ -260,3 +262,47 @@ def natural_index(codes: list[np.ndarray]) -> np.ndarray:
     )
     index[order] = np.arange(len(target)) - group_start
     return index
+
+
+def natural_rank(codes: list[np.ndarray]) -> np.ndarray:
+    """Return a dense index ranking distinct labels within each preceding-code group.
+
+    Where :func:`natural_index` counts rows, this counts *distinct labels*: rows
+    sharing a label within a group share a position. That is the index a ladder
+    shared by the rows beneath it needs -- the expiries of a long option chain,
+    which repeat once per strike -- and it equals :func:`natural_index` wherever
+    the labels are unique within each group.
+
+    Parameters
+    ----------
+    codes : list of numpy.ndarray
+        Codes of the preceding dimensions, then the codes of the dimension
+        being replaced, as the last entry.
+
+    Returns
+    -------
+    numpy.ndarray
+        The within-group dense rank (0-based, ascending by label) of each row.
+    """
+    *preceding, target = codes
+    n_rows = len(target)
+    rank = np.empty(n_rows, dtype=np.intp)
+    if n_rows == 0:
+        return rank
+
+    order = np.lexsort([target, *reversed(preceding)])
+    ordered = target[order]
+    starts_group = np.zeros(n_rows, dtype=bool)
+    starts_group[0] = True
+    for code in preceding:
+        grouped = code[order]
+        starts_group[1:] |= grouped[1:] != grouped[:-1]
+
+    new_label = starts_group.copy()
+    new_label[1:] |= ordered[1:] != ordered[:-1]
+    # Distinct labels seen so far, less the count at the start of the row's
+    # group, is the rank within the group.
+    seen = np.cumsum(new_label) - 1
+    at_group_start = np.maximum.accumulate(np.where(starts_group, seen, 0))
+    rank[order] = seen - at_group_start
+    return rank

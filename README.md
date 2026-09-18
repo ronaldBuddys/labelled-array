@@ -140,6 +140,20 @@ LabelledArray.from_dataframe(
 # shape (3, 4, 1), 100% populated, dims ('group', 'item', 'date_idx')
 ```
 
+That numbers rows, so the labels must be unique within the group. A ladder
+shared by the rows beneath it — the expiries of an option chain, repeating once
+per strike — is ranked by distinct label instead, with the mapping form:
+
+```python
+LabelledArray.from_dataframe(
+    chain,
+    cols=["vol"],
+    dims=["trade_date", "expiry", "strike"],
+    natural={"expiry": "distinct", "strike": "rows"},
+)
+# dims ('trade_date', 'expiry_idx', 'strike_idx'): ragged on both axes, no padding by hand
+```
+
 See `examples/04_natural_index_and_sparsity.py`.
 
 ## Alternative dimensions
@@ -285,11 +299,13 @@ Beyond dtypes:
   building an array with a label you cannot reach.
 - **Duplicate rows are refused.** Two rows for one cell are ambiguous;
   `DuplicateIndexError` names the offending labels.
-- **A natural index needs labels unique within the other dimensions.** The
-  index counts rows, not distinct labels, so `natural="expiry"` on a long
-  option chain (one row per strike, expiries repeating) would number every
-  strike as its own expiry. `from_dataframe` raises `DuplicateIndexError`
-  rather than build that ladder.
+- **A natural index numbers rows unless told otherwise.** `natural="expiry"` on
+  a long option chain (one row per strike, expiries repeating) would number
+  every strike as its own expiry, so `from_dataframe` raises
+  `DuplicateIndexError` rather than build that ladder. Where the repeat is the
+  point, say so: `natural={"expiry": "distinct", "strike": "rows"}` ranks the
+  distinct expiries and numbers the strikes beneath each, which is a ragged
+  surface in one call.
 - **`ffill` refuses a natural-index dimension.** The padding cells it would
   fill were never rows, and each would carry its source's label, so the
   result could not come back through `from_dataframe`. Fill along a real
