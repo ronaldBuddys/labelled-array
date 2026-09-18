@@ -2,6 +2,8 @@
 
 Both DataFrame adapters hand numpy arrays to the functions here, so pandas and
 polars produce identical results by construction rather than by coincidence.
+:func:`factorize` is also the reference an adapter's native factorization has
+to reproduce exactly.
 """
 
 from __future__ import annotations

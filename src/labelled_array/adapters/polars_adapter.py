@@ -44,3 +44,23 @@ class PolarsAdapter(DataFrameAdapter):
         return pl.DataFrame(
             {name: pl.Series(name, values) for name, values in columns.items()}
         )
+    def _native_factorize(
+        self, df: Any, column: str
+    ) -> tuple[np.ndarray, np.ndarray] | None:
+        pl = self._pl
+        series = df[column]
+        # Only strings pay: np.unique is already fast for every other dtype, and
+        # a null has to reach the numpy path to be refused with the usual error.
+        if series.dtype != pl.String or series.null_count():
+            return None
+        # polars sorts strings by their UTF-8 bytes, which is the code point
+        # order Python -- and so the numpy reference -- sorts them by.
+        labels = series.unique().sort()
+        # An Enum's physical value is the index into its categories. Categorical
+        # would not do: its physical codes come from a global string cache.
+        codes = series.cast(pl.Enum(labels)).to_physical().to_numpy()
+        return (
+            np.asarray(labels.to_numpy(), dtype=object),
+            codes.astype(np.intp, copy=False),
+        )
+
