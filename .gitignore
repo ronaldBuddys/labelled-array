@@ -28,3 +28,6 @@ htmlcov/
 docs/_build/
 docs/auto_examples/
 docs/sg_execution_times.rst
+
+# Agent instructions are local to each checkout, never committed.
+CLAUDE.md
