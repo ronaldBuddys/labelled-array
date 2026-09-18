@@ -56,9 +56,8 @@ namespace, because a DataFrame column can only be one of them. That is what lets
 ## Install
 
 ```bash
-pip install -e ".[dev]"          # pandas, polars, pytest, coverage, hypothesis
-pip install -e ".[jax]"          # optional array backends
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+uv sync                          # the dev group: pandas, polars, jax, torch, pytest, ruff
+pip install -e ".[polars]"       # or as a library; extras: polars, pandas, jax, torch
 ```
 
 ## The presence mask
