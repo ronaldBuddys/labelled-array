@@ -18,7 +18,7 @@ import numpy as np
 import polars as pl
 from polars.testing import assert_frame_equal
 
-from labelled_array import LabelledArray
+from labelled_array import DuplicateIndexError, LabelledArray
 
 panel = pl.DataFrame(
     {
@@ -131,6 +131,57 @@ print(uneven.mask)
 assert uneven.shape == (2, 3)
 assert uneven.density == 4 / 6
 assert_frame_equal(ragged.sort(["group", "date"]), uneven.to_dataframe())
+
+# %%
+# A ladder shared by the rows beneath it
+# --------------------------------------
+# Numbering rows needs labels that are unique within the group. A long option
+# chain breaks that on purpose: there is one row per strike, so an expiry
+# repeats within its trade date, and numbering the rows would count every
+# strike as an expiry of its own. ``from_dataframe`` refuses rather than build
+# that ladder.
+
+chain = pl.DataFrame(
+    {
+        "trade_date": ["2024-06-03"] * 5 + ["2024-06-04"] * 2,
+        "expiry": [0.1, 0.1, 0.1, 0.5, 0.5, 0.4, 0.4],
+        "strike": [90.0, 100.0, 110.0, 95.0, 105.0, 80.0, 85.0],
+        "vol": [0.22, 0.20, 0.21, 0.19, 0.18, 0.30, 0.31],
+    }
+)
+chain_dims = ["trade_date", "expiry", "strike"]
+
+try:
+    LabelledArray.from_dataframe(
+        chain, cols=["vol"], dims=chain_dims, natural=["expiry", "strike"]
+    )
+except DuplicateIndexError as error:
+    print(str(error)[:140], "...")
+
+# %%
+# Ranking distinct labels
+# -----------------------
+# The mapping form of ``natural`` says how each position is counted.
+# ``"distinct"`` ranks the distinct labels, so the rows sharing an expiry share
+# a position; ``"rows"`` is the numbering above, used here for the strikes
+# beneath each expiry. Both axes are ragged and neither is padded by hand.
+
+surface = LabelledArray.from_dataframe(
+    chain,
+    cols=["vol"],
+    dims=chain_dims,
+    natural={"expiry": "distinct", "strike": "rows"},
+)
+labelled_chain = LabelledArray.from_dataframe(chain, cols=["vol"], dims=chain_dims)
+
+print(surface.shape, "against", labelled_chain.shape)
+print(surface.coords["strike"])
+assert surface.shape == (2, 2, 3)
+assert labelled_chain.shape == (2, 3, 7)
+assert surface.density > 3 * labelled_chain.density
+assert_frame_equal(
+    chain.sort(chain_dims), surface.to_dataframe(index=False).select(chain.columns)
+)
 
 # %%
 # Coordinates that do not vary along every dimension
