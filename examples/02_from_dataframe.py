@@ -1,10 +1,10 @@
 """
-Round trips with pandas and polars
-==================================
+Round trips through a DataFrame
+===============================
 
 Labelled arrays are usually reached from a DataFrame: some columns identify a
-cell, the rest become variables. The conversion goes both ways, and both
-DataFrame libraries give exactly the same result.
+cell, the rest become variables. The conversion goes both ways: polars is the
+default, and pandas works the same way when asked for by name.
 """
 
 # %%
@@ -14,8 +14,8 @@ DataFrame libraries give exactly the same result.
 # ('south', 'BBB') has no row at all -- the frame is sparse.
 
 import numpy as np
-import pandas as pd
 import polars as pl
+from polars.testing import assert_frame_equal
 
 from labelled_array import LabelledArray
 
@@ -25,7 +25,7 @@ records = {
     "units": [10, 20, 30, 40],
     "price": [1.5, 2.5, 3.5, 4.5],
 }
-df = pd.DataFrame(records)
+df = pl.DataFrame(records)
 print(df)
 
 # %%
@@ -46,9 +46,9 @@ assert sales.density == 4 / 6
 # %%
 # The presence mask
 # -----------------
-# The mask records which cells came from a row. It is what lets an integer
-# column keep its dtype: the two empty cells hold a placeholder zero, and the
-# mask -- not the value -- is what says they are absent.
+# The mask records which cells came from a row, so an integer column keeps its
+# dtype: an empty cell holds a placeholder zero and the mask says it is absent.
+# ``11_presence_mask.py`` covers the mask end to end.
 
 print(sales["units"])
 print(sales.mask)
@@ -61,37 +61,43 @@ assert not sales.mask[1, 1]
 # Converting back
 # ---------------
 # Only the populated cells become rows, so the round trip is exact -- up to row
-# order, which follows the dimension labels.
+# order, which follows the dimension labels. With no engine named the result
+# is a polars frame, and the dimensions are ordinary columns.
 
-out = sales.to_dataframe(index=False)
-pd.testing.assert_frame_equal(
-    df.sort_values(["region", "product"]).reset_index(drop=True), out
-)
+out = sales.to_dataframe()
+assert isinstance(out, pl.DataFrame)
+assert out.columns == ["region", "product", "units", "price"]
+assert_frame_equal(df.sort(["region", "product"]), out)
 print(out)
 
 # %%
-# Keeping the dimensions as an index
-# ----------------------------------
-# By default pandas gets the dimension columns back as a MultiIndex, and a
-# frame that already has one needs no ``dims`` argument at all.
+# pandas: dimensions as an index
+# ------------------------------
+# A pandas frame with a named index needs no ``dims`` argument -- the index
+# levels supply them. On the way out, ``to_dataframe("pandas")`` puts the
+# dimensions back into a MultiIndex; ``index=False`` leaves them as columns.
 
-indexed = df.set_index(["region", "product"]).sort_index()
+import pandas as pd  # noqa: E402
+
+indexed = pd.DataFrame(records).set_index(["region", "product"]).sort_index()
 assert LabelledArray.from_dataframe(indexed).equals(sales)
-pd.testing.assert_frame_equal(indexed, sales.to_dataframe())
+pd.testing.assert_frame_equal(indexed, sales.to_dataframe("pandas"))
+pd.testing.assert_frame_equal(
+    indexed.reset_index(), sales.to_dataframe("pandas", index=False)
+)
+print(sales.to_dataframe("pandas"))
 
 # %%
-# polars gives the same answer
-# ----------------------------
-# polars has no index, so dimensions are always ordinary columns. The array
-# built from either library is the same object.
+# polars and pandas side by side
+# ------------------------------
+# polars has no index, so its dimensions are always ordinary columns and
+# ``dims`` is always passed. Either library builds the same array;
+# ``13_polars_and_pandas.py`` sets the two side by side.
 
-polars_frame = pl.DataFrame(records)
-from_polars = LabelledArray.from_dataframe(
-    polars_frame, cols=["units", "price"], dims=["region", "product"]
+from_pandas = LabelledArray.from_dataframe(
+    pd.DataFrame(records), cols=["units", "price"], dims=["region", "product"]
 )
-
-assert from_polars.equals(sales)
-print(sales.to_dataframe("polars"))
+assert from_pandas.equals(sales)
 
 # %%
 # Choosing the fill and the dtype
@@ -117,7 +123,7 @@ assert filled.dtypes["price"] == np.dtype("float32")
 
 from labelled_array import DuplicateIndexError  # noqa: E402
 
-duplicated = pd.DataFrame(
+duplicated = pl.DataFrame(
     {"region": ["north", "north"], "product": ["AAA", "AAA"], "units": [1, 2]}
 )
 try:

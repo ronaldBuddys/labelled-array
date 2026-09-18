@@ -10,6 +10,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from functools import cache
 from typing import Any, Generic, TypeVar
 
@@ -84,17 +85,22 @@ class Registry(Generic[P]):
         What an entry is called in error messages, e.g. ``"backend"``.
     error : type
         Exception raised for an unknown, uninstalled or unrecognised entry.
-    default : str
-        Name returned when a lookup is given None.
+    default : str or sequence of str
+        Name used when a lookup is given None. Several names are an order of
+        preference: the first whose library is installed is used.
     """
 
     def __init__(
-        self, base: type[P], noun: str, error: type[Exception], default: str
+        self,
+        base: type[P],
+        noun: str,
+        error: type[Exception],
+        default: str | Sequence[str],
     ) -> None:
         self.base = base
         self.noun = noun
         self.error = error
-        self.default = default
+        self.defaults = (default,) if isinstance(default, str) else tuple(default)
         self.entries: dict[str, P] = {}
 
     def register(self, plugin: P | type[P]) -> P:
@@ -122,6 +128,19 @@ class Registry(Generic[P]):
             name for name, entry in self.entries.items() if entry.is_available()
         )
 
+    def _default_name(self) -> str:
+        """Return the first preferred entry whose library is installed."""
+        if len(self.defaults) == 1:
+            return self.defaults[0]  # let `get` say why a lone default is unusable
+        for name in self.defaults:
+            entry = self.entries.get(name)
+            if entry is not None and entry.is_available():
+                return name
+        raise self.error(
+            f"none of the default {self.noun}s {list(self.defaults)} is installed; "
+            f"install one, or name a registered {self.noun} explicitly"
+        )
+
     def get(self, key: str | P | None = None) -> P:
         """Return an entry by name, passing instances through.
 
@@ -132,7 +151,7 @@ class Registry(Generic[P]):
         """
         if isinstance(key, self.base):
             return key
-        name = self.default if key is None else key
+        name = self._default_name() if key is None else key
         if name not in self.entries:
             raise self.error(
                 f"unknown {self.noun} {name!r}, registered {self.noun}s: {list(self.entries)}"

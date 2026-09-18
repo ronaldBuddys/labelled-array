@@ -10,16 +10,19 @@ on numpy, because they are metadata rather than payload.
 # %%
 # Moving between backends
 # -----------------------
+# The frame is polars, the array starts on numpy, and ``to_backend`` moves the
+# variables without changing a value.
 
 import numpy as np
-import pandas as pd
+import polars as pl
+from polars.testing import assert_frame_equal
 
 from labelled_array import BackendDtypeError, LabelledArray
 from labelled_array.backends import available_backends
 
 print("available backends:", available_backends())
 
-df = pd.DataFrame(
+df = pl.DataFrame(
     {
         "region": ["north", "north", "south"],
         "product": ["AAA", "BBB", "AAA"],
@@ -44,7 +47,7 @@ for name in available_backends():
 on_torch = prices.to_backend("torch") if "torch" in available_backends() else prices
 assert isinstance(on_torch.dims["region"], np.ndarray)
 assert on_torch.select({"region": "north"}).shape == (1, 2)
-print(on_torch.to_dataframe(index=False))
+print(on_torch.to_dataframe())
 
 # %%
 # What a backend cannot hold
@@ -53,7 +56,7 @@ print(on_torch.to_dataframe(index=False))
 # the move fails and names the variable.
 
 text = LabelledArray.from_dataframe(
-    pd.DataFrame({"a": [1, 2], "label": ["p", "q"]}), cols=["label"], dims=["a"]
+    pl.DataFrame({"a": [1, 2], "label": ["p", "q"]}), cols=["label"], dims=["a"]
 )
 try:
     text.to_backend("torch")
@@ -82,9 +85,10 @@ if "jax" in available_backends():
 # Dtypes through a round trip
 # ---------------------------
 # Because the mask records absence, a column does not have to be widened to
-# hold a null: integers and booleans keep their dtype through a sparse frame.
+# hold a null: integers and booleans keep their dtype through a sparse frame,
+# and come back as polars ``Int32`` and ``Boolean``.
 
-typed = pd.DataFrame(
+typed = pl.DataFrame(
     {
         "region": ["north", "north", "south"],
         "product": ["AAA", "BBB", "AAA"],
@@ -95,17 +99,20 @@ typed = pd.DataFrame(
 kept = LabelledArray.from_dataframe(typed, dims=["region", "product"])
 assert kept.dtypes["count"] == np.dtype("int32")
 assert kept.dtypes["ok"] == np.dtype("bool")
-pd.testing.assert_frame_equal(
-    typed.sort_values(["region", "product"]).reset_index(drop=True),
-    kept.to_dataframe(index=False),
-)
+out = kept.to_dataframe()
+assert out.schema["count"] == pl.Int32
+assert out.schema["ok"] == pl.Boolean
+assert_frame_equal(typed.sort(["region", "product"]), out)
 print(kept.dtypes)
 
 # %%
-# Where information is lost
-# -------------------------
+# pandas: where information is lost
+# ---------------------------------
 # Extension dtypes have no numpy equivalent, so they come back as the plain
-# dtype underneath. README.md has the full table.
+# dtype underneath. A pandas ``Categorical`` is the usual case; README.md has
+# the full table.
+
+import pandas as pd  # noqa: E402
 
 categorical = pd.DataFrame(
     {
@@ -116,7 +123,7 @@ categorical = pd.DataFrame(
     }
 )
 graded = LabelledArray.from_dataframe(categorical, cols=["grade"], dims=["a"])
-print("category ->", graded.dtypes["grade"], "->", graded.to_dataframe()["grade"].dtype)
-assert graded.to_dataframe()["grade"].tolist() == ["high", "low"], (
-    "values survive, categories do not"
-)
+back = graded.to_dataframe("pandas")
+print("category ->", graded.dtypes["grade"], "->", back["grade"].dtype)
+assert back["grade"].tolist() == ["high", "low"], "values survive, categories do not"
+assert not isinstance(back["grade"].dtype, pd.CategoricalDtype)

@@ -195,8 +195,9 @@ def test_concat_runs_on_every_backend(jan, feb, backend):
 def test_a_concatenated_array_still_round_trips(jan, feb):
     joined = LabelledArray.concat([jan, feb], dim="day")
     assert len(joined.to_dataframe()) == joined.size
-    # str labels come back as object, as they do for any round trip.
-    back = LabelledArray.from_dataframe(joined.to_dataframe())
+    # str labels come back as object, as they do for any round trip. The pandas
+    # index is what lets `dims` go unsaid on the way back in.
+    back = LabelledArray.from_dataframe(joined.to_dataframe("pandas"))
     assert back.dims["day"].tolist() == joined.dims["day"].tolist()
     assert back.dims["g"].tolist() == joined.dims["g"].tolist()
     np.testing.assert_array_equal(back["v"], joined["v"])
