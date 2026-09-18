@@ -13,9 +13,10 @@ from labelled_array import (
     LabelledArray,
 )
 from labelled_array.adapters import (
-    DEFAULT_ADAPTER,
+    DEFAULT_ADAPTERS,
     DataFrameAdapter,
     PandasAdapter,
+    PolarsAdapter,
     available_adapters,
     get_adapter,
     register_adapter,
@@ -29,11 +30,31 @@ from labelled_array.adapters import (
 def test_both_engines_are_registered_and_installed():
     assert set(registered_adapters()) == {"pandas", "polars"}
     assert set(available_adapters()) == {"pandas", "polars"}
-    assert DEFAULT_ADAPTER == "pandas"
+    assert DEFAULT_ADAPTERS == ("polars", "pandas")
 
 
-def test_get_adapter_defaults_to_pandas():
+def test_get_adapter_defaults_to_polars():
+    assert get_adapter().name == "polars"
+
+
+def test_default_engine_falls_back_to_pandas_without_polars(monkeypatch, simple):
+    # The install check is cached, so it is the adapter that has to say no.
+    monkeypatch.setattr(PolarsAdapter, "is_available", classmethod(lambda cls: False))
     assert get_adapter().name == "pandas"
+    assert type(simple.to_dataframe()).__module__.startswith("pandas")
+
+
+def test_no_installed_engine_names_the_candidates(monkeypatch):
+    for adapter in (PandasAdapter, PolarsAdapter):
+        monkeypatch.setattr(adapter, "is_available", classmethod(lambda cls: False))
+    with pytest.raises(AdapterError, match="none of the default DataFrame engines"):
+        get_adapter()
+
+
+def test_naming_an_engine_never_falls_back(monkeypatch):
+    monkeypatch.setattr(PolarsAdapter, "is_available", classmethod(lambda cls: False))
+    with pytest.raises(AdapterError, match="not installed"):
+        get_adapter("polars")
 
 
 def test_get_adapter_passes_through_instances():

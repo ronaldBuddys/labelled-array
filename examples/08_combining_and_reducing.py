@@ -15,16 +15,17 @@ and a result with nothing behind it is marked absent rather than being invented.
 # started late, so the array is sparse from the moment it is built.
 
 import numpy as np
-import pandas as pd
+import polars as pl
 
 from labelled_array import LabelledArray
 
-trades = pd.DataFrame(
+trades = pl.DataFrame(
     {
         "asset": ["AAA", "AAA", "AAA", "AAA", "BBB", "BBB", "BBB", "BBB", "CCC", "CCC"],
-        "date": pd.to_datetime(
+        "date": np.array(
             ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04"] * 2
-            + ["2024-01-03", "2024-01-04"]
+            + ["2024-01-03", "2024-01-04"],
+            dtype="datetime64[D]",
         ),
         "pnl": [1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0, 100.0, 200.0],
         "lots": [1, 1, 2, 2, 3, 3, 4, 4, 5, 5],
@@ -167,7 +168,7 @@ assert np.isnan(book[["pnl"]].rolling("date", 2, min_periods=1).mean()["pnl"][2,
 # marking them absent. It is how an array is put onto a layout decided
 # somewhere else.
 
-week = pd.date_range("2024-01-01", periods=5).to_numpy()
+week = np.datetime64("2024-01-01") + np.arange(5)
 padded = book.reindex(date=week)
 
 print(padded.mask)
@@ -195,10 +196,10 @@ assert len(filled.to_dataframe()) == filled.size
 # neither side filled.
 
 benchmark = LabelledArray.from_dataframe(
-    pd.DataFrame(
+    pl.DataFrame(
         {
             "asset": ["BBB", "CCC", "DDD"],
-            "date": pd.to_datetime(["2024-01-03"] * 3),
+            "date": np.array(["2024-01-03"] * 3, dtype="datetime64[D]"),
             "pnl": [1.0, 2.0, 3.0],
         }
     ),

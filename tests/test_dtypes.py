@@ -223,7 +223,9 @@ def test_timezone_aware_labels_round_trip():
     la = LabelledArray.from_dataframe(df, dims=["k"])
     assert la.dims["k"].dtype == np.dtype("O")
     assert_frames_equal(
-        "pandas", sort_frame("pandas", df, ["k"]), la.to_dataframe(index=False)
+        "pandas",
+        sort_frame("pandas", df, ["k"]),
+        la.to_dataframe("pandas", index=False),
     )
 
 

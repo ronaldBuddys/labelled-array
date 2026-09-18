@@ -62,7 +62,8 @@ def test_a_frame_with_no_named_index_needs_explicit_dims(df):
 
 
 def test_to_dataframe_builds_a_multiindex(df):
-    out = LabelledArray.from_dataframe(df, dims=["region", "product"]).to_dataframe()
+    la = LabelledArray.from_dataframe(df, dims=["region", "product"])
+    out = la.to_dataframe("pandas")
     assert isinstance(out.index, pd.MultiIndex)
     assert list(out.index.names) == ["region", "product"]
     assert list(out.columns) == ["units", "price"]
@@ -70,14 +71,14 @@ def test_to_dataframe_builds_a_multiindex(df):
 
 def test_to_dataframe_of_one_dimension_builds_a_plain_index():
     df = pd.DataFrame({"a": [1, 2], "w": [1.5, 2.5]})
-    out = LabelledArray.from_dataframe(df, dims=["a"]).to_dataframe()
+    out = LabelledArray.from_dataframe(df, dims=["a"]).to_dataframe("pandas")
     assert out.index.name == "a"
     assert out.index.tolist() == [1, 2]
 
 
 def test_to_dataframe_index_false_keeps_dimensions_as_columns(df):
     out = LabelledArray.from_dataframe(df, dims=["region", "product"]).to_dataframe(
-        index=False
+        "pandas", index=False
     )
     assert list(out.columns) == ["region", "product", "units", "price"]
     assert out.index.tolist() == [0, 1, 2, 3]
@@ -85,17 +86,17 @@ def test_to_dataframe_index_false_keeps_dimensions_as_columns(df):
 
 def test_index_round_trip(df):
     indexed = df.set_index(["region", "product"]).sort_index()
-    out = LabelledArray.from_dataframe(indexed).to_dataframe()
+    out = LabelledArray.from_dataframe(indexed).to_dataframe("pandas")
     pd.testing.assert_frame_equal(indexed, out)
 
 
-def test_default_engine_is_pandas(sales_data):
+def test_a_pandas_frame_still_writes_polars_by_default(df):
     import polars as pl
 
-    la = LabelledArray.from_dataframe(
-        pl.DataFrame(sales_data), dims=["region", "product"]
-    )
-    assert isinstance(la.to_dataframe(), pd.DataFrame), "the engine is not remembered"
+    la = LabelledArray.from_dataframe(df, dims=["region", "product"])
+    assert isinstance(la.to_dataframe(), pl.DataFrame), "the engine is not remembered"
+    assert isinstance(la.to_dataframe("pandas"), pd.DataFrame)
+    assert isinstance(la.to_dataframe(engine="pandas"), pd.DataFrame)
 
 
 def test_datetime_columns_keep_their_unit(adapter):
@@ -105,5 +106,6 @@ def test_datetime_columns_keep_their_unit(adapter):
     )
     values = adapter.column_values(df, "date")
     assert values.dtype == df["date"].dtype == np.dtype("datetime64[us]")
-    out = LabelledArray.from_dataframe(df, dims=["date"]).to_dataframe(index=False)
+    la = LabelledArray.from_dataframe(df, dims=["date"])
+    out = la.to_dataframe("pandas", index=False)
     pd.testing.assert_frame_equal(df.sort_values("date").reset_index(drop=True), out)
