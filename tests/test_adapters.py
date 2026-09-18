@@ -143,7 +143,8 @@ def test_from_dataframe_builds_a_dense_array(engine, sales_data):
     assert la.variables == ("units", "price")
     assert la.dims["region"].tolist() == ["north", "south"]
     assert la.dims["product"].tolist() == ["AAA", "BBB", "CCC"]
-    assert la["units"].tolist() == [[10, 20, 40], [30, 0, 0]]
+    absent = np.iinfo("int64").min  # unmistakable, where a zero would pass for data
+    assert la["units"].tolist() == [[10, 20, 40], [30, absent, absent]]
     assert la.mask.tolist() == [[True, True, True], [True, False, False]]
     assert la.density == pytest.approx(4 / 6)
 

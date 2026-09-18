@@ -127,7 +127,7 @@ def test_an_absent_integer_cell_keeps_the_dtype():
     )
     total = array.sum("b")
     assert total.dtypes["k"] == np.dtype("int64")
-    assert total["k"].tolist() == [1, 0]
+    assert total["k"].tolist() == [1, np.iinfo("int64").min], "absent, not a zero sum"
     assert total.mask.tolist() == [True, False]
 
 

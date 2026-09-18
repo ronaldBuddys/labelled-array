@@ -69,9 +69,18 @@ something the dtype can hold, and records the gap in a boolean mask:
 
 ```python
 sales["units"].dtype  # int64 -- not widened to float
-sales["units"][1, 1]  # 0     -- a placeholder, not data
+sales["units"][1, 1]  # -9223372036854775808 -- a placeholder, not data
 sales.mask[1, 1]  # False -- this is what says the cell is empty
 ```
+
+The placeholder is never read by this package, but a bare `sales["units"]`
+carries no mask with it, so it is chosen to be unmistakable: NaN, NaT or None
+where the dtype has a null, the minimum of a signed integer and the maximum of
+an unsigned one where it does not (`bool` has no value to spare and gets
+`False`; strings get `""`). `default_fill_value(dtype)` says what any dtype
+gets, and `fill_value=` on `from_dataframe`, `reindex`, `align` and `concat`
+overrides it, for every variable or per variable -- worth doing under
+`mask=False`, where the placeholder is all that marks an invented cell.
 
 `to_dataframe` emits only the masked-in cells, which is why `int`, `bool`,
 `str` and `datetime` columns all survive a sparse round trip unchanged.
