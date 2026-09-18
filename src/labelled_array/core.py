@@ -393,8 +393,9 @@ class LabelledArray(ArithmeticMixin):
         Returns
         -------
         LabelledArray
-            An instance of this class holding the selection, with the
-            dimensions ordered as the labels were requested.
+            An instance of this class holding the selection. Dimensions keep
+            their axis order; the labels within each selected dimension come
+            back in the order they were requested.
 
         Raises
         ------
@@ -1213,8 +1214,11 @@ class LabelledArray(ArithmeticMixin):
 
         Notes
         -----
-        Rows come out ordered by the dimension labels, so a round trip
-        reproduces the source frame up to that ordering.
+        Rows come out in the array's stored layout. Straight after
+        :meth:`from_dataframe` that is sorted by the dimension labels, so a
+        round trip reproduces the source frame up to that ordering; after a
+        reordering ``select``, ``reindex`` or ``concat`` it is whatever order
+        the labels were left in.
 
         See Also
         --------
