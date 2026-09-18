@@ -113,7 +113,7 @@ def test_an_integer_variable_keeps_its_dtype_where_a_window_is_short():
     array = LabelledArray({"k": np.arange(3)}, {"t": [0, 1, 2]})
     rolled = array.rolling("t", 2).sum()
     assert rolled.dtypes["k"] == np.dtype("int64")
-    assert rolled["k"].tolist() == [np.iinfo("int64").min, 1, 3]
+    assert rolled["k"].tolist() == [0, 1, 3]
     assert rolled.mask.tolist() == [False, True, True]
 
 

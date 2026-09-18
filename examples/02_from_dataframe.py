@@ -47,15 +47,14 @@ assert sales.density == 4 / 6
 # The presence mask
 # -----------------
 # The mask records which cells came from a row, so an integer column keeps its
-# dtype: an empty cell holds a placeholder no one could take for data -- the
-# smallest int64 -- and the mask says it is absent.
+# dtype: an empty cell holds a placeholder zero and the mask says it is absent.
 # ``11_presence_mask.py`` covers the mask end to end.
 
 print(sales["units"])
 print(sales.mask)
 
 assert sales.dtypes["units"] == np.dtype("int64")
-assert sales["units"][1, 1] == np.iinfo("int64").min
+assert sales["units"][1, 1] == 0
 assert not sales.mask[1, 1]
 
 # %%

@@ -7,7 +7,6 @@ polars DataFrames.
 """
 
 from labelled_array._ops import GroupBy, Rolling
-from labelled_array._reshape import default_fill_value
 from labelled_array.core import LabelledArray
 from labelled_array.dimensions import Dimensions
 from labelled_array.exceptions import (
@@ -35,5 +34,4 @@ __all__ = [
     "LabelNotFoundError",
     "LabelledArrayError",
     "__version__",
-    "default_fill_value",
 ]

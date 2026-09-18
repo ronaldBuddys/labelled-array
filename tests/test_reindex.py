@@ -70,8 +70,8 @@ def test_the_fill_keeps_the_dtype_of_each_variable(prices):
     assert wider.dtypes["units"] == np.dtype("int64"), (
         "an int column is not widened to float"
     )
-    assert wider["units"][:, 1].tolist() == [np.iinfo("int64").min] * 2, (
-        "the mask says the cell is empty, and the value cannot pass for data"
+    assert wider["units"][:, 1].tolist() == [0, 0], (
+        "the mask is what says the cell is empty"
     )
     assert not wider.mask[:, 1].any()
 
@@ -85,7 +85,7 @@ def test_fill_value_for_every_variable(prices):
 def test_fill_value_per_variable(prices):
     wider = prices.reindex(product=["a", "d"], fill_value={"price": -1.0})
     assert wider["price"][:, 1].tolist() == [-1.0, -1.0]
-    assert wider["units"][:, 1].tolist() == [np.iinfo("int64").min] * 2, (
+    assert wider["units"][:, 1].tolist() == [0, 0], (
         "unnamed variables take the dtype default"
     )
 

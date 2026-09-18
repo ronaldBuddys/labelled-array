@@ -86,11 +86,6 @@ the sections follow the module that defines each object.
    :undoc-members:
    :show-inheritance:
 
-``labelled_array.default_fill_value``
--------------------------------------
-
-.. autofunction:: labelled_array.default_fill_value
-
 ``labelled_array.dimensions``
 -----------------------------
 
