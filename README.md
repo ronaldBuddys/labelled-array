@@ -322,7 +322,7 @@ copy for a sliding window.
 ## Examples and tests
 
 ```bash
-python examples/01_basics.py                # 01 basics ... 10 alternative dimensions
+python examples/01_basics.py                # 01 basics ... 13 polars and pandas
 pytest -q                                   # the full suite
 pytest --cov=labelled_array --cov-report=term-missing
 ```
