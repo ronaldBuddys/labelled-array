@@ -22,7 +22,7 @@ dependencies = ["numpy>=1.24"]
 [project.optional-dependencies]
 docs = ["sphinx>=7.0", "sphinx-gallery>=0.17", "furo>=2024.8"]
 pandas = ["pandas>=2.0"]
-polars = ["polars>=0.20"]
+polars = ["polars>=1.0"]
 jax = ["jax>=0.4"]
 torch = ["torch>=2.0"]
 
@@ -35,7 +35,7 @@ Homepage = "https://github.com/ronaldBuddys/labelled-array"
 [dependency-groups]
 dev = [
     "pandas>=2.0",
-    "polars>=0.20",
+    "polars>=1.0",
     # jax and torch are registered backends, and the suite asserts every
     # registered backend is actually installed
     # (test_every_registered_backend_is_installed_in_this_environment), so they
