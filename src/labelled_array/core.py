@@ -19,7 +19,6 @@ from labelled_array._utils import (
     is_null,
     per_name,
 )
-from labelled_array.adapters import DataFrameAdapter
 from labelled_array.backends import (
     DEFAULT_BACKEND,
     ArrayBackend,
@@ -1087,9 +1086,9 @@ class LabelledArray(ArithmeticMixin):
         mask: bool = True,
         attrs: Mapping[str, Any] | None = None,
         backend: str | ArrayBackend | None = None,
-        engine: str | DataFrameAdapter | None = None,
+        engine: str | None = None,
     ) -> LabelledArray:
-        """Build a labelled array from a polars or pandas DataFrame.
+        """Build a labelled array from a pandas or polars DataFrame.
 
         Each dimension column contributes its sorted unique values as that
         dimension's labels, and every value column becomes a variable of the
@@ -1098,10 +1097,8 @@ class LabelledArray(ArithmeticMixin):
 
         Parameters
         ----------
-        df : polars.DataFrame or pandas.DataFrame
-            Source frame; the library is detected, and the array built is the
-            same whichever it is. A pandas (Multi)Index is moved into columns
-            first.
+        df : pandas.DataFrame or polars.DataFrame
+            Source frame. A pandas (Multi)Index is moved into columns first.
         cols : str or sequence of str, optional
             Columns to turn into variables; defaults to every column that is not
             a dimension.
@@ -1136,7 +1133,7 @@ class LabelledArray(ArithmeticMixin):
             Metadata to attach.
         backend : str or ArrayBackend, optional
             Array backend for the variables; defaults to numpy.
-        engine : str or DataFrameAdapter, optional
+        engine : str, optional
             Force a DataFrame engine instead of detecting it from ``df``.
 
         Returns
@@ -1158,8 +1155,8 @@ class LabelledArray(ArithmeticMixin):
 
         Examples
         --------
-        >>> import polars as pl
-        >>> df = pl.DataFrame({"a": [1, 1, 2], "b": ["x", "y", "x"], "w": [1.0, 2.0, 3.0]})
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({"a": [1, 1, 2], "b": ["x", "y", "x"], "w": [1.0, 2.0, 3.0]})
         >>> la = LabelledArray.from_dataframe(df, cols="w", dims=["a", "b"])
         >>> la.shape
         (2, 2)
@@ -1187,7 +1184,7 @@ class LabelledArray(ArithmeticMixin):
 
     def to_dataframe(
         self,
-        engine: str | DataFrameAdapter | None = None,
+        engine: str | None = None,
         *,
         index: bool = True,
         dropna: bool = False,
@@ -1197,14 +1194,11 @@ class LabelledArray(ArithmeticMixin):
 
         Parameters
         ----------
-        engine : str or DataFrameAdapter, optional
-            DataFrame engine, ``'polars'`` or ``'pandas'``. Defaults to polars,
-            falling back to pandas only where polars is not installed. The
-            engine the array was built from is not remembered, so pass
-            ``'pandas'`` to get a pandas frame.
+        engine : str, optional
+            DataFrame engine, ``'pandas'`` (the default) or ``'polars'``.
         index : bool, default True
-            pandas only: put the dimension columns into the frame's index.
-            polars has no index and ignores this.
+            Put the dimension columns into the frame's index. polars has no
+            index and ignores this.
         dropna : bool, default False
             Also drop rows in which every variable is null. Unnecessary when a
             mask is present, which already excludes unpopulated cells.
@@ -1214,7 +1208,7 @@ class LabelledArray(ArithmeticMixin):
 
         Returns
         -------
-        polars.DataFrame or pandas.DataFrame
+        pandas.DataFrame or polars.DataFrame
             Dimension columns first, then any remaining coordinates, then the
             variables.
 

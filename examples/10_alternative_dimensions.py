@@ -18,7 +18,7 @@ coordinate -- can be selected on.
 # that exist.
 
 import numpy as np
-import polars as pl
+import pandas as pd
 
 from labelled_array import DimensionError, LabelledArray, LabelNotFoundError
 
@@ -26,7 +26,7 @@ ASSETS = ["AAA", "BBB", "CCC", "DDD"]
 DATES = ["d1", "d2", "d3"]
 SECTORS = ["tech", "tech", "fin", "tech"]
 
-panel = pl.DataFrame(
+panel = pd.DataFrame(
     {
         "asset": [asset for asset in ASSETS for _ in DATES],
         "date": DATES * len(ASSETS),
@@ -211,13 +211,12 @@ assert joined.select(sector="fin").dims["asset"].tolist() == ["CCC", "FFF"]
 # gathered at each cell's position along the dimension it describes, so the
 # column that was folded in comes back out.
 
-out = book.to_dataframe().sort(["asset", "date"])
-assert out.columns == ["asset", "date", "sector", "px"]
+out = book.to_dataframe(index=False).sort_values(["asset", "date"])
+assert out.columns.tolist() == ["asset", "date", "sector", "px"]
 assert set(zip(out["asset"], out["sector"], strict=True)) == set(
     zip(ASSETS, SECTORS, strict=True)
 )
-with pl.Config(tbl_rows=len(out)):
-    print(out)
+print(out.to_string(index=False))
 
 # %%
 # Against a coordinate

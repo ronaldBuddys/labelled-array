@@ -12,15 +12,13 @@ the original values, so the round trip is still exact.
 # The problem: a date per row
 # ---------------------------
 # Three groups of four rows, each with dates that appear in no other group.
-# A ``datetime64[D]`` array becomes a polars ``Date`` column.
 
 import numpy as np
-import polars as pl
-from polars.testing import assert_frame_equal
+import pandas as pd
 
 from labelled_array import LabelledArray
 
-panel = pl.DataFrame(
+panel = pd.DataFrame(
     {
         "group": np.repeat(["A", "B", "C"], 4),
         "item": list("wxyz") * 3,
@@ -28,7 +26,6 @@ panel = pl.DataFrame(
         "value": np.arange(12, dtype=float),
     }
 )
-assert panel.schema["date"] == pl.Date
 print(panel.head())
 
 # %%
@@ -81,20 +78,20 @@ assert natural.coords["date"].dtype.kind == "M"
 # %%
 # The round trip is still exact
 # -----------------------------
-# ``to_dataframe`` writes the coordinate back out under its original name, and
-# the dates come back as a polars ``Date`` column.
+# ``to_dataframe`` writes the coordinate back out under its original name.
 
-out = natural.to_dataframe()
-assert_frame_equal(panel.sort(["group", "item", "date"]), out)
+out = natural.to_dataframe(index=False)
+pd.testing.assert_frame_equal(
+    panel.sort_values(["group", "item", "date"]).reset_index(drop=True), out
+)
 print(out.head())
 
 # %%
 # ...or the index itself, if that is what you want
 # ------------------------------------------------
-# ``expand_natural=False`` keeps the position as a column beside the dates.
 
-positions = natural.to_dataframe(expand_natural=False)
-assert positions.columns == ["group", "item", "date_idx", "date", "value"]
+positions = natural.to_dataframe(index=False, expand_natural=False)
+assert list(positions.columns) == ["group", "item", "date_idx", "date", "value"]
 print(positions.head(3))
 
 # %%
@@ -114,12 +111,11 @@ assert other_order.size == natural.size
 # When groups have different numbers of dates the array takes the largest, and
 # the mask marks the short ones -- still exact on the way back.
 
-ragged = pl.DataFrame(
+ragged = pd.DataFrame(
     {
         "group": ["A", "A", "A", "B"],
         "date": np.array(
-            ["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"],
-            dtype="datetime64[D]",
+            ["2024-01-01", "2024-01-02", "2024-01-03", "2024-02-01"], "datetime64[D]"
         ),
         "value": [1.0, 2.0, 3.0, 4.0],
     }
@@ -130,7 +126,10 @@ uneven = LabelledArray.from_dataframe(
 print(uneven.mask)
 assert uneven.shape == (2, 3)
 assert uneven.density == 4 / 6
-assert_frame_equal(ragged.sort(["group", "date"]), uneven.to_dataframe())
+pd.testing.assert_frame_equal(
+    ragged.sort_values(["group", "date"]).reset_index(drop=True),
+    uneven.to_dataframe(index=False),
+)
 
 # %%
 # Coordinates that do not vary along every dimension

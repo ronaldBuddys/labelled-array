@@ -26,10 +26,8 @@ import time
 
 import numpy as np
 import pandas as pd
-import polars as pl
 
 from labelled_array import LabelledArray
-from labelled_array.adapters import get_adapter
 from labelled_array.backends import available_backends
 
 SCALE = float(os.environ.get("LABELLED_ARRAY_SCALE", "1"))
@@ -52,9 +50,7 @@ def bench(label, call, repeat=3):
 # The data
 # --------
 # A price panel: every asset quoted on every date, which is the dense case the
-# layout is built for. At the default scale that is a million rows. It is held
-# twice, as a pandas frame -- the yardstick throughout -- and as a polars one
-# built from the same numpy columns.
+# layout is built for. At the default scale that is a million rows.
 
 n_assets, n_dates = int(400 * SCALE), int(2500 * SCALE)
 rng = np.random.default_rng(0)
@@ -62,14 +58,14 @@ rng = np.random.default_rng(0)
 assets = np.array([f"A{i:05d}" for i in range(n_assets)])
 dates = np.datetime64("2015-01-03", "ns") + np.arange(n_dates) * np.timedelta64(1, "D")
 
-columns = {
-    "asset": np.repeat(assets, n_dates),
-    "date": np.tile(dates, n_assets),
-    "close": rng.standard_normal(n_assets * n_dates),
-    "volume": rng.integers(0, 10**6, n_assets * n_dates),
-}
-panel = pd.DataFrame(columns)
-panel_pl = pl.DataFrame(columns)
+panel = pd.DataFrame(
+    {
+        "asset": np.repeat(assets, n_dates),
+        "date": np.tile(dates, n_assets),
+        "close": rng.standard_normal(n_assets * n_dates),
+        "volume": rng.integers(0, 10**6, n_assets * n_dates),
+    }
+)
 print(f"{len(panel):,} rows, {n_assets} assets x {n_dates} dates")
 
 # %%
@@ -77,26 +73,16 @@ print(f"{len(panel):,} rows, {n_assets} assets x {n_dates} dates")
 # ------------------
 # One pass over the frame: factorize each dimension column, ravel the codes
 # into flat positions, then scatter each value column into a preallocated
-# array. The frame's library is detected, and either one gives the same array.
+# array.
 
 prices = bench(
-    "from_dataframe (pandas)",
+    "from_dataframe",
     lambda: LabelledArray.from_dataframe(
         panel, cols=["close", "volume"], dims=["asset", "date"]
     ),
     repeat=2,
 )
-from_polars = bench(
-    "from_dataframe (polars)",
-    lambda: LabelledArray.from_dataframe(
-        panel_pl, cols=["close", "volume"], dims=["asset", "date"]
-    ),
-    repeat=2,
-)
 print(prices)
-
-assert np.array_equal(from_polars["close"], prices["close"])
-assert from_polars.dims["asset"].tolist() == prices.dims["asset"].tolist()
 
 assert prices.shape == (n_assets, n_dates)
 assert prices.density == 1.0
@@ -105,11 +91,11 @@ assert prices.mask is None, "a fully populated array keeps no mask"
 # %%
 # Where that time goes
 # --------------------
-# Calling the numpy reference pieces directly shows the split. Factorizing the
-# asset column dominates: as an object array, every one of the million strings
-# has to be hashed to find which of the few hundred labels it is. The numeric
-# work either side of it -- ravelling positions, checking them for duplicates,
-# scattering the values -- is a fraction of it.
+# Calling the pieces directly shows the split. Factorizing the asset column
+# dominates: pandas hands strings over as an object array, and every one of the
+# million entries has to be hashed to find which of the few hundred labels it
+# is. The numeric work either side of it -- ravelling positions, checking them
+# for duplicates, scattering the values -- is a fraction of it.
 
 from labelled_array import Dimensions  # noqa: E402
 from labelled_array._reshape import factorize, flat_positions, scatter  # noqa: E402
@@ -132,36 +118,12 @@ bench(
 )
 
 # %%
-# Factorizing string labels
-# -------------------------
-# An adapter may factorize a plain string column with its own library rather
-# than hand it to the numpy reference. polars does: it sorts the distinct values
-# and casts the column onto them. pandas does not -- ``pd.factorize`` is barely
-# faster -- so its line is the reference plus reading the column out. All three
-# agree on the labels and the codes.
-
-reference = np.asarray(asset_values, dtype=object)
-by_numpy = bench("  numpy reference factorize 'asset'", lambda: factorize(reference))
-by_polars = bench(
-    "  polars adapter factorize 'asset'",
-    lambda: get_adapter("polars").factorize(panel_pl, "asset"),
-)
-by_pandas = bench(
-    "  pandas adapter factorize 'asset'",
-    lambda: get_adapter("pandas").factorize(panel, "asset"),
-)
-
-for labels, codes in (by_polars, by_pandas):
-    assert np.array_equal(labels, by_numpy[0]), "the same labels, in the same order"
-    assert np.array_equal(codes, by_numpy[1]), "and the same code for every row"
-
-# %%
 # Labels you already hold as codes
 # --------------------------------
-# The other way to avoid that cost is not to pay it: when the dimension columns
-# are already integers, factorizing them is a sort of a few hundred distinct
-# values rather than a pass over a million strings. Same array, and quicker to
-# build than from the pandas frame of strings.
+# The way to avoid that cost is not to pay it: when the dimension columns are
+# already integers, factorizing them is a sort of a few hundred distinct values
+# rather than a hash of a million strings. Same array, and typically several
+# times quicker to build.
 
 coded = panel.assign(
     asset=np.repeat(np.arange(n_assets), n_dates),
@@ -176,8 +138,7 @@ by_code = bench(
 )
 assert np.array_equal(by_code["close"], prices["close"]), "same layout, cheaper labels"
 speed_up = (
-    TIMINGS["from_dataframe (pandas)"]
-    / TIMINGS["from_dataframe, integer dimension columns"]
+    TIMINGS["from_dataframe"] / TIMINGS["from_dataframe, integer dimension columns"]
 )
 print(f"{'speed-up':<46}{speed_up:8.1f}x")
 
@@ -360,7 +321,7 @@ for name, array in (("labelled dates", spread), ("natural index ", packed)):
 assert spread.size == n_groups * n_groups * per_group
 assert packed.size == n_groups * per_group
 assert footprint(packed) < footprint(spread)
-assert spread.to_dataframe().equals(packed.to_dataframe())
+assert spread.to_dataframe(index=False).equals(packed.to_dataframe(index=False))
 
 # %%
 # What that would cost at a realistic size
@@ -523,35 +484,28 @@ assert LabelledArray.concat([first, second], dim="date").equals(prices)
 # ``to_dataframe`` gathers one row per populated cell: a flat gather per
 # variable, plus the dimension labels expanded to match. It is priced on the
 # rows it emits, so a sparse array is cheaper than a dense one of the same
-# shape. With no engine named the frame is polars; pandas is asked for by name.
+# shape.
 
-bench("to_dataframe (polars, dense)", lambda: prices.to_dataframe(), repeat=2)
 bench(
-    "to_dataframe (pandas, dense)",
-    lambda: prices.to_dataframe("pandas", index=False),
-    repeat=2,
+    "to_dataframe (pandas, dense)", lambda: prices.to_dataframe(index=False), repeat=2
 )
-bench(
-    "  ... with the dimensions as an index",
-    lambda: prices.to_dataframe("pandas"),
-    repeat=2,
-)
+bench("to_dataframe (polars, dense)", lambda: prices.to_dataframe("polars"), repeat=2)
+bench("  ... with the dimensions as an index", lambda: prices.to_dataframe(), repeat=2)
 
-# The same shape, masked and unmasked, both out to polars: the mask is what
-# keeps the empty cells out of the frame, and it is the row count that the
-# conversion is priced on.
+# The same shape, masked and unmasked: the mask is what keeps the empty cells
+# out of the frame, and it is the row count that the conversion is priced on.
 bench(
     f"to_dataframe, {len(uneven):,} of {spread.size:,} cells masked in",
-    lambda: spread.to_dataframe(),
+    lambda: spread.to_dataframe(index=False),
     repeat=2,
 )
 bench(
     f"to_dataframe, all {unmasked.size:,} cells (mask=False)",
-    lambda: unmasked.to_dataframe(),
+    lambda: unmasked.to_dataframe(index=False),
     repeat=2,
 )
 
-round_tripped = prices.to_dataframe()
+round_tripped = prices.to_dataframe(index=False)
 assert len(round_tripped) == prices.size
 assert bool((round_tripped["close"].to_numpy() == prices["close"].reshape(-1)).all())
 
@@ -567,9 +521,8 @@ for label, seconds in sorted(TIMINGS.items(), key=lambda item: -item[1])[:8]:
 # %%
 # Rules of thumb
 # --------------
-# * Building is dominated by factorizing string dimension columns. A polars
-#   frame factorizes them natively, well ahead of the numpy reference; integer
-#   or datetime codes are cheap from either library.
+# * Building is dominated by factorizing object-dtype dimension columns; hand
+#   over integer or datetime codes where you can.
 # * Everything else in the build is linear in the rows and cheap per row.
 # * ``select`` costs what the result costs, whichever order the dimensions are
 #   asked for in.

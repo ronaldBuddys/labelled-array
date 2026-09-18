@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "labelled-array"
-version = "0.2.0"
+version = "0.1.0"
 description = "N-dimensional arrays carrying named, labelled dimensions, with lossless DataFrame round trips."
 readme = "README.md"
 requires-python = ">=3.10"

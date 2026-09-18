@@ -1,14 +1,14 @@
 # labelled-array
 
 N-dimensional arrays that carry their dimension names and labels, align and
-reduce over them, convert losslessly to and from polars or pandas DataFrames,
+reduce over them, convert losslessly to and from pandas or polars DataFrames,
 and hold their data on numpy, JAX or torch.
 
 ```python
-import polars as pl
+import pandas as pd
 from labelled_array import LabelledArray
 
-df = pl.DataFrame(
+df = pd.DataFrame(
     {
         "region": ["north", "north", "south", "north"],
         "product": ["AAA", "BBB", "AAA", "CCC"],
@@ -27,14 +27,8 @@ sales.density  # 0.666...  -- ('south', 'BBB') has no row
 sales.select({"region": "north"})  # length-1 'region' dimension
 sales.select({"region": "north"}, drop=True)  # 'region' removed
 sales.select({"region": "north", "product": ["CCC", "AAA"]})  # several at once
-sales.to_dataframe()  # back to the original four rows, as a polars frame
-sales.to_dataframe("pandas")  # or as pandas, dimensions in a MultiIndex
+sales.to_dataframe(index=False)  # back to the original four rows
 ```
-
-Either library's frame goes into `from_dataframe` and builds the same array;
-`to_dataframe` writes polars unless asked for `"pandas"`, and falls back to
-pandas only where polars is not installed. `examples/13_polars_and_pandas.py`
-runs the two side by side.
 
 ## What it is
 
@@ -247,8 +241,6 @@ asserted in `tests/test_dtypes.py`, so none of it can change silently.
 | int, uint, float, bool, complex | same | same | nothing |
 | `datetime64`, `timedelta64` (any unit) | same | same | nothing |
 | polars `Date`, `Datetime`, `Duration` | `datetime64` | same | nothing |
-| `timedelta64[D]`, `[h]`, `[m]`, `[s]` and `datetime64[s]`, `[m]`, `[h]`, written to polars | -- | `Duration`/`Datetime` in `ms` | the unit; values are exact |
-| `datetime64[W]`, `[M]`, `[Y]`, written to polars | -- | `Date` | the unit; values are exact |
 | python/pandas/polars strings | `object` | the library's string dtype | nothing |
 | pandas tz-aware datetime | `object` of `Timestamp` | same tz-aware dtype | vectorised datetime ops; cannot move to another backend |
 | pandas `category` | `object` | `str` | the categories and their order |

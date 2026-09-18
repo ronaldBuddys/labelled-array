@@ -73,27 +73,3 @@ def test_date_columns_round_trip(adapter):
     out = LabelledArray.from_dataframe(df, dims=["date"]).to_dataframe("polars")
     assert out.schema["date"] == pl.Date
     assert_frame_equal(df.sort("date"), out)
-
-
-@pytest.mark.parametrize(
-    "dtype, written",
-    [
-        ("timedelta64[D]", pl.Duration("ms")),
-        ("timedelta64[h]", pl.Duration("ms")),
-        ("timedelta64[s]", pl.Duration("ms")),
-        ("timedelta64[us]", pl.Duration("us")),
-        ("datetime64[s]", pl.Datetime("ms")),
-        ("datetime64[h]", pl.Datetime("ms")),
-        ("datetime64[M]", pl.Date),
-        ("datetime64[Y]", pl.Date),
-        ("datetime64[D]", pl.Date),
-        ("datetime64[ns]", pl.Datetime("ns")),
-    ],
-)
-def test_time_units_polars_lacks_are_widened_exactly(dtype, written):
-    """polars refuses e.g. timedelta64[D], which subtracting two dates gives."""
-    values = np.array([3, 1, 2]).astype(dtype)
-    la = LabelledArray({"v": values}, {"k": ["a", "b", "c"]})
-    out = la.to_dataframe("polars")
-    assert out.schema["v"] == written
-    np.testing.assert_array_equal(out["v"].to_numpy(), values)

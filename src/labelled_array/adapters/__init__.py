@@ -17,7 +17,7 @@ __all__ = [
     "DataFrameAdapter",
     "PandasAdapter",
     "PolarsAdapter",
-    "DEFAULT_ADAPTERS",
+    "DEFAULT_ADAPTER",
     "available_adapters",
     "get_adapter",
     "register_adapter",
@@ -25,15 +25,14 @@ __all__ = [
     "resolve_adapter",
 ]
 
-#: Adapters used when none is given, in order of preference: the first whose
-#: library is installed wins, so pandas is the fallback for a polars-less install.
-DEFAULT_ADAPTERS = ("polars", "pandas")
+#: Name of the adapter used when none is given.
+DEFAULT_ADAPTER = "pandas"
 
 _REGISTRY: Registry[DataFrameAdapter] = Registry(
     base=DataFrameAdapter,
     noun="DataFrame engine",
     error=AdapterError,
-    default=DEFAULT_ADAPTERS,
+    default=DEFAULT_ADAPTER,
 )
 
 #: Register an adapter under its name, replacing any previous entry.
@@ -42,7 +41,7 @@ register_adapter = _REGISTRY.register
 registered_adapters = _REGISTRY.names
 #: Names of registered adapters whose library can be imported.
 available_adapters = _REGISTRY.available
-#: Return an adapter by name, defaulting to polars; instances pass through.
+#: Return an adapter by name, defaulting to pandas; instances pass through.
 get_adapter = _REGISTRY.get
 #: Return the adapter owning a DataFrame.
 resolve_adapter = _REGISTRY.resolve
