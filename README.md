@@ -76,10 +76,6 @@ sales.mask[1, 1]  # False -- this is what says the cell is empty
 `to_dataframe` emits only the masked-in cells, which is why `int`, `bool`,
 `str` and `datetime` columns all survive a sparse round trip unchanged.
 
-See `examples/11_presence_mask.py` for how the mask moves through arithmetic,
-reductions, alignment and filling, and `examples/12_ordering.py` for what each
-operation does to the order of dimensions and of the labels within them.
-
 ## Coordinates that do not vary along every dimension
 
 A coordinate labels every cell, but it need not be *given* that way. Anything
