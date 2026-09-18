@@ -295,16 +295,16 @@ Array backends and DataFrame engines are registries, and `LabelledArray` builds
 every derived object through `type(self)`:
 
 ```python
-class FinancialArray(LabelledArray):
+class ClimateArray(LabelledArray):
     _idx_suffix = "_pos"
 
     def _validate(self):
         super()._validate()
         if "date" not in self.dims:
-            raise DimensionError("a FinancialArray needs a 'date' dimension")
+            raise DimensionError("a ClimateArray needs a 'date' dimension")
 
 
-book.select({"ticker": "AAA"})  # still a FinancialArray
+july.select({"station": "Oslo"})  # still a ClimateArray
 ```
 
 See `examples/06_subclassing.py`, and `register_backend` / `register_adapter`
