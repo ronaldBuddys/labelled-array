@@ -77,18 +77,15 @@ them and `examples/07_timings_at_scale.py` times them. What they left behind:
 
 ## Project setup
 
-None of this exists yet:
+Linting (`ruff`, pinned in the `dev` group), CI (`.github/workflows/ci.yml`) and the
+Sphinx build (`docs/`, `make -C docs html`) exist. What is left:
 
-- **Linting and formatting.** No `ruff`/`black` configuration, and neither has
-  been run over the package.
 - **Type checking.** Everything is annotated, but `mypy`/`pyright` has never
   been run, so the annotations are unverified.
-- **CI.** No workflow running the suite across Python versions, or with the
-  optional libraries absent. Those "library not installed" branches — in
-  `Registry.get` and the lazy backends — are the only lines the suite cannot
-  reach in an environment where everything is installed.
-- **Docs build.** The examples are written in sphinx-gallery style but there is
-  no `docs/` tree or `conf.py` to render them.
+- **CI across Python versions, and with the optional libraries absent.** One job
+  on 3.12 with every adapter and backend installed. The "library not installed"
+  branches -- in `Registry.get`, the lazy backends and the polars-to-pandas
+  fallback -- are the only lines the suite cannot reach in that environment.
 
 ## Deferred cleanups
 
