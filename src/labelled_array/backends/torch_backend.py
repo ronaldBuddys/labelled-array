@@ -85,6 +85,14 @@ class TorchBackend(ArrayBackend):
     def reshape(self, arr: Any, shape: Sequence[int]) -> Any:
         return arr.reshape(tuple(shape))
 
+    def broadcast_to(self, arr: Any, shape: Sequence[int]) -> Any:
+        """Return an ``expand`` view, which like numpy's has zero strides.
+
+        Unlike numpy's it is writable: one element written through it changes
+        every cell that shares it. See ``TODO.md``.
+        """
+        return self._torch.broadcast_to(arr, tuple(shape))
+
     def take_along_axis(self, arr: Any, indices: np.ndarray, axis: int) -> Any:
         """Gather per cell; ``gather`` needs a contiguous int64 index of equal rank."""
         index = np.ascontiguousarray(indices, np.int64)

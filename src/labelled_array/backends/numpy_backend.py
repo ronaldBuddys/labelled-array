@@ -49,6 +49,10 @@ class NumpyBackend(ArrayBackend):
     def reshape(self, arr: np.ndarray, shape: Sequence[int]) -> np.ndarray:
         return np.reshape(arr, tuple(shape))
 
+    def broadcast_to(self, arr: np.ndarray, shape: Sequence[int]) -> np.ndarray:
+        """Return a read-only zero-stride view, so broadcasting costs no memory."""
+        return np.broadcast_to(arr, tuple(shape))
+
     def take_multi(
         self, arr: np.ndarray, indexers: Mapping[int, np.ndarray]
     ) -> np.ndarray:

@@ -55,6 +55,14 @@ them and `examples/07_timings_at_scale.py` times them. What they left behind:
   `_map_cells` -- because every shape-changing operation would then need a
   per-coordinate axis map. Deferred deliberately: let measured array sizes
   decide whether it is worth that, rather than building it speculatively.
+  The same trade-off applies to variables given with `broadcast=True`: they are
+  stored broadcast to the full shape for the same invariant. The alternative is
+  to keep them compact and broadcast only in `to_dataframe`.
+- **Torch broadcast views are writable.** `broadcast=True` stores a torch
+  variable as an `expand` view, which torch does not mark read-only, so writing
+  one element through it changes every cell that shares it. numpy's view refuses
+  the write, and JAX materialises the array. Options: `.clone()` on torch (no
+  memory saving), or refuse `broadcast=True` on torch.
 - **Grouping by a multi-dimensional coordinate.** `groupby` needs a coordinate
   that varies along exactly one dimension. Grouping cells by a value that
   varies along several -- every cell of a given date, in a natural index panel
