@@ -232,6 +232,40 @@ assert sliced.coords["time_to_expiry"][2, 3] == tau[2], "values are intact"
 print("after select:", sliced.coords["time_to_expiry"].nbytes, "bytes, materialised")
 
 # %%
+# Variables : broadcast at construction with ``broadcast=True``
+# -------------------------------------------------------------
+# The same saving is there for a *variable*, behind a flag. A vol surface over
+# ``(date, expiry, strike)`` often carries a per-expiry quantity -- time to
+# expiry here -- next to the per-strike vols. Give it as ``(date, expiry, 1)``
+# and pass ``broadcast=True``: it is stored as a read-only zero-stride view of
+# the full shape, so every consumer still reads one value per cell.
+#
+# The flag is stricter than numpy. Each array needs one axis per dimension,
+# length 1 where it does not vary, so a ``(expiry,)`` array cannot silently land
+# on the strike axis. ``dims`` must be given, since the shape can no longer be
+# read off the first variable.
+
+dates = np.array(["2024-01-02", "2024-01-03"], "datetime64[D]")
+snap_tau = (expiries[None, :] - dates[:, None]).astype(float) / 365.0
+vols = np.full((len(dates), len(expiries), len(strikes)), 0.2)
+
+surface = LabelledArray(
+    {"vol": vols, "time_to_expiry": snap_tau[:, :, None]},  # (2, 3, 1) vs (2, 3, 100)
+    {"date": dates, "expiry": expiries, "strike": strikes},
+    broadcast=True,
+)
+
+stored = surface["time_to_expiry"]
+assert stored.shape == surface.shape and stored.strides[-1] == 0
+assert not stored.flags.writeable
+print("vol           :", surface["vol"].nbytes, "bytes")
+print("time_to_expiry:", stored.base.nbytes, "bytes held, read as", stored.shape)
+
+# The round trip to a DataFrame writes one row per cell, as for any variable.
+frame = surface.to_dataframe(index=False)
+assert frame.height == surface.size
+
+# %%
 # When sparsity is unavoidable
 # ----------------------------
 # ``density`` is the number to watch: it is the fraction of cells a row

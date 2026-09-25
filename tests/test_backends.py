@@ -148,6 +148,21 @@ def test_reshape(backend, source):
     np.testing.assert_array_equal(backend.to_numpy(arr), source.reshape(3, 2))
 
 
+def test_broadcast_to_matches_numpy(backend, source):
+    column = source[:, :1]
+    arr = backend.broadcast_to(backend.asarray(column), (2, 3))
+    assert backend.shape(arr) == (2, 3)
+    np.testing.assert_array_equal(
+        backend.to_numpy(arr), np.broadcast_to(column, (2, 3))
+    )
+
+
+def test_broadcast_to_in_numpy_is_a_read_only_view(source):
+    arr = get_backend("numpy").broadcast_to(source[:, :1], (2, 3))
+    assert arr.strides[1] == 0
+    assert not arr.flags.writeable
+
+
 # -- operations -----------------------------------------------------------------
 
 

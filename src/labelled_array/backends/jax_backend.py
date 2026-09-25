@@ -69,6 +69,9 @@ class JaxBackend(ArrayBackend):
     def reshape(self, arr: Any, shape: Sequence[int]) -> Any:
         return self._jnp.reshape(arr, tuple(shape))
 
+    def broadcast_to(self, arr: Any, shape: Sequence[int]) -> Any:
+        return self._jnp.broadcast_to(arr, tuple(shape))
+
     def take_multi(self, arr: Any, indexers: Mapping[int, np.ndarray]) -> Any:
         """Gather every axis in one pass, so no intermediate array is built."""
         if not indexers:

@@ -78,6 +78,17 @@ class ArrayBackend(Plugin):
     # above, or by way of numpy, so an existing backend keeps working when the
     # package learns a new operation. Overriding one is a performance choice.
 
+    def broadcast_to(self, arr: Any, shape: Sequence[int]) -> Any:
+        """Return ``arr`` broadcast to ``shape``, by numpy's rules.
+
+        Notes
+        -----
+        The default goes through numpy and so copies. A backend with a native
+        broadcast -- a zero-stride view in numpy and torch, a lazy one in JAX --
+        should override this.
+        """
+        return self.asarray(np.broadcast_to(self.to_numpy(arr), tuple(shape)))
+
     def take_multi(self, arr: Any, indexers: Mapping[int, np.ndarray]) -> Any:
         """Return the entries at integer indices along several axes at once.
 

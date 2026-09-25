@@ -59,6 +59,15 @@ class LabelledArray(ArithmeticMixin):
     backend : str or ArrayBackend, optional
         Array backend for the variables. Defaults to the backend of the first
         variable that a registered backend recognises, else numpy.
+    alt_dims : mapping, optional
+        Alternative dimensions, layered on ``dims``.
+    broadcast : bool, default False
+        Accept variables and a mask with a length-1 axis wherever they do not
+        vary, e.g. time to expiry as ``(date, expiry, 1)`` beside vols over
+        ``(date, expiry, strike)``. Each is stored broadcast to ``dims.shape``:
+        a read-only zero-stride view in numpy, so the values are held once.
+        ``dims`` must then be given, and every such array must have one axis
+        per dimension; see Notes.
 
     Raises
     ------
@@ -70,6 +79,21 @@ class LabelledArray(ArithmeticMixin):
     -----
     Variable, coordinate and dimension names share one namespace, because a
     DataFrame column can only carry one of each.
+
+    ``broadcast=True`` is stricter than numpy's rule, which aligns shapes from
+    the right: there a ``(5,)`` array lands on the last axis of a ``(5, 5)``
+    array whichever dimension it meant. Requiring one axis per dimension makes
+    the caller say which. Coordinates keep numpy's rule, and broadcast without
+    the flag.
+
+    A broadcast variable stays compact only until an operation builds a new
+    array from it. :meth:`transpose` and ``copy(deep=False)`` keep the view;
+    a deep :meth:`copy`, :meth:`astype`, :meth:`to_backend`, arithmetic,
+    :meth:`isel`, :meth:`select` and pickling materialise it. :meth:`assign`
+    and item assignment do not broadcast; pass
+    ``np.broadcast_to(value, array.shape)``. :meth:`from_dataframe` always
+    builds full arrays. In torch the stored view is *not* read-only: writing
+    one element through it changes every cell that shares it.
 
     Examples
     --------
@@ -98,6 +122,8 @@ class LabelledArray(ArithmeticMixin):
         attrs: Mapping[str, Any] | None = None,
         backend: str | ArrayBackend | None = None,
         alt_dims: Mapping[str, Any] | None = None,
+        *,
+        broadcast: bool = False,
     ) -> None:
         if not isinstance(data, Mapping):
             raise TypeError(
@@ -113,8 +139,17 @@ class LabelledArray(ArithmeticMixin):
         self._data = {
             name: self._backend.asarray(value) for name, value in data.items()
         }
+        # Without dims, the shape would be read off the first variable -- the
+        # compact one, when broadcasting -- so it has to be stated.
+        if broadcast and dims is None:
+            raise DimensionError("dims must be given when broadcast=True")
         self._dims = self._resolve_dims(dims, alt_dims)
-        self._mask = _as_mask(mask, self._dims.shape)
+        if broadcast:
+            self._data = {
+                name: self._broadcast_variable(name, value)
+                for name, value in self._data.items()
+            }
+        self._mask = _as_mask(mask, self._dims.shape, broadcast=broadcast)
         self._coords = {
             name: _as_coord(name, value, self._dims.shape)
             for name, value in (coords or {}).items()
@@ -136,6 +171,19 @@ class LabelledArray(ArithmeticMixin):
             if owner is not None:
                 return owner
         return get_backend(self._default_backend)
+
+    def _broadcast_variable(self, name: str, value: Any) -> Any:
+        """Return variable ``value`` broadcast to ``dims.shape`` on its backend.
+
+        A full-shape variable is returned as it is, so ``broadcast=True`` costs
+        nothing for arrays that do not need it.
+        """
+        shape = self._dims.shape
+        given = self._backend.shape(value)
+        if given == shape:
+            return value
+        _check_broadcastable(f"variable {name!r}", given, shape, same_ndim=True)
+        return self._backend.broadcast_to(value, shape)
 
     def _resolve_dims(self, dims: Any, alt_dims: Any = None) -> Dimensions:
         """Return ``dims`` as :class:`Dimensions`, defaulting to a natural index.
@@ -1485,13 +1533,52 @@ class LabelledArray(ArithmeticMixin):
         return "\n".join(lines)
 
 
-def _as_mask(mask: Any, shape: tuple[int, ...]) -> np.ndarray | None:
-    """Return ``mask`` as a read-only boolean array of ``shape``, or None."""
+def _check_broadcastable(
+    what: str, given: tuple[int, ...], shape: tuple[int, ...], *, same_ndim: bool
+) -> None:
+    """Raise unless an array of shape ``given`` broadcasts to ``shape``.
+
+    With ``same_ndim``, ``given`` needs one axis per dimension, each of length 1
+    or the dimension's size. Without it, numpy's rule applies: missing leading
+    axes count as length 1, so a ``(m,)`` array lines up with the last axis.
+
+    Raises
+    ------
+    DimensionError
+        If it does not broadcast.
+    """
+    if same_ndim and len(given) != len(shape):
+        raise DimensionError(
+            f"{what} has shape {given}, which is not broadcastable to {shape}: "
+            f"with broadcast=True it needs {len(shape)} axes, one per dimension, "
+            "each of length 1 or the dimension's size"
+        )
+    padded = (1,) * (len(shape) - len(given)) + given
+    if len(given) > len(shape) or any(
+        size not in (1, full) for size, full in zip(padded, shape, strict=True)
+    ):
+        raise DimensionError(
+            f"{what} has shape {given}, which is not broadcastable to {shape}"
+        )
+
+
+def _as_mask(
+    mask: Any, shape: tuple[int, ...], *, broadcast: bool = False
+) -> np.ndarray | None:
+    """Return ``mask`` as a read-only boolean array of ``shape``, or None.
+
+    With ``broadcast``, a mask with length-1 axes is stored as a broadcast view
+    of a private copy, so the caller changing their array cannot change it.
+    """
     if mask is None:
         return None
     array = np.asarray(mask, dtype=bool)
     if array.shape != shape:
-        raise DimensionError(f"mask has shape {array.shape}, expected {shape}")
+        if not broadcast:
+            raise DimensionError(f"mask has shape {array.shape}, expected {shape}")
+        _check_broadcastable("mask", array.shape, shape, same_ndim=True)
+        # broadcast_to returns a read-only view, so it is frozen already.
+        return np.broadcast_to(array.copy(), shape)
     array = array.copy() if array.flags.writeable else array
     array.flags.writeable = False
     return array
@@ -1514,13 +1601,10 @@ def _as_coord(name: str, value: Any, shape: tuple[int, ...]) -> np.ndarray:
     """
     array = np.asarray(value)
     if array.shape != shape:
-        try:
-            array = np.broadcast_to(array, shape)
-        except ValueError as exc:
-            raise DimensionError(
-                f"coordinate {name!r} has shape {array.shape}, "
-                f"which is not broadcastable to {shape}"
-            ) from exc
+        _check_broadcastable(
+            f"coordinate {name!r}", array.shape, shape, same_ndim=False
+        )
+        array = np.broadcast_to(array, shape)
     array = array.view()
     array.flags.writeable = False
     return array

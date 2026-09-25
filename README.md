@@ -42,7 +42,7 @@ A `LabelledArray` holds:
 
 | Part | What it is | Where it lives |
 | --- | --- | --- |
-| **variables** | one or more equally shaped arrays | the array backend |
+| **variables** | one or more equally shaped arrays; `broadcast=True` accepts length-1 axes | the array backend |
 | **dims** | ordered name → unique labels, one per axis | always numpy |
 | **alt_dims** | extra, repeatable labels for one dimension's entries; no axis of their own | always numpy |
 | **mask** | bool array, True where a source row existed | always numpy |
@@ -118,9 +118,23 @@ Two things follow, and are limitations rather than bugs:
   array there; so does `copy()` (the default is deep). The saving is real at
   construction and through `transpose`, `copy(deep=False)`, `equals` and `repr`.
 
-Variables are not extended this way: they live on a backend, and arithmetic and
-`__setitem__` write to them. Call `np.broadcast_to(...).copy()` yourself if you
-want one, and the explicit copy is the point.
+Variables (and the mask) broadcast the same way, but only when asked, with
+`broadcast=True`:
+
+```python
+surface = LabelledArray(
+    {"vol": vols, "time_to_expiry": tau[:, :, None]},  # (date, expiry, 1)
+    {"date": dates, "expiry": expiries, "strike": strikes},
+    broadcast=True,
+)
+```
+
+The flag is stricter than numpy's rule. Each array needs one axis per
+dimension, length 1 where it does not vary, so an `(expiry,)` array cannot
+silently line up with the strike axis; and `dims` must be given. The same two
+limitations apply, plus a third: `assign` and `__setitem__` do not broadcast
+(pass `np.broadcast_to(value, array.shape)`). In torch the stored `expand`
+view is not read-only; see `TODO.md`.
 
 ## Natural index dimensions
 
