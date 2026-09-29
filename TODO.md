@@ -18,8 +18,9 @@ workable today, and a natural index already covers the case that hurts most.
 ## Operations
 
 The alignment, `concat`, reduction, `groupby`, `reindex`/`fillna`, rolling and
-multi-axis `take` items are done; `examples/08_combining_and_reducing.py` shows
-them and `examples/07_timings_at_scale.py` times them. What they left behind:
+multi-axis `take` items are done;
+`examples/operations/01_combining_and_reducing.py` shows them and
+`examples/performance/01_timings_at_scale.py` times them. What they left behind:
 
 - **Broadcasting.** Arithmetic aligns labels but still needs the same dimension
   *names* on both operands. Combining an array over `(asset, date)` with one
@@ -121,7 +122,7 @@ Raised by the code-quality review and deliberately not done:
 The dense layout spans the product of the dimension label sets, so an array is
 only as efficient as its `density` — the fraction of cells a source row
 populates. When dimensions are close to independent, that fraction collapses:
-in `examples/04_natural_index_and_sparsity.py`, twelve rows span 144 cells.
+in `examples/layout/02_natural_index.py`, twelve rows span 144 cells.
 
 `natural=` is the current answer, in two modes. `"rows"`, the default, numbers
 rows and so needs labels that are *unique within* the others (dates, event

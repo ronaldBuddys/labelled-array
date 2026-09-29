@@ -942,7 +942,8 @@ class LabelledArray(ArithmeticMixin):
                 coords={**curve.coords, "fill_age": age[:, None]}
             )
 
-        ``examples/09_ffill_and_staleness.py`` works this through end to end.
+        ``examples/operations/02_ffill_and_staleness.py`` works this through end
+        to end.
 
         Examples
         --------
