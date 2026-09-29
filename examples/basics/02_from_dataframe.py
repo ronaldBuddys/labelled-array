@@ -95,7 +95,8 @@ print(sales.to_dataframe("pandas"))
 # ------------------------------
 # polars has no index, so its dimensions are always ordinary columns and
 # ``dims`` is always passed. Either library builds the same array;
-# :ref:`polars_and_pandas_example` sets the two side by side.
+# :ref:`the polars-and-pandas page <polars_and_pandas_example>` sets the two side
+# by side.
 
 from_pandas = LabelledArray.from_dataframe(
     pd.DataFrame(records), cols=["units", "price"], dims=["region", "product"]
