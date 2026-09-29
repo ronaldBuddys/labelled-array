@@ -1,6 +1,8 @@
 """
-What keeps its order, and what does not
-=======================================
+.. _ordering_example:
+
+``select``, ``transpose``, ``align`` : what keeps its order, and what does not
+==============================================================================
 
 Two orders matter in a labelled array: the order of the *dimensions*, which is
 the order of the axes, and the order of the *labels* within each dimension.

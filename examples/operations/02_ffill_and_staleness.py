@@ -1,6 +1,8 @@
 """
-Forward filling, and knowing how stale the fill is
-==================================================
+.. _ffill_example:
+
+``reindex``, ``ffill`` : forward filling, and knowing how stale the fill is
+===========================================================================
 
 Two calendars rarely agree. A discount curve is not published on every date an
 option chain has a snapshot for, so putting the curve on the chain's dates

@@ -1,6 +1,8 @@
 """
-Subclassing for a domain
-========================
+.. _subclassing_example:
+
+``LabelledArray`` : subclassing for a domain
+============================================
 
 ``LabelledArray`` is meant to be inherited from. Every operation that returns a
 new array builds it through ``type(self)``, so a subclass keeps its own type,

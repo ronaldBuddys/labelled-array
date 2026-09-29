@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-EXAMPLES = sorted((Path(__file__).resolve().parent.parent / "examples").glob("*.py"))
+# One level of numbered subsections, as the gallery lays them out.
+EXAMPLES = sorted((Path(__file__).resolve().parent.parent / "examples").glob("*/*.py"))
 
 
 def test_the_examples_are_present():
@@ -25,7 +26,9 @@ def test_example_runs(path, capsys):
 def test_example_is_written_in_the_sphinx_gallery_style(path):
     lines = path.read_text().splitlines()
     assert lines[0] == '"""', "an example starts with a module docstring"
-    assert set(lines[2]) == {"="}, "with an underlined rst title"
+    # An anchor, ".. _name:" and a blank line, may come before the title.
+    title_at = 3 if lines[1].startswith(".. _") else 1
+    assert set(lines[title_at + 1]) == {"="}, "with an underlined rst title"
     assert any(line.startswith("# %%") for line in lines), "and is split into cells"
     for number, line in enumerate(lines):
         if line.startswith("# %%"):

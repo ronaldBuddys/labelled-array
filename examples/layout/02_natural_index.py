@@ -1,6 +1,8 @@
 """
-Natural indices and sparsity
-============================
+.. _natural_index_example:
+
+``from_dataframe(natural=...)`` : natural indices and sparsity
+==============================================================
 
 A dense array spans the product of its dimension labels, which is wasteful when
 one dimension's labels are nearly unique per group -- dates, most of the time.

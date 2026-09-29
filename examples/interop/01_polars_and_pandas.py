@@ -1,6 +1,8 @@
 """
-One API, two DataFrame engines
-==============================
+.. _polars_and_pandas_example:
+
+``from_dataframe``, ``to_dataframe`` : one API, two DataFrame engines
+=====================================================================
 
 ``from_dataframe`` takes a polars frame or a pandas one, and ``to_dataframe``
 writes either. The array in between is the same whichever library it came from.

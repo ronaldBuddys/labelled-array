@@ -1,6 +1,8 @@
 """
-Combining and reducing
-======================
+.. _combining_and_reducing_example:
+
+``sum``, ``groupby``, ``rolling``, ``align``, ``concat`` : combining and reducing
+=================================================================================
 
 Arrays that carry their labels can be put side by side even when their labels
 differ, and reduced along the dimensions they name. Everything in this example
