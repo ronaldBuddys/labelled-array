@@ -1,6 +1,8 @@
 """
-Selecting by label
-==================
+.. _selection_example:
+
+``select`` : selecting by label
+===============================
 
 Selection is by label, not position, and the shape of the result never depends
 on how many labels were asked for: a single label still yields a dimension of

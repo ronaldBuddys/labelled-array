@@ -1,6 +1,8 @@
 """
-Timings at scale
-================
+.. _performance_example:
+
+``from_dataframe``, ``select``, ``groupby``, ``rolling`` : timings at scale
+===========================================================================
 
 Where the time goes on a large array, and which choices change it. Every number
 below is measured on the machine running the script -- the point is not the

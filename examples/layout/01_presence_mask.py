@@ -1,6 +1,8 @@
 """
-The presence mask, end to end
-=============================
+.. _presence_mask_example:
+
+``mask`` : the presence mask, end to end
+========================================
 
 A dense array has a cell for every combination of labels, whether or not the
 data had a row for it. The mask is how a ``LabelledArray`` remembers which cells
@@ -210,8 +212,8 @@ assert hidden.sum()["w"] == 4.0
 # ``ffill`` carries the last *present* cell forward over the mask -- not over
 # NaN -- and the cells it fills become present, or ``to_dataframe`` would drop
 # the very rows the fill was for. ``limit`` counts positions, and a gap before
-# the first observation stays a gap. ``09_ffill_and_staleness.py`` takes this
-# further.
+# the first observation stays a gap. :ref:`The forward-filling page <ffill_example>`
+# takes this further.
 
 quotes = LabelledArray(
     {"px": np.array([[0.0, 5.0, 0.0, 0.0, 0.0, 9.0]])},
@@ -268,7 +270,8 @@ assert picked.mask.tolist() == [[True, True], [True, False]]
 # %%
 # Where else the mask appears
 # ---------------------------
-# ``02_from_dataframe.py`` introduces it, ``04_natural_index_and_sparsity.py``
-# shows a natural index keeping density high, ``08_combining_and_reducing.py``
-# uses the rules above on a real panel, and ``07_timings_at_scale.py`` measures
-# what the mask costs.
+# :ref:`The DataFrame round trip <from_dataframe_example>` introduces it,
+# :ref:`natural indices <natural_index_example>` keep density high,
+# :ref:`combining and reducing <combining_and_reducing_example>` uses the rules above
+# on a real panel, and :ref:`the timings page <performance_example>` measures what
+# the mask costs.

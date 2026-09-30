@@ -1,6 +1,8 @@
 """
-Alternative dimensions
-======================
+.. _alternative_dimensions_example:
+
+``alt_dims`` : alternative dimensions
+=====================================
 
 A descriptive column often varies along one dimension and only that one: a
 sector per asset, a currency per book, a maturity bucket per tenor. Making it a
@@ -228,7 +230,7 @@ with pl.Config(tbl_rows=len(out)):
 # is stored once per entry, and can be selected on. Reach for a coordinate when
 # the value genuinely varies cell by cell, and for an alternative dimension when
 # it is a property of one dimension's labels. See
-# ``examples/04_natural_index_and_sparsity.py`` for the third case: a dimension
+# :ref:`natural indices <natural_index_example>` for the third case: a dimension
 # whose labels are near-unique per group, which wants a natural index instead.
 
 with_coord = LabelledArray(

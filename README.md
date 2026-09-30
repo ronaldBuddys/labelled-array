@@ -33,7 +33,7 @@ sales.to_dataframe("pandas")  # or as pandas, dimensions in a MultiIndex
 
 Either library's frame goes into `from_dataframe` and builds the same array;
 `to_dataframe` writes polars unless asked for `"pandas"`, and falls back to
-pandas only where polars is not installed. `examples/13_polars_and_pandas.py`
+pandas only where polars is not installed. `examples/interop/01_polars_and_pandas.py`
 runs the two side by side.
 
 ## What it is
@@ -84,9 +84,9 @@ overrides it, for every variable or per variable -- worth doing under
 `to_dataframe` emits only the masked-in cells, which is why `int`, `bool`,
 `str` and `datetime` columns all survive a sparse round trip unchanged.
 
-See `examples/11_presence_mask.py` for how the mask moves through arithmetic,
-reductions, alignment and filling, and `examples/12_ordering.py` for what each
-operation does to the order of dimensions and of the labels within them.
+See `examples/layout/01_presence_mask.py` for how the mask moves through
+arithmetic, reductions, alignment and filling, and
+`examples/basics/04_ordering.py` for what each operation does to the order of dimensions and of the labels within them.
 
 ## Coordinates that do not vary along every dimension
 
@@ -167,7 +167,7 @@ LabelledArray.from_dataframe(
 # dims ('trade_date', 'expiry_idx', 'strike_idx'): ragged on both axes, no padding by hand
 ```
 
-See `examples/04_natural_index_and_sparsity.py`.
+See `examples/layout/02_natural_index.py`.
 
 ## Alternative dimensions
 
@@ -230,7 +230,7 @@ Two things it deliberately is not:
 that says two different things about a single asset, or one tied to a `natural=`
 dimension whose labels are positions rather than values.
 
-See `examples/10_alternative_dimensions.py`.
+See `examples/layout/03_alternative_dimensions.py`.
 
 ## Operations
 
@@ -272,8 +272,9 @@ The operations are deliberately narrow, and say so rather than guessing:
 - **`ffill` carries over the mask, not over NaN**, for the same reason, and
   forward only. A cell it fills becomes present, so `to_dataframe` emits it.
 
-See `examples/08_combining_and_reducing.py`,
-`examples/09_ffill_and_staleness.py`, and `examples/07_timings_at_scale.py` for
+See `examples/operations/01_combining_and_reducing.py`,
+`examples/operations/02_ffill_and_staleness.py`, and
+`examples/performance/01_timings_at_scale.py` for
 what each of them costs on a million cells.
 
 ## Round trip gotchas
@@ -349,7 +350,7 @@ class ClimateArray(LabelledArray):
 july.select({"station": "Oslo"})  # still a ClimateArray
 ```
 
-See `examples/06_subclassing.py`, and `register_backend` / `register_adapter`
+See `examples/interop/03_subclassing.py`, and `register_backend` / `register_adapter`
 for supporting another array or DataFrame library from outside the package. An
 `ArrayBackend` only has to provide the abstract methods: `take_multi`, `full`,
 `where`, `concatenate`, `reduce` and `sliding_window` all have working
@@ -360,13 +361,13 @@ copy for a sliding window.
 ## Examples and tests
 
 ```bash
-python examples/01_basics.py                # 01 basics ... 13 polars and pandas
+python examples/basics/01_labelled_array.py  # each page runs alone; see examples/*/
 pytest -q                                   # the full suite
 pytest --cov=labelled_array --cov-report=term-missing
 ```
 
-`examples/07_timings_at_scale.py` measures where the time goes on a million-row
-frame — what dominates `from_dataframe`, what a `select` costs, what the
+`examples/performance/01_timings_at_scale.py` measures where the time goes on a
+million-row frame — what dominates `from_dataframe`, what a `select` costs, what the
 operations above cost, and what sparsity costs in memory rather than in time.
 Set `LABELLED_ARRAY_SCALE=2` to run it on four times the cells.
 

@@ -1,6 +1,8 @@
 """
-Array backends and dtypes
-=========================
+.. _backends_example:
+
+``to_backend`` : array backends and dtypes
+==========================================
 
 The variables can live on numpy, JAX or torch, and the same conversion code
 serves all of them. Dimension labels, the mask and the coordinates always stay

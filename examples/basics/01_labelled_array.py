@@ -1,6 +1,8 @@
 """
-Labelled arrays from scratch
-============================
+.. _labelled_array_example:
+
+``LabelledArray`` : building one from scratch
+=============================================
 
 A :class:`~labelled_array.LabelledArray` is one or more equally shaped arrays
 plus an ordered mapping of dimension name to labels. This example builds one by

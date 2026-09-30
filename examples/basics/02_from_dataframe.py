@@ -1,6 +1,8 @@
 """
-Round trips through a DataFrame
-===============================
+.. _from_dataframe_example:
+
+``from_dataframe``, ``to_dataframe`` : round trips through a DataFrame
+======================================================================
 
 Labelled arrays are usually reached from a DataFrame: some columns identify a
 cell, the rest become variables. The conversion goes both ways: polars is the
@@ -49,7 +51,7 @@ assert sales.density == 4 / 6
 # The mask records which cells came from a row, so an integer column keeps its
 # dtype: an empty cell holds a placeholder no one could take for data -- the
 # smallest int64 -- and the mask says it is absent.
-# ``11_presence_mask.py`` covers the mask end to end.
+# :ref:`The presence mask page <presence_mask_example>` covers it end to end.
 
 print(sales["units"])
 print(sales.mask)
@@ -93,7 +95,8 @@ print(sales.to_dataframe("pandas"))
 # ------------------------------
 # polars has no index, so its dimensions are always ordinary columns and
 # ``dims`` is always passed. Either library builds the same array;
-# ``13_polars_and_pandas.py`` sets the two side by side.
+# :ref:`the polars-and-pandas page <polars_and_pandas_example>` sets the two side
+# by side.
 
 from_pandas = LabelledArray.from_dataframe(
     pd.DataFrame(records), cols=["units", "price"], dims=["region", "product"]
