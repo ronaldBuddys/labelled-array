@@ -1,9 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
+  # No push to main: the PR's run already tested what the merge lands, and repeating
+  # it after every merge was over a third of the account's Actions minutes. To check
+  # main itself, run this workflow by hand from the Actions tab.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
