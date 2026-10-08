@@ -12,7 +12,7 @@ import importlib.util
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from functools import cache
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 __all__ = ["Plugin", "Registry"]
 
@@ -71,10 +71,7 @@ class Plugin(ABC):
         return hash(self.name)
 
 
-P = TypeVar("P", bound=Plugin)
-
-
-class Registry(Generic[P]):
+class Registry[P: Plugin]:
     """A name-to-plugin registry, resolvable by name or by object.
 
     Parameters
