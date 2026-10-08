@@ -7,7 +7,7 @@ name = "labelled-array"
 version = "0.3.0"
 description = "N-dimensional arrays carrying named, labelled dimensions, with lossless DataFrame round trips."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Ronald MacEachern" }]
