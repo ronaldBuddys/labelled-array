@@ -87,9 +87,10 @@ class LabelledArray(ArithmeticMixin):
     the flag.
 
     A broadcast variable stays compact only until an operation builds a new
-    array from it. :meth:`transpose` and ``copy(deep=False)`` keep the view;
-    a deep :meth:`copy`, :meth:`astype`, :meth:`to_backend`, arithmetic,
-    :meth:`isel`, :meth:`select` and pickling materialise it. :meth:`assign`
+    array from it. :meth:`transpose`, ``copy(deep=False)`` and, on the numpy
+    backend, :meth:`isel` and :meth:`select` keep the broadcast axes broadcast
+    (the sliced cell is a read-only view); a deep :meth:`copy`, :meth:`astype`,
+    :meth:`to_backend`, arithmetic and pickling materialise it. :meth:`assign`
     and item assignment do not broadcast; pass
     ``np.broadcast_to(value, array.shape)``. :meth:`from_dataframe` always
     builds full arrays. In torch the stored view is *not* read-only: writing
