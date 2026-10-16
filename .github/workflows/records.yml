@@ -1,0 +1,200 @@
+name: Records
+
+# Record the regression-records scenarios on the PR's base commit, replay them on its
+# head, and show which numbers moved. Records are never committed; this job is the
+# before/after. A PR that moves numbers on purpose carries the `records-break` label
+# and pastes the summary into its description (tests/records/README.md).
+
+on:
+  pull_request:
+    # labeled/unlabeled: adding or removing `records-break` runs only the cheap
+    # verdict job, not the record and replay.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+# Label changes get their own group: a label must not cancel a replay in progress.
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.ref }}-${{
+    (github.event.action == 'labeled' || github.event.action == 'unlabeled')
+    && 'label' || 'code' }}
+  cancel-in-progress: true
+
+# Least privilege: jobs only read this repository. The private regression-records
+# dev dependency is fetched with SIBLING_CHECKOUT_TOKEN, never with GITHUB_TOKEN.
+permissions:
+  contents: read
+
+env:
+  # The jax backend runs on CPU.
+  JAX_PLATFORMS: cpu
+
+jobs:
+  records:
+    if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
+    runs-on: ubuntu-latest
+    # Job-level permissions replace the workflow's: restate contents, and add
+    # pull-requests: read for the labels.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Place the base checkout and the store outside the workspace
+        run: |
+          echo "BASE=$RUNNER_TEMP/base" >> "$GITHUB_ENV"
+          echo "LA_RECORDS_STORE=$RUNNER_TEMP/records-store" >> "$GITHUB_ENV"
+
+      - name: Check the sibling-dependency token is configured
+        # regression-records is private, and [tool.uv.sources] resolves it from git.
+        # GITHUB_TOKEN is scoped to this repository only, so `uv sync` needs a PAT
+        # with Contents: Read on it (see ci.yml).
+        run: |
+          if [ -z "${{ secrets.SIBLING_CHECKOUT_TOKEN }}" ]; then
+            echo "::error::SIBLING_CHECKOUT_TOKEN is not set. Add a fine-grained PAT" \
+                 "with Contents: Read on the sibling repos as an Actions secret."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate git for the private sibling source
+        run: >
+          git config --global
+          url."https://x-access-token:${{ secrets.SIBLING_CHECKOUT_TOKEN }}@github.com/ronaldBuddys/".insteadOf
+          "https://github.com/ronaldBuddys/"
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Check out the base commit
+        run: git worktree add "$BASE" "${{ github.event.pull_request.base.sha }}"
+
+      - name: Record on the base commit
+        working-directory: ${{ env.BASE }}
+        # A base from before the harness existed has no "before". Record on the head
+        # instead, so the PR that adds the harness still proves record -> replay in CI
+        # (and uv runs, so setup-uv has a cache to save).
+        run: |
+          if [ ! -f tests/records/cli.py ]; then
+            echo "::notice::The base commit has no records harness; recording on the head."
+            cd "$GITHUB_WORKSPACE"
+          fi
+          uv sync --locked
+          uv run python -m tests.records.cli record
+
+      - name: Replay on the head commit
+        id: replay
+        run: |
+          uv sync --locked
+          status=0
+          uv run python -m tests.records.cli replay \
+            --save replay-report.json --markdown replay-summary.md || status=$?
+          # No summary means replay itself broke (e.g. an empty store): never let the
+          # label excuse that.
+          if [ ! -f replay-summary.md ]; then
+            echo "::error::Replay did not run to a summary"; exit 1
+          fi
+          cat replay-summary.md >> "$GITHUB_STEP_SUMMARY"
+          # Kept in the artifact too, for the verdict of a later label change.
+          echo "$status" > replay-status
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+
+      - name: Keep the base store and the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-records
+          path: |
+            ${{ env.LA_RECORDS_STORE }}
+            replay-report.json
+            replay-status
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Fail on moved numbers unless labelled
+        if: steps.replay.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        # The labels now, not those in the event: a label added while the replay was
+        # running must count.
+        run: |
+          if gh pr view "$PR" --json labels -q '.labels[].name' | grep -qx records-break; then
+            echo "::notice::Numbers moved, and the PR is labelled records-break." \
+                 "Paste the job summary into the PR description."
+          else
+            echo "::error::Recorded numbers moved (see the job summary). If intended," \
+                 "add the records-break label and paste the summary into the PR."
+            exit 1
+          fi
+
+  verdict:
+    # Re-decides pass or fail when `records-break` is added or removed, reusing the
+    # replay already made for the same head commit, so a label change takes seconds,
+    # not a record and replay. It only runs on those events: on a push, the records
+    # job decides by itself, as a second job would be billed another whole minute.
+    if: >-
+      (github.event.action == 'labeled' || github.event.action == 'unlabeled')
+      && github.event.label.name == 'records-break'
+    runs-on: ubuntu-latest
+    # actions: read to download another run's artifact; pull-requests: read for the
+    # labels.
+    permissions:
+      actions: read
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Find the replay status
+        id: status
+        env:
+          SHA: ${{ github.event.pull_request.head.sha }}
+        # The newest run on this commit whose records job ran (label-only runs skip
+        # it), waiting for it if it is still replaying. Its job fails when numbers
+        # moved without the label, so both success and failure carry a status.
+        run: |
+          for id in $(gh run list --workflow records.yml --commit "$SHA" \
+                        --event pull_request --limit 50 --json databaseId \
+                        -q '.[].databaseId'); do
+            [ "$id" = "$GITHUB_RUN_ID" ] && continue
+            job='.jobs[] | select(.name == "records") | .status + " " + .conclusion'
+            read -r state conclusion <<< "$(gh run view "$id" --json jobs -q "$job")"
+            [ "$conclusion" = skipped ] && continue
+            if [ "$state" != completed ]; then
+              echo "Waiting for run $id to finish its replay"
+              gh run watch "$id" > /dev/null || true
+              read -r state conclusion <<< "$(gh run view "$id" --json jobs -q "$job")"
+            fi
+            # Cancelled: superseded; an older run on this commit may still have replayed.
+            [ "$conclusion" = cancelled ] && continue
+            gh run download "$id" --name regression-records --dir replay || true
+            file=$(find replay -name replay-status 2>/dev/null | head -1)
+            if [ -z "$file" ]; then
+              echo "::error::Run $id saved no replay status: the replay broke, or the" \
+                   "run predates this job. Push to run the replay again."
+              exit 1
+            fi
+            echo "status=$(cat "$file")" >> "$GITHUB_OUTPUT"
+            exit 0
+          done
+          echo "::error::No replay of $SHA to decide from; push to run one."
+          exit 1
+
+      - name: Fail on moved numbers unless labelled
+        if: steps.status.outputs.status != '0'
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if gh pr view "$PR" --json labels -q '.labels[].name' | grep -qx records-break; then
+            echo "::notice::Numbers moved, and the PR is labelled records-break." \
+                 "Paste the records job summary into the PR description."
+          else
+            echo "::error::Recorded numbers moved (see the records job summary). If" \
+                 "intended, add the records-break label and paste the summary into the PR."
+            exit 1
+          fi
