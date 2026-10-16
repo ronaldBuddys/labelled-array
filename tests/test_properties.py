@@ -7,7 +7,13 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from helpers import assert_frames_equal, build_both, build_frame, sort_frame
+from helpers import (
+    assert_frames_equal,
+    build_both,
+    build_frame,
+    needs_polars,
+    sort_frame,
+)
 from labelled_array import LabelledArray
 
 SETTINGS = settings(
@@ -81,6 +87,7 @@ def test_round_trip_is_the_identity(engine, frame):
     assert_frames_equal(engine, sort_frame(engine, df, dim_names), out)
 
 
+@needs_polars
 @SETTINGS
 @given(frame=frames())
 def test_the_engines_always_agree(frame):

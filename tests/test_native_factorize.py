@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import polars as pl
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -13,6 +12,9 @@ from helpers import build_frame
 from labelled_array import LabelledArray, _reshape
 from labelled_array._utils import arrays_equal
 from labelled_array.adapters import DataFrameAdapter, get_adapter
+
+# The whole module exercises polars; without it nothing here can run.
+pl = pytest.importorskip("polars")
 
 RNG = np.random.default_rng(0)
 

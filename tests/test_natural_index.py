@@ -11,6 +11,7 @@ from helpers import (
     build_frame,
     column,
     columns,
+    needs_polars,
     sort_frame,
 )
 from labelled_array import DimensionError, DuplicateIndexError, LabelledArray
@@ -225,6 +226,7 @@ def test_string_labels_can_be_made_natural(engine):
     )
 
 
+@needs_polars
 def test_engines_agree_on_natural_indices(panel):
     built = build_both(panel, DIMS, cols=["w"], natural=["date"])
     assert built[0].equals(built[1])
@@ -463,6 +465,7 @@ def test_mapping_order_sets_the_grouping_order(engine, chain):
     assert swapped.shape == (2, 1, 5)
 
 
+@needs_polars
 def test_engines_agree_on_distinct_mode(chain):
     built = build_both(chain, CHAIN_DIMS, cols=["vol"], natural=SURFACE)
     assert built[0].equals(built[1])
