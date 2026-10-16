@@ -53,6 +53,49 @@ def test_a_numpy_broadcast_variable_is_held_once():
     assert stored.base.nbytes == TAU.nbytes
 
 
+def lazy_surface():
+    """A surface whose variable, coordinate and mask all vary along strike not at all."""
+    present = np.array([[True, True, False], [True, False, True]])[:, :, None]
+    return surface(mask=present, coords={"fwd": TAU * 2})
+
+
+#: Each slicing call with the equivalent plain numpy index on the strike axis.
+SLICINGS = {
+    "isel list": (lambda a: a.isel({"strike": [1]}), np.array([1])),
+    "select list": (lambda a: a.select({"strike": [95]}), np.array([1])),
+    "isel slice": (lambda a: a.isel({"strike": slice(0, 3)}), np.array([0, 1, 2])),
+    "isel reordered": (lambda a: a.isel({"strike": [3, 1, 2]}), np.array([3, 1, 2])),
+}
+
+
+@pytest.mark.parametrize("slicing", SLICINGS)
+def test_isel_keeps_a_broadcast_axis_zero_stride(slicing):
+    call, strike = SLICINGS[slicing]
+    array = lazy_surface()
+    sliced = call(array)
+    cells = {"tau": sliced["tau"], "fwd": sliced.coords["fwd"], "mask": sliced.mask}
+    for name, cell in cells.items():
+        assert cell.strides[2] == 0, name
+        assert cell.shape == (2, 3, len(strike)), name
+        assert not cell.flags.writeable, name
+    # Same values as the dense path: slice a materialised copy the old way.
+    dense = {
+        "tau": np.array(array["tau"]),
+        "fwd": np.array(array.coords["fwd"]),
+        "mask": np.array(array.mask),
+    }
+    for name, cell in cells.items():
+        np.testing.assert_array_equal(cell, dense[name][:, :, strike], err_msg=name)
+
+
+def test_slicing_a_non_broadcast_axis_keeps_the_broadcast_one():
+    sliced = lazy_surface().isel({"expiry": [2, 0], "date": 1}, drop=True)
+    assert sliced["tau"].strides[-1] == 0
+    np.testing.assert_array_equal(
+        sliced["tau"], np.broadcast_to(TAU[1, [2, 0]], (2, 4))
+    )
+
+
 def test_a_torch_broadcast_variable_is_held_once():
     torch = pytest.importorskip("torch")
     stored = surface(backend="torch")["tau"]
