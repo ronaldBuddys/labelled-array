@@ -10,11 +10,13 @@ import datetime
 
 import numpy as np
 import pandas as pd
-import polars as pl
 import pytest
 
 from helpers import assert_frames_equal, build_frame, sort_frame
 from labelled_array import BackendDtypeError, DimensionError, LabelledArray
+
+# The whole module exercises polars; without it nothing here can run.
+pl = pytest.importorskip("polars")
 
 DIMS = ["a", "b"]
 #: A sparse key: (1, 'y') has no row, so the fill and mask paths are exercised.

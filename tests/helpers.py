@@ -3,9 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from importlib.util import find_spec
 from typing import Any
 
 import numpy as np
+import pytest
+
+#: Skip a test that needs polars when the library is not installed (the CI job
+#: ``test-no-polars`` runs the suite without it).
+needs_polars = pytest.mark.skipif(
+    find_spec("polars") is None, reason="polars is not installed"
+)
 
 
 def build_frame(engine: str, data: Mapping[str, Any]) -> Any:

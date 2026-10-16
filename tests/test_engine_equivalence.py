@@ -14,7 +14,7 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from helpers import build_frame, column
+from helpers import build_frame, column, needs_polars
 from labelled_array import (
     DimensionError,
     DuplicateIndexError,
@@ -168,18 +168,21 @@ def numpy_only(monkeypatch):
 # -- the two engines ---------------------------------------------------------
 
 
+@needs_polars
 @pytest.mark.parametrize("name", sorted(DATASETS))
 def test_engines_build_the_same_array_from_every_shape(name):
     data, dims = DATASETS[name]
     assert_same_array(*(build(engine, data, dims) for engine in ENGINES))
 
 
+@needs_polars
 @pytest.mark.parametrize("family", sorted(LABEL_FAMILIES))
 def test_engines_build_the_same_array_from_every_label_dtype(family):
     data = {"label": LABEL_FAMILIES[family], "other": ["x", "y", "x"], "w": [1, 2, 3]}
     assert_same_array(*(build(engine, data, ["label", "other"]) for engine in ENGINES))
 
 
+@needs_polars
 @pytest.mark.parametrize("name", sorted(KWARGS))
 def test_engines_build_the_same_array_with_every_option(name):
     assert_same_array(
@@ -193,6 +196,7 @@ def test_forcing_the_engine_changes_nothing(engine):
     assert_same_array(detected, forced)
 
 
+@needs_polars
 def test_date_labels_are_the_documented_exception():
     # polars has a Date dtype and gives back datetime64[D]; pandas has none and
     # keeps the python objects. The labels agree, their dtype does not.
@@ -233,6 +237,7 @@ def assert_same_content(from_pandas, from_polars) -> None:
         assert arrays_equal(column(from_pandas, name), column(from_polars, name)), name
 
 
+@needs_polars
 @pytest.mark.parametrize("name", sorted(DATASETS))
 def test_engines_write_the_same_content(engine, name):
     data, dims = DATASETS[name]
@@ -242,6 +247,7 @@ def test_engines_write_the_same_content(engine, name):
     )
 
 
+@needs_polars
 @pytest.mark.parametrize("name", ["natural", "alt", "no_mask", "dims_reversed"])
 def test_engines_write_the_same_content_with_options(engine, name):
     la = build(engine, BOOK, BOOK_DIMS, **KWARGS[name])
@@ -250,6 +256,7 @@ def test_engines_write_the_same_content_with_options(engine, name):
     )
 
 
+@needs_polars
 @pytest.mark.parametrize("dropna", [False, True])
 @pytest.mark.parametrize("expand_natural", [False, True])
 def test_engines_write_the_same_content_with_every_flag(dropna, expand_natural):
@@ -261,6 +268,7 @@ def test_engines_write_the_same_content_with_every_flag(dropna, expand_natural):
     )
 
 
+@needs_polars
 @pytest.mark.parametrize("name", sorted(set(DATASETS) - {"zero_rows"}))
 @pytest.mark.parametrize("source, via", [ENGINES, ENGINES[::-1]])
 def test_cross_engine_round_trips(name, source, via):
@@ -294,6 +302,7 @@ REFUSED = {
 }
 
 
+@needs_polars
 @pytest.mark.parametrize("name", sorted(REFUSED))
 def test_engines_refuse_the_same_inputs_with_the_same_message(name):
     data, kwargs, error = REFUSED[name]
@@ -320,6 +329,7 @@ def string_frames(draw):
     }
 
 
+@needs_polars
 @settings(
     deadline=None,
     max_examples=100,
