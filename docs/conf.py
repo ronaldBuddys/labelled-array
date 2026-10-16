@@ -16,6 +16,7 @@ per-repo block. Change anything outside the fence everywhere at once, never in o
 
 from __future__ import annotations
 
+import importlib.metadata
 import os
 import sys
 from pathlib import Path
@@ -24,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # ---- per-repo settings: the only lines that differ between repos ------------------
 project = "labelled-array"
-release = "0.2.0"
+release = importlib.metadata.version(project)
 EXTRA_EXTENSIONS: list[str] = []
 # Directories importable by the docs build, relative to the repo root, beyond src/.
 EXTRA_SYS_PATHS: list[str] = []
