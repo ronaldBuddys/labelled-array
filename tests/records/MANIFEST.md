@@ -1,7 +1,7 @@
 # Coverage manifest
 
 What the records harness covers, and, as explicitly, what it does not. 16 checkpoints,
-98 records (seed bundle b49-labelled-array-seed). `r` counts the records that raise on
+103 records (seed bundle b49-labelled-array-seed, plus broadcast slicing from b51). `r` counts the records that raise on
 the current base. A record count that changes without a scenario change is itself a
 finding. `record` writes one record per distinct call, so two scenario lines making the
 same call count once.
@@ -10,8 +10,8 @@ same call count once.
 
 | Checkpoint | Records | Cases |
 |---|---|---|
-| `LabelledArray.select` | 13 (2 r) | label, list, scalar with `drop`, datetime labels, `missing="ignore"`, an int-labelled `(b, a)` array, a 3-D cube; a missing label (`LabelNotFoundError`); a label slice (refused as an unknown label today) |
-| `LabelledArray.isel` | 10 | negative position, negative with `drop`, strided slice, integer arrays on two dimensions, `(b, a)`, 3-D with `drop` |
+| `LabelledArray.select` | 15 (2 r) | label, list, scalar with `drop`, datetime labels, `missing="ignore"`, an int-labelled `(b, a)` array, a 3-D cube; a missing label (`LabelNotFoundError`); a label slice (refused as an unknown label today); a variable stored broadcast (`broadcast=True`, zero stride along `strike`), by list and by scalar with `drop` |
+| `LabelledArray.isel` | 13 | negative position, negative with `drop`, strided slice, integer arrays on two dimensions, `(b, a)`, 3-D with `drop`; a broadcast variable by array, by slice with a scalar, and by scalars with `drop` |
 | `_align.reindex` | 4 | new dates and symbols (NaN-filled cells), `fill_value`, int labels on `(b, a)`, a shorter date set |
 | `_fill.ffill` | 5 | along `date` on reindexed and on NaN-gapped arrays, with and without `limit`, along `sym` |
 | `_align.align` | 5 (1 r) | inner, outer, left with `fill_value`, outer on differing symbols; `exact` on differing labels (`DimensionError`) |

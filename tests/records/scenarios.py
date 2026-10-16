@@ -87,6 +87,23 @@ def indexing() -> None:
     la.isel({"date": np.array([3, 0, 5]), "sym": np.array([-1, 0])})
     ba.isel({"a": [1, 0]})
     cube.isel({"strike": -1, "expiry": 0}, drop=True)
+    broadcast_slicing()
+
+
+def broadcast_slicing() -> None:
+    """Slice a variable stored broadcast along ``strike`` (zero stride) and others."""
+    rng = np.random.default_rng(4)
+    dims = {"expiry": ["1M", "3M"], "strike": [90, 100, 110], "kind": ["c", "p"]}
+    data = {
+        "iv": rng.uniform(0.1, 0.5, (2, 3, 2)),
+        "tau": rng.uniform(0.1, 1, (2, 1, 1)),
+    }
+    bc = LabelledArray(data, dims=dims, broadcast=True)
+    bc.isel({"strike": [2, 0]})
+    bc.isel({"strike": slice(0, 2), "kind": -1})
+    bc.isel({"expiry": 1, "strike": 1}, drop=True)
+    bc.select({"strike": [110, 90]})
+    bc.select({"strike": 100, "kind": "p"}, drop=True)
 
 
 def alignment() -> None:
