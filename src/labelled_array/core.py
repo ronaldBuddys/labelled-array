@@ -418,7 +418,7 @@ class LabelledArray(ArithmeticMixin):
         drop: bool = False,
         missing: str = "raise",
         **kwargs: Any,
-    ):
+    ) -> LabelledArray:
         """Select along dimensions, or alternative dimensions, by label.
 
         Parameters
@@ -539,7 +539,7 @@ class LabelledArray(ArithmeticMixin):
         indexers: Mapping[str, Any] | None = None,
         drop: bool = False,
         **kwargs: Any,
-    ):
+    ) -> LabelledArray:
         """Select along dimensions by integer position.
 
         Parameters
@@ -573,7 +573,9 @@ class LabelledArray(ArithmeticMixin):
             self._resolve(indexers, kwargs, self._dims.get_positions), drop=drop
         )
 
-    def rename(self, mapping: Mapping[str, str] | None = None, **kwargs: str):
+    def rename(
+        self, mapping: Mapping[str, str] | None = None, **kwargs: str
+    ) -> LabelledArray:
         """Rename dimensions, variables or coordinates.
 
         Parameters
@@ -607,7 +609,7 @@ class LabelledArray(ArithmeticMixin):
         }
         return self._replace(dims=dims, data=data, coords=coords)
 
-    def transpose(self, *order: str | Sequence[str]):
+    def transpose(self, *order: str | Sequence[str]) -> LabelledArray:
         """Return a view with the dimensions reordered.
 
         Parameters
@@ -630,7 +632,7 @@ class LabelledArray(ArithmeticMixin):
             **self._map_cells(lambda backend, array: backend.transpose(array, axes)),
         )
 
-    def astype(self, dtype: Any):
+    def astype(self, dtype: Any) -> LabelledArray:
         """Cast the variables.
 
         Parameters
@@ -647,7 +649,7 @@ class LabelledArray(ArithmeticMixin):
         }
         return self._replace(data=data)
 
-    def to_backend(self, backend: str | ArrayBackend):
+    def to_backend(self, backend: str | ArrayBackend) -> LabelledArray:
         """Return the array held on another array backend.
 
         Raises
@@ -662,12 +664,14 @@ class LabelledArray(ArithmeticMixin):
             data[name] = target.asarray(self._backend.to_numpy(value))
         return self._replace(data=data, backend=target)
 
-    def assign(self, variables: Mapping[str, Any] | None = None, **kwargs: Any):
+    def assign(
+        self, variables: Mapping[str, Any] | None = None, **kwargs: Any
+    ) -> LabelledArray:
         """Return the array with variables added or replaced."""
         variables = {**(variables or {}), **kwargs}
         return self._replace(data={**self._data, **variables})
 
-    def drop_vars(self, names: str | Iterable[str]):
+    def drop_vars(self, names: str | Iterable[str]) -> LabelledArray:
         """Return the array without the named variables."""
         names = set(as_name_list(names))
         unknown = sorted(names - set(self._data))
@@ -679,7 +683,7 @@ class LabelledArray(ArithmeticMixin):
             }
         )
 
-    def copy(self, deep: bool = True):
+    def copy(self, deep: bool = True) -> LabelledArray:
         """Return a copy, duplicating the arrays when ``deep``."""
         if not deep:
             return self._replace()
@@ -695,7 +699,7 @@ class LabelledArray(ArithmeticMixin):
         indexers: Mapping[str, Any] | None = None,
         fill_value: Any = None,
         **kwargs: Any,
-    ):
+    ) -> LabelledArray:
         """Return the array on a different label set for the named dimensions.
 
         Labels the array already has bring their cells with them; labels it does
@@ -741,7 +745,9 @@ class LabelledArray(ArithmeticMixin):
             self, {**(indexers or {}), **kwargs}, fill_value=fill_value
         )
 
-    def reindex_like(self, other: LabelledArray, fill_value: Any = None):
+    def reindex_like(
+        self, other: LabelledArray, fill_value: Any = None
+    ) -> LabelledArray:
         """Return the array on ``other``'s labels, for the dimensions they share.
 
         Parameters
@@ -758,7 +764,7 @@ class LabelledArray(ArithmeticMixin):
 
     def align(
         self, *others: LabelledArray, join: str = "inner", fill_value: Any = None
-    ):
+    ) -> tuple[LabelledArray, ...]:
         """Return this array and ``others`` on one label set per shared dimension.
 
         Dimensions no other array has are left alone, and no array is
@@ -800,7 +806,7 @@ class LabelledArray(ArithmeticMixin):
         labels: Any = None,
         join: str = "outer",
         fill_value: Any = None,
-    ):
+    ) -> LabelledArray:
         """Join arrays along an existing or a new dimension.
 
         Parameters
@@ -847,7 +853,7 @@ class LabelledArray(ArithmeticMixin):
             arrays, dim, labels=labels, join=join, fill_value=fill_value
         )
 
-    def fillna(self, value: Any):
+    def fillna(self, value: Any) -> LabelledArray:
         """Return the array with unpopulated and null cells filled.
 
         A cell is filled when the mask marks it absent or the value there is
@@ -881,7 +887,7 @@ class LabelledArray(ArithmeticMixin):
         filled_all = all(values[name] is not None for name in self.variables)
         return self._replace(data=data, mask=None if filled_all else self._mask)
 
-    def ffill(self, dim: str, limit: int | None = None):
+    def ffill(self, dim: str, limit: int | None = None) -> LabelledArray:
         """Return the array with the last present position carried forward along ``dim``.
 
         A cell the mask marks absent takes the value of the nearest present
@@ -967,7 +973,7 @@ class LabelledArray(ArithmeticMixin):
 
     # -- reductions ----------------------------------------------------------------
 
-    def reduce(self, op: str, dim: str | Sequence[str] | None = None):
+    def reduce(self, op: str, dim: str | Sequence[str] | None = None) -> LabelledArray:
         """Reduce every variable over the named dimensions.
 
         Only populated cells take part: those the mask marks absent are
@@ -1015,26 +1021,26 @@ class LabelledArray(ArithmeticMixin):
         """
         return _ops.reduce(self, op, dim)
 
-    def sum(self, dim: str | Sequence[str] | None = None):
+    def sum(self, dim: str | Sequence[str] | None = None) -> LabelledArray:
         """Sum over the named dimensions. See :meth:`reduce`."""
         return _ops.reduce(self, "sum", dim)
 
-    def mean(self, dim: str | Sequence[str] | None = None):
+    def mean(self, dim: str | Sequence[str] | None = None) -> LabelledArray:
         """Average over the named dimensions, counting only populated cells.
 
         See :meth:`reduce`.
         """
         return _ops.reduce(self, "mean", dim)
 
-    def min(self, dim: str | Sequence[str] | None = None):
+    def min(self, dim: str | Sequence[str] | None = None) -> LabelledArray:
         """Smallest value over the named dimensions. See :meth:`reduce`."""
         return _ops.reduce(self, "min", dim)
 
-    def max(self, dim: str | Sequence[str] | None = None):
+    def max(self, dim: str | Sequence[str] | None = None) -> LabelledArray:
         """Largest value over the named dimensions. See :meth:`reduce`."""
         return _ops.reduce(self, "max", dim)
 
-    def groupby(self, by: Any, dim: str | None = None):
+    def groupby(self, by: Any, dim: str | None = None) -> _ops.GroupBy:
         """Group one dimension, for reducing within each group.
 
         Parameters
@@ -1084,7 +1090,9 @@ class LabelledArray(ArithmeticMixin):
         """
         return _ops.groupby(self, by, dim)
 
-    def rolling(self, dim: str, window: int, min_periods: int | None = None):
+    def rolling(
+        self, dim: str, window: int, min_periods: int | None = None
+    ) -> _ops.Rolling:
         """Return trailing windows along one dimension, for reducing over.
 
         The window at each position covers that position and the ``window - 1``
@@ -1432,10 +1440,10 @@ class LabelledArray(ArithmeticMixin):
             array = array.astype(dtype)
         return array.copy() if copy else array
 
-    def __copy__(self):
+    def __copy__(self) -> LabelledArray:
         return self.copy(deep=False)
 
-    def __deepcopy__(self, memo: dict | None = None):
+    def __deepcopy__(self, memo: dict | None = None) -> LabelledArray:
         return self.copy(deep=True)
 
     def __getstate__(self) -> dict[str, Any]:
