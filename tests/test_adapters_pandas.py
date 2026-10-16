@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from helpers import needs_polars
 from labelled_array import DimensionError, LabelledArray
 from labelled_array.adapters import get_adapter
 
@@ -90,6 +91,7 @@ def test_index_round_trip(df):
     pd.testing.assert_frame_equal(indexed, out)
 
 
+@needs_polars
 def test_a_pandas_frame_still_writes_polars_by_default(df):
     import polars as pl
 

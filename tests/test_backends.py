@@ -404,3 +404,34 @@ def test_torch_accepts_read_only_source():
     source = np.arange(3, dtype=np.float64)
     source.flags.writeable = False
     assert get_backend("torch").shape(get_backend("torch").asarray(source)) == (3,)
+
+
+# -- take_multi -----------------------------------------------------------------
+
+
+def broadcast_source():
+    """A (3, 4, 5) array with zero stride on the last axis."""
+    return np.broadcast_to(np.arange(12.0).reshape(3, 4, 1), (3, 4, 5))
+
+
+@pytest.mark.parametrize("index", [[7], [-6], [0, 5]])
+def test_take_multi_validates_indices_on_a_broadcast_axis(index):
+    arr = broadcast_source()
+    with pytest.raises(IndexError):
+        arr[np.ix_(np.arange(3), np.arange(4), np.asarray(index))]  # the dense rule
+    with pytest.raises(IndexError):
+        NumpyBackend().take_multi(arr, {2: np.asarray(index)})
+
+
+def test_take_multi_accepts_negative_indices_on_a_broadcast_axis():
+    out = NumpyBackend().take_multi(broadcast_source(), {2: np.array([-1, 0])})
+    assert out.shape == (3, 4, 2)
+    assert out.strides[2] == 0
+
+
+def test_take_multi_on_a_dense_array_is_unchanged():
+    arr = np.arange(60.0).reshape(3, 4, 5)
+    out = NumpyBackend().take_multi(arr, {0: np.array([2, 0]), 2: np.array([4])})
+    np.testing.assert_array_equal(out, arr[np.ix_([2, 0], np.arange(4), [4])])
+    assert out.flags.writeable
+    assert out.flags.owndata

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 import runpy
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -18,6 +20,10 @@ def test_the_examples_are_present():
 @pytest.mark.parametrize("path", EXAMPLES, ids=lambda path: path.stem)
 def test_example_runs(path, capsys):
     """Run the script end to end; its inline assertions are the test."""
+    # Only a script that imports polars needs it; the others run without it.
+    imports_polars = re.search(r"^(import|from) polars", path.read_text(), re.M)
+    if imports_polars and find_spec("polars") is None:
+        pytest.skip("the example needs polars, which is not installed")
     runpy.run_path(str(path), run_name="__main__")
     capsys.readouterr()
 

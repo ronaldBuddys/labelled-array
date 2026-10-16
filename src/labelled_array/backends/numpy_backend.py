@@ -56,14 +56,26 @@ class NumpyBackend(ArrayBackend):
     def take_multi(
         self, arr: np.ndarray, indexers: Mapping[int, np.ndarray]
     ) -> np.ndarray:
-        """Gather every axis in one pass, so no intermediate array is built."""
+        """Gather every axis in one pass, so no intermediate array is built.
+
+        A zero-stride (broadcast) axis stays zero-stride in the result, so
+        slicing a broadcast variable does not materialise it. Such a result is
+        a read-only view, like the stored one.
+        """
         if not indexers:
             return arr
-        grids = [
-            indexers[axis] if axis in indexers else np.arange(length)
+        broadcast = [
+            axis
             for axis, length in enumerate(arr.shape)
+            if length > 1 and arr.strides[axis] == 0
         ]
-        return arr[np.ix_(*grids)]
+        if not broadcast:
+            grids = [
+                indexers[axis] if axis in indexers else np.arange(length)
+                for axis, length in enumerate(arr.shape)
+            ]
+            return arr[np.ix_(*grids)]
+        return _take_keeping_broadcast(arr, indexers, broadcast)
 
     def take_along_axis(
         self, arr: np.ndarray, indices: np.ndarray, axis: int
@@ -87,3 +99,28 @@ class NumpyBackend(ArrayBackend):
     def sliding_window(self, arr: np.ndarray, axis: int, window: int) -> np.ndarray:
         """Return a read-only view of the windows, costing no memory at all."""
         return np.lib.stride_tricks.sliding_window_view(arr, window, axis=axis)
+
+
+def _take_keeping_broadcast(
+    arr: np.ndarray, indexers: Mapping[int, np.ndarray], broadcast: list[int]
+) -> np.ndarray:
+    """Gather from ``arr`` without materialising its zero-stride ``broadcast`` axes."""
+    out_shape = list(arr.shape)
+    grids = []
+    for axis, length in enumerate(arr.shape):
+        if axis in broadcast:
+            # Every position holds the same value, so only the indexer's length and
+            # validity matter. Indexing an arange raises IndexError out of range,
+            # as a dense array would, and handles negative and boolean indexers.
+            if axis in indexers:
+                out_shape[axis] = len(np.arange(length)[indexers[axis]])
+            grids.append(np.zeros(1, dtype=np.intp))
+        elif axis in indexers:
+            out_shape[axis] = len(indexers[axis])
+            grids.append(indexers[axis])
+        else:
+            grids.append(np.arange(length))
+    # Gather from a length-1 slice along each broadcast axis (a view), then broadcast
+    # the small result back out; the result is read-only like the stored view.
+    one = tuple(slice(0, 1) if a in broadcast else slice(None) for a in range(arr.ndim))
+    return np.broadcast_to(arr[one][np.ix_(*grids)], tuple(out_shape))

@@ -52,6 +52,9 @@ dev = [
     "pytest-cov>=4.1",
     "hypothesis>=6.90",
     "ruff==0.16.4",
+    # Records the regression harness in tests/records (dev only; src/ never
+    # imports it).
+    "regression-records>=0.4",
 ]
 
 # The suite never touches a GPU. Left to PyPI, Linux resolves the CUDA build of
@@ -64,6 +67,7 @@ explicit = true
 
 [tool.uv.sources]
 torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+regression-records = { git = "https://github.com/ronaldBuddys/regression-records", branch = "main" }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/labelled_array"]
@@ -98,6 +102,10 @@ convention = "numpy"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The repository root on sys.path, so tests/test_records.py imports the records
+# harness as `tests.records`, the name `python -m tests.records.cli` gives it.
+# tests/ has no __init__.py (the other tests import `helpers` from it).
+pythonpath = ["."]
 addopts = "-q --strict-markers"
 filterwarnings = ["error::RuntimeWarning"]
 

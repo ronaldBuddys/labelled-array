@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from helpers import build_both as _build_both
-from helpers import build_frame
+from helpers import build_frame, needs_polars
 from labelled_array import LabelledArray
 
 DIMS = ["region", "product"]
@@ -55,11 +55,13 @@ def build_both(dataset, **kwargs):
     return _build_both(dataset, DIMS, **kwargs)
 
 
+@needs_polars
 def test_engines_agree(dataset):
     from_pandas, from_polars = build_both(dataset)
     assert from_pandas.equals(from_polars)
 
 
+@needs_polars
 def test_engines_agree_on_shape_and_labels(dataset):
     from_pandas, from_polars = build_both(dataset)
     assert from_pandas.shape == from_polars.shape
@@ -68,6 +70,7 @@ def test_engines_agree_on_shape_and_labels(dataset):
         assert from_pandas.dims[name].tolist() == from_polars.dims[name].tolist()
 
 
+@needs_polars
 def test_engines_agree_on_the_mask(dataset):
     from_pandas, from_polars = build_both(dataset)
     if from_pandas.mask is None:
@@ -76,11 +79,13 @@ def test_engines_agree_on_the_mask(dataset):
         assert from_pandas.mask.tolist() == from_polars.mask.tolist()
 
 
+@needs_polars
 def test_engines_agree_on_variable_dtypes(dataset):
     from_pandas, from_polars = build_both(dataset)
     assert from_pandas.dtypes == from_polars.dtypes
 
 
+@needs_polars
 def test_engines_agree_with_options(dataset):
     from_pandas, from_polars = build_both(
         dataset, fill_value=-1, dtype="float64", mask=False
@@ -88,6 +93,7 @@ def test_engines_agree_with_options(dataset):
     assert from_pandas.equals(from_polars)
 
 
+@needs_polars
 def test_one_array_writes_the_same_content_to_either_engine(dataset):
     la = build_both(dataset)[0]
     from_pandas = la.to_dataframe("pandas", index=False)
@@ -97,12 +103,14 @@ def test_one_array_writes_the_same_content_to_either_engine(dataset):
         assert from_polars[name].to_list() == from_pandas[name].tolist()
 
 
+@needs_polars
 def test_string_labels_have_the_same_dtype_from_both_engines():
     from_pandas, from_polars = build_both(DATASETS["sparse"])
     assert from_pandas.dims["region"].dtype == from_polars.dims["region"].dtype
     assert from_pandas.dims["region"].dtype == np.dtype("O")
 
 
+@needs_polars
 def test_cross_engine_round_trip():
     """A frame written by one engine, read back by the other, is unchanged."""
     la = LabelledArray.from_dataframe(

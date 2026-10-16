@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import numpy as np
-import polars as pl
 import pytest
-from polars.testing import assert_frame_equal
 
 from labelled_array import DimensionError, LabelledArray
 from labelled_array.adapters import get_adapter
+
+# The whole module exercises polars; without it nothing here can run.
+pl = pytest.importorskip("polars")
+assert_frame_equal = pytest.importorskip("polars.testing").assert_frame_equal
 
 
 @pytest.fixture

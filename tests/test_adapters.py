@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from helpers import build_frame, column, columns, n_rows
+from helpers import build_frame, column, columns, n_rows, needs_polars
 from labelled_array import (
     AdapterError,
     DimensionError,
@@ -27,12 +27,14 @@ from labelled_array.adapters import (
 # -- registry -------------------------------------------------------------------
 
 
+@needs_polars
 def test_both_engines_are_registered_and_installed():
     assert set(registered_adapters()) == {"pandas", "polars"}
     assert set(available_adapters()) == {"pandas", "polars"}
     assert DEFAULT_ADAPTERS == ("polars", "pandas")
 
 
+@needs_polars
 def test_get_adapter_defaults_to_polars():
     assert get_adapter().name == "polars"
 
@@ -57,6 +59,7 @@ def test_naming_an_engine_never_falls_back(monkeypatch):
         get_adapter("polars")
 
 
+@needs_polars
 def test_get_adapter_passes_through_instances():
     adapter = get_adapter("polars")
     assert get_adapter(adapter) is adapter
@@ -94,6 +97,7 @@ def test_resolve_unknown_object_raises():
         resolve_adapter({"a": [1]})
 
 
+@needs_polars
 def test_adapter_equality_and_repr():
     assert get_adapter("pandas") == PandasAdapter()
     assert get_adapter("pandas") != get_adapter("polars")
