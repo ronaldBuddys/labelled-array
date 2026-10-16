@@ -9,8 +9,8 @@ records, and a NaN that is masked in is data.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -19,6 +19,9 @@ from labelled_array._reshape import default_fill_value, factorize
 from labelled_array._utils import arrays_equal, as_name_list
 from labelled_array.dimensions import as_1d
 from labelled_array.exceptions import DimensionError
+
+if TYPE_CHECKING:
+    from labelled_array.core import LabelledArray
 
 __all__ = ["OPS", "GroupBy", "Rolling", "groupby", "reduce", "rolling"]
 
@@ -110,7 +113,7 @@ def _reduce_coords(array: Any, axes: Sequence[int]) -> dict[str, np.ndarray]:
 
 def reduce(
     array: Any, op: str, dim: str | Sequence[str] | None = None, keepdims: bool = False
-):
+) -> LabelledArray:
     """Reduce ``array`` over the named dimensions. See :meth:`LabelledArray.reduce`."""
     _check_op(op)
     names = list(array.dims.names) if dim is None else as_name_list(dim)
@@ -246,7 +249,7 @@ class GroupBy:
         """Return the number of groups."""
         return len(self._labels)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[Any, LabelledArray]]:
         """Iterate over ``(group value, sub-array)`` pairs."""
         for position, label in enumerate(self._labels.tolist()):
             yield (
@@ -260,7 +263,7 @@ class GroupBy:
             f"{len(self._labels)} groups)"
         )
 
-    def reduce(self, op: str):
+    def reduce(self, op: str) -> LabelledArray:
         """Reduce each group over the grouping dimension.
 
         Parameters
@@ -299,19 +302,19 @@ class GroupBy:
         ]
         return concat(pieces, self._dim, join="exact")
 
-    def sum(self):
+    def sum(self) -> LabelledArray:
         """Sum each group. See :meth:`reduce`."""
         return self.reduce("sum")
 
-    def mean(self):
+    def mean(self) -> LabelledArray:
         """Average each group. See :meth:`reduce`."""
         return self.reduce("mean")
 
-    def min(self):
+    def min(self) -> LabelledArray:
         """Smallest value in each group. See :meth:`reduce`."""
         return self.reduce("min")
 
-    def max(self):
+    def max(self) -> LabelledArray:
         """Largest value in each group. See :meth:`reduce`."""
         return self.reduce("max")
 
@@ -423,7 +426,7 @@ class Rolling:
             [backend.full(shape, fill, dtype), values], axis=axis
         )
 
-    def reduce(self, op: str):
+    def reduce(self, op: str) -> LabelledArray:
         """Reduce each trailing window.
 
         Parameters
@@ -468,19 +471,19 @@ class Rolling:
             data=data, mask=np.broadcast_to(enough, array.shape).copy()
         )
 
-    def sum(self):
+    def sum(self) -> LabelledArray:
         """Sum each window. See :meth:`reduce`."""
         return self.reduce("sum")
 
-    def mean(self):
+    def mean(self) -> LabelledArray:
         """Average each window. See :meth:`reduce`."""
         return self.reduce("mean")
 
-    def min(self):
+    def min(self) -> LabelledArray:
         """Smallest value in each window. See :meth:`reduce`."""
         return self.reduce("min")
 
-    def max(self):
+    def max(self) -> LabelledArray:
         """Largest value in each window. See :meth:`reduce`."""
         return self.reduce("max")
 

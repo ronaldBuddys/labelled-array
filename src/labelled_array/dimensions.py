@@ -539,7 +539,7 @@ class Dimensions(Mapping[str, np.ndarray]):
 
         Unlike :meth:`get_indexer` this neither raises nor drops, so the caller
         can tell which labels were missing and where -- what
-        :meth:`~labelled_array.LabelledArray.reindex` needs to know which cells
+        :meth:`~labelled_array.core.LabelledArray.reindex` needs to know which cells
         to fill.
 
         Parameters

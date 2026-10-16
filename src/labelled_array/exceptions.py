@@ -1,5 +1,7 @@
 """Exception hierarchy for :mod:`labelled_array`."""
 
+from collections.abc import Iterable
+
 __all__ = [
     "LabelledArrayError",
     "DimensionError",
@@ -26,7 +28,7 @@ class LabelNotFoundError(KeyError, LabelledArrayError):
     with the same idiom used for mappings.
     """
 
-    def __init__(self, dim: str, missing) -> None:
+    def __init__(self, dim: str, missing: Iterable[object]) -> None:
         self.dim = dim
         self.missing = list(missing)
         super().__init__(f"labels not found in dimension {dim!r}: {self.missing}")
