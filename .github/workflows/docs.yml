@@ -1,0 +1,54 @@
+name: Docs
+
+# Publish the docs site to GitHub Pages: https://ronaldbuddys.github.io/labelled-array/
+# PRs build the docs as a check in ci.yml; this workflow publishes what lands on main.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deploy at a time, and never cancel one half-pushed.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Pages serves the gh-pages branch rather than an Actions artifact: Binder launch
+    # links need the generated notebooks to live in a git branch.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install
+        run: uv sync --locked --all-extras
+
+      - name: Build docs
+        # -W: warnings are errors. Examples are executed; see docs/building.rst.
+        run: uv run make -C docs html
+
+      - name: Publish to gh-pages
+        # A single orphan commit, force-pushed: the branch holds only the current
+        # site, so old builds do not accumulate in the repository's history. Plain
+        # git rather than a third-party action, so no outside code holds the token.
+        working-directory: docs/_build/html
+        run: |
+          touch .nojekyll
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Publish docs for ${GITHUB_SHA}"
+          git push -q --force \
+            "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" \
+            gh-pages

@@ -1,8 +1,12 @@
 # labelled-array
 
+[![Docs](https://github.com/ronaldBuddys/labelled-array/actions/workflows/docs.yml/badge.svg)](https://ronaldbuddys.github.io/labelled-array/)
+
 N-dimensional arrays that carry their dimension names and labels, align and
 reduce over them, convert losslessly to and from polars or pandas DataFrames,
 and hold their data on numpy, JAX or torch.
+
+**Documentation:** <https://ronaldbuddys.github.io/labelled-array/>
 
 ```python
 import polars as pl
@@ -377,8 +381,9 @@ MIT — see [LICENSE](LICENSE).
 
 ## Documentation
 
-Sphinx docs -- getting started, an examples gallery built from `examples/`, and an API
-reference:
+The docs -- getting started, an examples gallery built from `examples/`, and an API
+reference -- are published at <https://ronaldbuddys.github.io/labelled-array/>,
+rebuilt from `main` on every merge. To build them locally:
 
 ```bash
 uv sync --extra docs && uv run make -C docs html

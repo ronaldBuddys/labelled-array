@@ -6,6 +6,8 @@ aligns and reduces over them, and converts losslessly to and from pandas or
 polars DataFrames.
 """
 
+from importlib.metadata import version
+
 from labelled_array._ops import GroupBy, Rolling
 from labelled_array._reshape import default_fill_value
 from labelled_array.core import LabelledArray
@@ -20,7 +22,8 @@ from labelled_array.exceptions import (
     LabelNotFoundError,
 )
 
-__version__ = "0.2.0"
+# One source of truth: the version in pyproject.toml, as installed.
+__version__ = version("labelled-array")
 
 __all__ = [
     "AdapterError",

@@ -26,7 +26,8 @@ ROOT = Path(__file__).resolve().parents[1]
 # ---- per-repo settings: the only lines that differ between repos ------------------
 project = "labelled-array"
 release = importlib.metadata.version(project)
-EXTRA_EXTENSIONS: list[str] = []
+# githubpages writes .nojekyll, so Pages serves the _static/ and _images/ folders.
+EXTRA_EXTENSIONS: list[str] = ["sphinx.ext.githubpages"]
 # Directories importable by the docs build, relative to the repo root, beyond src/.
 EXTRA_SYS_PATHS: list[str] = []
 # Every example here is self-contained, so the gallery executes by default.
@@ -45,6 +46,8 @@ SUBSECTION_ORDER: list[str] | None = [
     "../examples/interop",
     "../examples/performance",
 ]
+# The site is public: GitHub Pages, rebuilt from main (.github/workflows/docs.yml).
+html_baseurl = "https://ronaldbuddys.github.io/labelled-array/"
 # ---- end per-repo settings ---------------------------------------------------------
 
 sys.path.insert(0, str(ROOT / "src"))
