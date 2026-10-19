@@ -1,0 +1,90 @@
+
+
+.. _sphx_glr_auto_examples_layout:
+
+.. _layout_examples:
+
+Layout
+------
+
+What an array holds besides its variables: the presence mask that records which cells
+had a source row, a natural index that keeps a sparse panel dense, and alternative
+dimensions that label a dimension the array already has.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A dense array has a cell for every combination of labels, whether or not the data had a row for it. The mask is how a LabelledArray remembers which cells are real. This example follows it from the frame it comes from, through every operation that changes it, and back out to a frame.">
+
+.. only:: html
+
+  .. image:: /auto_examples/layout/images/thumb/sphx_glr_01_presence_mask_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/layout/01_presence_mask`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">mask : the presence mask, end to end</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A dense array spans the product of its dimension labels, which is wasteful when one dimension&#x27;s labels are nearly unique per group -- dates, most of the time. Replacing that dimension with a natural index collapses the array while keeping the original values, so the round trip is still exact.">
+
+.. only:: html
+
+  .. image:: /auto_examples/layout/images/thumb/sphx_glr_02_natural_index_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/layout/02_natural_index`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe(natural=...) : natural indices and sparsity</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A descriptive column often varies along one dimension and only that one: a sector per asset, a currency per book, a maturity bucket per tenor. Making it a dimension of its own spans every combination and leaves the array mostly empty. An alternative dimension labels the entries of a dimension the array already has, is stored once per entry rather than once per cell, and -- unlike a coordinate -- can be selected on.">
+
+.. only:: html
+
+  .. image:: /auto_examples/layout/images/thumb/sphx_glr_03_alternative_dimensions_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/layout/03_alternative_dimensions`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">alt_dims : alternative dimensions</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/layout/01_presence_mask
+   /auto_examples/layout/02_natural_index
+   /auto_examples/layout/03_alternative_dimensions
+

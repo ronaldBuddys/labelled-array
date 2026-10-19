@@ -1,0 +1,89 @@
+
+
+.. _sphx_glr_auto_examples_interop:
+
+.. _interop_examples:
+
+Interoperability
+----------------
+
+Where the array meets other libraries: polars and pandas frames, the numpy, JAX and torch
+backends, and subclasses that add a domain's own API.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="from_dataframe takes a polars frame or a pandas one, and to_dataframe writes either. The array in between is the same whichever library it came from. This example runs the two side by side, and then shows the few places where the libraries themselves differ and the difference shows through.">
+
+.. only:: html
+
+  .. image:: /auto_examples/interop/images/thumb/sphx_glr_01_polars_and_pandas_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/interop/01_polars_and_pandas`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe, to_dataframe : one API, two DataFrame engines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The variables can live on numpy, JAX or torch, and the same conversion code serves all of them. Dimension labels, the mask and the coordinates always stay on numpy, because they are metadata rather than payload.">
+
+.. only:: html
+
+  .. image:: /auto_examples/interop/images/thumb/sphx_glr_02_backends_and_dtypes_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/interop/02_backends_and_dtypes`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">to_backend : array backends and dtypes</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="LabelledArray is meant to be inherited from. Every operation that returns a new array builds it through type(self), so a subclass keeps its own type, its extra API and its own validation without overriding anything.">
+
+.. only:: html
+
+  .. image:: /auto_examples/interop/images/thumb/sphx_glr_03_subclassing_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/interop/03_subclassing`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">LabelledArray : subclassing for a domain</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/interop/01_polars_and_pandas
+   /auto_examples/interop/02_backends_and_dtypes
+   /auto_examples/interop/03_subclassing
+

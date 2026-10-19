@@ -1,0 +1,107 @@
+
+
+.. _sphx_glr_auto_examples_basics:
+
+.. _basics_examples:
+
+Basics
+------
+
+Building an array, by hand and from a DataFrame, selecting from it by label, and what
+keeps its order when you do.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A LabelledArray is one or more equally shaped arrays plus an ordered mapping of dimension name to labels. This example builds one by hand and shows what it can tell you about itself.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_01_labelled_array_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/01_labelled_array`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">LabelledArray : building one from scratch</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Labelled arrays are usually reached from a DataFrame: some columns identify a cell, the rest become variables. The conversion goes both ways: polars is the default, and pandas works the same way when asked for by name.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_02_from_dataframe_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/02_from_dataframe`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe, to_dataframe : round trips through a DataFrame</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Selection is by label, not position, and the shape of the result never depends on how many labels were asked for: a single label still yields a dimension of length one unless it is explicitly dropped.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_03_selection_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/03_selection`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">select : selecting by label</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Two orders matter in a labelled array: the order of the dimensions, which is the order of the axes, and the order of the labels within each dimension. Selection changes only the second. This example walks through every operation that touches either, so that neither ever moves by surprise.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_04_ordering_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/04_ordering`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">select, transpose, align : what keeps its order, and what does not</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/basics/01_labelled_array
+   /auto_examples/basics/02_from_dataframe
+   /auto_examples/basics/03_selection
+   /auto_examples/basics/04_ordering
+

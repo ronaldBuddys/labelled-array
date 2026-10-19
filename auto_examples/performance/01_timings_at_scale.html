@@ -1,0 +1,1108 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="API reference" href="../../api.html"><link rel="prev" title="Performance" href="index.html">
+        <link rel="canonical" href="https://ronaldbuddys.github.io/labelled-array/auto_examples/performance/01_timings_at_scale.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>from_dataframe, select, groupby, rolling : timings at scale - labelled-array</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">labelled-array</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <span class="sidebar-brand-text">labelled-array</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">Examples</a><input aria-label="Toggle navigation of Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../basics/index.html">Basics</a><input aria-label="Toggle navigation of Basics" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../basics/01_labelled_array.html"><code class="docutils literal notranslate"><span class="pre">LabelledArray</span></code> : building one from scratch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../basics/02_from_dataframe.html"><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">to_dataframe</span></code> : round trips through a DataFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../basics/03_selection.html"><code class="docutils literal notranslate"><span class="pre">select</span></code> : selecting by label</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../basics/04_ordering.html"><code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">transpose</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code> : what keeps its order, and what does not</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../layout/index.html">Layout</a><input aria-label="Toggle navigation of Layout" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../layout/01_presence_mask.html"><code class="docutils literal notranslate"><span class="pre">mask</span></code> : the presence mask, end to end</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../layout/02_natural_index.html"><code class="docutils literal notranslate"><span class="pre">from_dataframe(natural=...)</span></code> : natural indices and sparsity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../layout/03_alternative_dimensions.html"><code class="docutils literal notranslate"><span class="pre">alt_dims</span></code> : alternative dimensions</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input aria-label="Toggle navigation of Operations" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../operations/01_combining_and_reducing.html"><code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">groupby</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">concat</span></code> : combining and reducing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../operations/02_ffill_and_staleness.html"><code class="docutils literal notranslate"><span class="pre">reindex</span></code>, <code class="docutils literal notranslate"><span class="pre">ffill</span></code> : forward filling, and knowing how stale the fill is</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../interop/index.html">Interoperability</a><input aria-label="Toggle navigation of Interoperability" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../interop/01_polars_and_pandas.html"><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">to_dataframe</span></code> : one API, two DataFrame engines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../interop/02_backends_and_dtypes.html"><code class="docutils literal notranslate"><span class="pre">to_backend</span></code> : array backends and dtypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../interop/03_subclassing.html"><code class="docutils literal notranslate"><span class="pre">LabelledArray</span></code> : subclassing for a domain</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html">Performance</a><input aria-label="Toggle navigation of Performance" checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">groupby</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code> : timings at scale</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../building.html">Building the docs locally</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/auto_examples/performance/01_timings_at_scale.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-auto-examples-performance-01-timings-at-scale-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code.</p>
+</div>
+<section class="sphx-glr-example-title" id="from-dataframe-select-groupby-rolling-timings-at-scale">
+<span id="performance-example"></span><span id="sphx-glr-auto-examples-performance-01-timings-at-scale-py"></span><h1><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">groupby</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code> : timings at scale<a class="headerlink" href="#from-dataframe-select-groupby-rolling-timings-at-scale" title="Link to this heading">¶</a></h1>
+<p>Where the time goes on a large array, and which choices change it. Every number
+below is measured on the machine running the script – the point is not the
+absolute milliseconds but the ratios, which hold up across machines: what
+dominates <code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, what a <code class="docutils literal notranslate"><span class="pre">select</span></code> costs, what the operations –
+reductions, groups, rolling windows, alignment – cost on a million cells, and
+what sparsity costs in memory rather than in time.</p>
+<p>Set <code class="docutils literal notranslate"><span class="pre">LABELLED_ARRAY_SCALE</span></code> to run it larger: <code class="docutils literal notranslate"><span class="pre">2</span></code> is four times the cells,
+<code class="docutils literal notranslate"><span class="pre">4</span></code> is sixteen times.</p>
+<section id="a-timing-helper">
+<h2>A timing helper<a class="headerlink" href="#a-timing-helper" title="Link to this heading">¶</a></h2>
+<p>Best of a few runs rather than a mean, because the interesting quantity is
+the cost of the work and not the cost of an unlucky page fault. Nothing here
+asserts on a duration – timings are not reproducible enough to assert on –
+so the assertions check that the faster spelling computes the same answer.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">labelled_array</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelledArray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labelled_array.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_adapter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labelled_array.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">available_backends</span>
+
+<a href="https://docs.python.org/3/builtins/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">SCALE</span></a> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LABELLED_ARRAY_SCALE"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">))</span>
+<a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TIMINGS</span></a><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">bench</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a><span class="p">,</span> <span class="n">call</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run ``call`` ``repeat`` times, report the fastest, and return its result."""</span>
+    <span class="n">best</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">),</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repeat</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/time.html#time.perf_counter" title="time.perf_counter" class="sphx-glr-backref-module-time sphx-glr-backref-type-py-function"><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span></a><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">call</span><span class="p">()</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">best</span><span class="p">,</span> <a href="https://docs.python.org/3/library/time.html#time.perf_counter" title="time.perf_counter" class="sphx-glr-backref-module-time sphx-glr-backref-type-py-function"><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span></a><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+    <a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TIMINGS</span></a><span class="p">[</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a><span class="p">]</span> <span class="o">=</span> <span class="n">best</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a><span class="si">:</span><span class="s2">&lt;46</span><span class="si">}{</span><span class="n">best</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">9.2f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+</div>
+</section>
+<section id="the-data">
+<h2>The data<a class="headerlink" href="#the-data" title="Link to this heading">¶</a></h2>
+<p>A price panel: every asset quoted on every date, which is the dense case the
+layout is built for. At the default scale that is a million rows. It is held
+twice, as a pandas frame – the yardstick throughout – and as a polars one
+built from the same numpy columns.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">400</span> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">SCALE</span></a><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2500</span> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">SCALE</span></a><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="numpy.random.Generator" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rng</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="numpy.random.default_rng" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span></a><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">assets</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="sa">f</span><span class="s2">"A</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">05d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">)])</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dates</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.datetime64" title="numpy.datetime64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class"><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span></a><span class="p">(</span><span class="s2">"2015-01-03"</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">)</span> <span class="o">+</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">)</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.timedelta64" title="numpy.timedelta64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class"><span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">)</span>
+
+<a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">columns</span></a> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"asset"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.repeat.html#numpy.repeat" title="numpy.repeat" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">repeat</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">assets</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">),</span>
+    <span class="s2">"date"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.tile.html#numpy.tile" title="numpy.tile" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">tile</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dates</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">),</span>
+    <span class="s2">"close"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.standard_normal.html#numpy.random.Generator.standard_normal" title="numpy.random.Generator.standard_normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">),</span>
+    <span class="s2">"volume"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.integers.html#numpy.random.Generator.integers" title="numpy.random.Generator.integers" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">integers</span></a><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">),</span>
+<span class="p">}</span>
+<span class="n">panel</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">columns</span></a><span class="p">)</span>
+<span class="n">panel_pl</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">columns</span></a><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">panel</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> rows, </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="si">}</span><span class="s2"> assets x </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="si">}</span><span class="s2"> dates"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>1,000,000 rows, 400 assets x 2500 dates
+</pre></div>
+</div>
+</section>
+<section id="building-the-array">
+<h2>Building the array<a class="headerlink" href="#building-the-array" title="Link to this heading">¶</a></h2>
+<p>One pass over the frame: factorize each dimension column, ravel the codes
+into flat positions, then scatter each value column into a preallocated
+array. The frame’s library is detected, and either one gives the same array.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">prices</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"from_dataframe (pandas)"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span>
+        <span class="n">panel</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"close"</span><span class="p">,</span> <span class="s2">"volume"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">from_polars</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"from_dataframe (polars)"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span>
+        <span class="n">panel_pl</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"close"</span><span class="p">,</span> <span class="s2">"volume"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span>
+
+<span class="k">assert</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array_equal.html#numpy.array_equal" title="numpy.array_equal" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span></a><span class="p">(</span><span class="n">from_polars</span><span class="p">[</span><span class="s2">"close"</span><span class="p">],</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">])</span>
+<span class="k">assert</span> <span class="n">from_polars</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">==</span> <span class="n">prices</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+<span class="k">assert</span> <span class="n">prices</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">)</span>
+<span class="k">assert</span> <span class="n">prices</span><span class="o">.</span><span class="n">density</span> <span class="o">==</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="n">prices</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"a fully populated array keeps no mask"</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>from_dataframe (pandas)                          215.71 ms
+from_dataframe (polars)                           78.56 ms
+LabelledArray: 2 variable(s) over 2 dimension(s), shape (400, 2500), backend numpy
+Dimensions (2d, size 1000000):
+  asset (400) object: ['A00000', 'A00001', 'A00002', ..., 'A00397', 'A00398', 'A00399']
+  date  (2500) datetime64[ns]: ['2015-01-03T00:00:00.000000000', '2015-01-04T00:00:00.000000000',
+ '2015-01-05T00:00:00.000000000', ..., '2021-11-04T00:00:00.000000000',
+ '2021-11-05T00:00:00.000000000', '2021-11-06T00:00:00.000000000']
+Variables:
+  close  float64
+  volume int64
+</pre></div>
+</div>
+</section>
+<section id="where-that-time-goes">
+<h2>Where that time goes<a class="headerlink" href="#where-that-time-goes" title="Link to this heading">¶</a></h2>
+<p>Calling the numpy reference pieces directly shows the split. Factorizing the
+asset column dominates: as an object array, every one of the million strings
+has to be hashed to find which of the few hundred labels it is. The numeric
+work either side of it – ravelling positions, checking them for duplicates,
+scattering the values – is a fraction of it.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">labelled_array</span><span class="w"> </span><span class="kn">import</span> <a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="collections.abc.Mapping" class="sphx-glr-backref-module-collections-abc sphx-glr-backref-type-py-class"><span class="n">Dimensions</span></a>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labelled_array._reshape</span><span class="w"> </span><span class="kn">import</span> <span class="n">factorize</span><span class="p">,</span> <span class="n">flat_positions</span><span class="p">,</span> <span class="n">scatter</span>  <span class="c1"># noqa: E402</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">asset_values</span></a> <span class="o">=</span> <span class="n">panel</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">date_values</span></a> <span class="o">=</span> <span class="n">panel</span><span class="p">[</span><span class="s2">"date"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+<span class="n">bench</span><span class="p">(</span><span class="s2">"  factorize 'asset' (object dtype)"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">factorize</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">asset_values</span></a><span class="p">))</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"  factorize 'date' (datetime64)"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">factorize</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">date_values</span></a><span class="p">))</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">codes</span></a> <span class="o">=</span> <span class="p">[</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.repeat.html#numpy.repeat" title="numpy.repeat" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">repeat</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">),</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">),</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.tile.html#numpy.tile" title="numpy.tile" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">tile</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">),</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">)]</span>
+<span class="n">dims</span> <span class="o">=</span> <a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="collections.abc.Mapping" class="sphx-glr-backref-module-collections-abc sphx-glr-backref-type-py-class"><span class="n">Dimensions</span></a><span class="p">({</span><span class="s2">"asset"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">assets</span></a><span class="p">,</span> <span class="s2">"date"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dates</span></a><span class="p">})</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">positions</span></a> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  flat_positions (+ duplicate check)"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">flat_positions</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">codes</span></a><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">panel</span><span class="p">)),</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  scatter one column"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">scatter</span><span class="p">(</span><span class="n">panel</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">positions</span></a><span class="p">,</span> <span class="n">dims</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  factorize 'asset' (object dtype)               130.90 ms
+  factorize 'date' (datetime64)                   42.02 ms
+  flat_positions (+ duplicate check)               4.24 ms
+  scatter one column                               1.66 ms
+
+array([[ 0.12573022, -0.13210486,  0.64042265, ...,  0.65964074,
+         0.21389623,  0.1710459 ],
+       [-0.85843593, -2.19653221, -0.89302575, ..., -0.69339977,
+        -0.35038257, -1.88983542],
+       [-0.17997426,  1.80872331,  0.34497425, ...,  0.20352838,
+        -0.54336659, -0.94142178],
+       ...,
+       [-0.160432  , -1.00620123,  1.44752376, ...,  1.23747924,
+        -0.12804741, -0.70489588],
+       [ 0.78878771,  0.082014  , -1.77755552, ...,  0.06779437,
+         0.4173631 ,  2.65083394],
+       [ 0.95037267,  0.33231795, -0.53239746, ...,  0.30056009,
+        -0.17446903,  0.2286422 ]], shape=(400, 2500))
+</pre></div>
+</div>
+</section>
+<section id="factorizing-string-labels">
+<h2>Factorizing string labels<a class="headerlink" href="#factorizing-string-labels" title="Link to this heading">¶</a></h2>
+<p>An adapter may factorize a plain string column with its own library rather
+than hand it to the numpy reference. polars does: it sorts the distinct values
+and casts the column onto them. pandas does not – <code class="docutils literal notranslate"><span class="pre">pd.factorize</span></code> is barely
+faster – so its line is the reference plus reading the column out. All three
+agree on the labels and the codes.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">reference</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.asarray.html#numpy.asarray" title="numpy.asarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">asarray</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">asset_values</span></a><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+<a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">by_numpy</span></a> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span><span class="s2">"  numpy reference factorize 'asset'"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">factorize</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">reference</span></a><span class="p">))</span>
+<a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">by_polars</span></a> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  polars adapter factorize 'asset'"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">"polars"</span><span class="p">)</span><span class="o">.</span><span class="n">factorize</span><span class="p">(</span><span class="n">panel_pl</span><span class="p">,</span> <span class="s2">"asset"</span><span class="p">),</span>
+<span class="p">)</span>
+<a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">by_pandas</span></a> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  pandas adapter factorize 'asset'"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">get_adapter</span><span class="p">(</span><span class="s2">"pandas"</span><span class="p">)</span><span class="o">.</span><span class="n">factorize</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="s2">"asset"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="k">for</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">labels</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">codes</span></a> <span class="ow">in</span> <span class="p">(</span><a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">by_polars</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">by_pandas</span></a><span class="p">):</span>
+    <span class="k">assert</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array_equal.html#numpy.array_equal" title="numpy.array_equal" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">labels</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">by_numpy</span></a><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">"the same labels, in the same order"</span>
+    <span class="k">assert</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array_equal.html#numpy.array_equal" title="numpy.array_equal" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">codes</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="builtins.tuple" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">by_numpy</span></a><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s2">"and the same code for every row"</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>numpy reference factorize 'asset'              129.47 ms
+polars adapter factorize 'asset'                24.51 ms
+pandas adapter factorize 'asset'               161.61 ms
+</pre></div>
+</div>
+</section>
+<section id="labels-you-already-hold-as-codes">
+<h2>Labels you already hold as codes<a class="headerlink" href="#labels-you-already-hold-as-codes" title="Link to this heading">¶</a></h2>
+<p>The other way to avoid that cost is not to pay it: when the dimension columns
+are already integers, factorizing them is a sort of a few hundred distinct
+values rather than a pass over a million strings. Same array, and quicker to
+build than from the pandas frame of strings.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">coded</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+    <span class="n">asset</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.repeat.html#numpy.repeat" title="numpy.repeat" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">repeat</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">),</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">),</span>
+    <span class="n">date</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.tile.html#numpy.tile" title="numpy.tile" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">tile</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">),</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">by_code</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"from_dataframe, integer dimension columns"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span>
+        <span class="n">coded</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"close"</span><span class="p">,</span> <span class="s2">"volume"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array_equal.html#numpy.array_equal" title="numpy.array_equal" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span></a><span class="p">(</span><span class="n">by_code</span><span class="p">[</span><span class="s2">"close"</span><span class="p">],</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]),</span> <span class="s2">"same layout, cheaper labels"</span>
+<a href="https://docs.python.org/3/builtins/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">speed_up</span></a> <span class="o">=</span> <span class="p">(</span>
+    <a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TIMINGS</span></a><span class="p">[</span><span class="s2">"from_dataframe (pandas)"</span><span class="p">]</span>
+    <span class="o">/</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TIMINGS</span></a><span class="p">[</span><span class="s2">"from_dataframe, integer dimension columns"</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'speed-up'</span><span class="si">:</span><span class="s2">&lt;46</span><span class="si">}{</span><a href="https://docs.python.org/3/builtins/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">speed_up</span></a><span class="si">:</span><span class="s2">8.1f</span><span class="si">}</span><span class="s2">x"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>from_dataframe, integer dimension columns         41.36 ms
+speed-up                                           5.2x
+</pre></div>
+</div>
+</section>
+<section id="it-is-linear-in-the-rows">
+<h2>It is linear in the rows<a class="headerlink" href="#it-is-linear-in-the-rows" title="Link to this heading">¶</a></h2>
+<p>Nothing in the conversion is worse than a sort of the distinct labels, so
+doubling the rows doubles the time. The per-row cost is the number to carry
+to a bigger frame.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a> <span class="ow">in</span> <span class="p">(</span><span class="mi">250_000</span><span class="p">,</span> <span class="mi">500_000</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">):</span>
+    <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a> <span class="o">//</span> <span class="mi">1000</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"g"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.repeat.html#numpy.repeat" title="numpy.repeat" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">repeat</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a><span class="p">),</span> <span class="mi">1000</span><span class="p">),</span>
+            <span class="s2">"d"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.tile.html#numpy.tile" title="numpy.tile" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">tile</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">1000</span><span class="p">),</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a><span class="p">),</span>
+            <span class="s2">"v"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.standard_normal.html#numpy.random.Generator.standard_normal" title="numpy.random.Generator.standard_normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a><span class="p">),</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a> <span class="o">=</span> <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a><span class="si">:</span><span class="s2">&gt;9,</span><span class="si">}</span><span class="s2"> rows"</span>
+    <span class="n">bench</span><span class="p">(</span>
+        <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span>
+            <span class="n">frame</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"v"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"g"</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">]</span>
+        <span class="p">),</span>
+        <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">''</span><span class="si">:</span><span class="s2">&lt;46</span><span class="si">}{</span><a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TIMINGS</span></a><span class="p">[</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e9</span><span class="si">:</span><span class="s2">9.0f</span><span class="si">}</span><span class="s2"> ns/row"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>  250,000 rows                                   9.11 ms
+                                                   36 ns/row
+  500,000 rows                                  16.34 ms
+                                                   33 ns/row
+1,000,000 rows                                  35.88 ms
+                                                   36 ns/row
+</pre></div>
+</div>
+</section>
+<section id="selecting-is-a-copy-priced-by-what-comes-out">
+<h2>Selecting is a copy, priced by what comes out<a class="headerlink" href="#selecting-is-a-copy-priced-by-what-comes-out" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">select</span></code> gathers the chosen entries into a new array, so it costs what the
+result costs and is independent of how many labels were looked up. The label
+lookup itself is a hash map, built once per dimension on first use and cached
+on the array’s <code class="docutils literal notranslate"><span class="pre">Dimensions</span></code>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">some_assets</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">assets</span></a><span class="p">[:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a> <span class="o">//</span> <span class="mi">100</span><span class="p">)]</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">same_positions</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="nb">len</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">some_assets</span></a><span class="p">))</span>
+
+<span class="n">cold</span> <span class="o">=</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"close"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">])</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"select on a fresh array (builds the lookup)"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">cold</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">some_assets</span></a><span class="p">),</span>
+    <span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"select again (the lookup is cached)"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cold</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">some_assets</span></a><span class="p">),</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"isel, by position (no lookup at all)"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cold</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">same_positions</span></a><span class="p">),</span> <span class="mi">5</span>
+<span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">cold</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">some_assets</span></a><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">cold</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">same_positions</span></a><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>select on a fresh array (builds the lookup)        0.24 ms
+select again (the lookup is cached)                0.09 ms
+isel, by position (no lookup at all)               0.09 ms
+</pre></div>
+</div>
+</section>
+<section id="several-dimensions-are-one-gather-in-either-order">
+<h2>Several dimensions are one gather, in either order<a class="headerlink" href="#several-dimensions-are-one-gather-in-either-order" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">select</span></code> hands every dimension to the backend at once – <code class="docutils literal notranslate"><span class="pre">np.ix_</span></code> on
+numpy – so no intermediate array is built for the axes still to come, and
+the order the indexers are given in does not change the cost. Applying them
+one axis at a time, as the package used to, made a wide-then-narrow selection
+several times more expensive than the same selection asked for the other way
+round.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">few_dates</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">many_assets</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">dates</span></a><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">assets</span></a><span class="p">[:</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="n">wide_first</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"select assets, then dates"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">select</span><span class="p">({</span><span class="s2">"asset"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">many_assets</span></a><span class="p">,</span> <span class="s2">"date"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">few_dates</span></a><span class="p">}),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">narrow_first</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"select dates, then assets"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">select</span><span class="p">({</span><span class="s2">"date"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">few_dates</span></a><span class="p">,</span> <span class="s2">"asset"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">many_assets</span></a><span class="p">}),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">wide_first</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">narrow_first</span><span class="p">)</span>
+
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">close</span></a> <span class="o">=</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows_</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">cols_</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">one_pass</span></a> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  np.ix_ on the bare array, one variable"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">close</span></a><span class="p">[</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ix_.html#numpy.ix_" title="numpy.ix_" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">ix_</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows_</span></a><span class="p">,</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">cols_</span></a><span class="p">)],</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array_equal.html#numpy.array_equal" title="numpy.array_equal" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array_equal</span></a><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">one_pass</span></a><span class="p">,</span> <span class="n">narrow_first</span><span class="p">[</span><span class="s2">"close"</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>select assets, then dates                          0.11 ms
+select dates, then assets                          0.11 ms
+  np.ix_ on the bare array, one variable           0.01 ms
+</pre></div>
+</div>
+</section>
+<section id="arithmetic-costs-what-the-backend-costs">
+<h2>Arithmetic costs what the backend costs<a class="headerlink" href="#arithmetic-costs-what-the-backend-costs" title="Link to this heading">¶</a></h2>
+<p>Operators map over the variables and rebuild the container. On a large array
+that container overhead is invisible next to the arithmetic; on a small one
+it is all there is, so it is worth knowing the fixed part.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bench</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prices</span><span class="o">.</span><span class="n">size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">-cell array * 2 + 1"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  the same on the bare numpy arrays"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"volume"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">tiny</span> <span class="o">=</span> <span class="n">LabelledArray</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">"w"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mf">6.0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">],</span> <span class="s2">"b"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"2x3 array * 2 + 1 (fixed overhead)"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">tiny</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"2x3 select"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">tiny</span><span class="o">.</span><span class="n">select</span><span class="p">({</span><span class="s2">"a"</span><span class="p">:</span> <span class="s2">"x"</span><span class="p">}),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>1,000,000-cell array * 2 + 1                       2.46 ms
+  the same on the bare numpy arrays                1.69 ms
+2x3 array * 2 + 1 (fixed overhead)                 0.02 ms
+2x3 select                                         0.04 ms
+
+LabelledArray(data={'w': array([[0., 1., 2.]], dtype='&lt;f8')}, dims=Dimensions({'a': array(['x'], dtype='&lt;U1'), 'b': array([1, 2, 3], dtype='&lt;i8')}))
+</pre></div>
+</div>
+</section>
+<section id="moving-between-backends">
+<h2>Moving between backends<a class="headerlink" href="#moving-between-backends" title="Link to this heading">¶</a></h2>
+<p>The move is a per-variable conversion, and how much it costs is the library’s
+choice, not the container’s: torch wraps the same buffer, while JAX copies it
+to a device. The labels, mask and coordinates never move.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"available backends:"</span><span class="p">,</span> <span class="n">available_backends</span><span class="p">())</span>
+<span class="k">for</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a> <span class="ow">in</span> <span class="n">available_backends</span><span class="p">():</span>
+    <span class="k">if</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a> <span class="o">==</span> <span class="s2">"numpy"</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="n">moved</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"to_backend(</span><span class="si">{</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a><span class="si">!r}</span><span class="s2">)"</span><span class="p">,</span> <span class="k">lambda</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a><span class="o">=</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">to_backend</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="n">bench</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a><span class="si">}</span><span class="s2"> back to numpy"</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">moved</span><span class="o">=</span><span class="n">moved</span><span class="p">:</span> <span class="n">moved</span><span class="o">.</span><span class="n">to_backend</span><span class="p">(</span><span class="s2">"numpy"</span><span class="p">),</span>
+        <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">assert</span> <span class="n">moved</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">prices</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="n">moved</span><span class="o">.</span><span class="n">dims</span> <span class="o">==</span> <span class="n">prices</span><span class="o">.</span><span class="n">dims</span>
+
+<span class="k">if</span> <span class="s2">"torch"</span> <span class="ow">in</span> <span class="n">available_backends</span><span class="p">():</span>
+    <span class="n">shared</span> <span class="o">=</span> <span class="n">prices</span><span class="o">.</span><span class="n">to_backend</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="n">shared</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">data_ptr</span><span class="p">()</span> <span class="o">==</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">),</span> <span class="s2">"torch wraps the numpy buffer rather than copying it"</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>available backends: ('numpy', 'jax', 'torch')
+to_backend('jax')                                  2.72 ms
+  jax back to numpy                                0.03 ms
+to_backend('torch')                                0.05 ms
+  torch back to numpy                              0.02 ms
+</pre></div>
+</div>
+</section>
+<section id="sparsity-is-a-memory-cost-not-a-time-cost">
+<h2>Sparsity is a memory cost, not a time cost<a class="headerlink" href="#sparsity-is-a-memory-cost-not-a-time-cost" title="Link to this heading">¶</a></h2>
+<p>A dense layout spans the product of the label sets. When one dimension’s
+labels are unique to a group – a date column that never repeats across
+assets – the cells outnumber the rows by the number of groups.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">per_group</span></a> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">200</span>
+<span class="n">uneven</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"group"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.repeat.html#numpy.repeat" title="numpy.repeat" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">repeat</span></a><span class="p">([</span><span class="sa">f</span><span class="s2">"g</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a><span class="p">)],</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">per_group</span></a><span class="p">),</span>
+        <span class="s2">"date"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.datetime64" title="numpy.datetime64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class"><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span></a><span class="p">(</span><span class="s2">"2015-01-03"</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">)</span>
+        <span class="o">+</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">per_group</span></a><span class="p">)</span> <span class="o">*</span> <a href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.timedelta64" title="numpy.timedelta64" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class"><span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span></a><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">),</span>
+        <span class="s2">"value"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.standard_normal.html#numpy.random.Generator.standard_normal" title="numpy.random.Generator.standard_normal" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span></a><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">per_group</span></a><span class="p">),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">spread</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"from_dataframe, dates as labels"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span>
+        <span class="n">uneven</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"group"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">packed</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"from_dataframe, natural=['date']"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span>
+        <span class="n">uneven</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"group"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">],</span> <span class="n">natural</span><span class="o">=</span><span class="p">[</span><span class="s2">"date"</span><span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">footprint</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Bytes held by the variables, the mask and the coordinates."""</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">nbytes</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">total</span> <span class="o">+=</span> <span class="n">array</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">nbytes</span> <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">total</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">nbytes</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<span class="k">for</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a><span class="p">,</span> <span class="n">array</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"labelled dates"</span><span class="p">,</span> <span class="n">spread</span><span class="p">),</span> <span class="p">(</span><span class="s2">"natural index "</span><span class="p">,</span> <span class="n">packed</span><span class="p">)):</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">name</span></a><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;14</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">density</span><span class="si">:</span><span class="s2">&gt;7.2%</span><span class="si">}</span><span class="s2"> populated,"</span>
+        <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="n">footprint</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s2">6.2f</span><span class="si">}</span><span class="s2"> MB"</span>
+    <span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">spread</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">per_group</span></a>
+<span class="k">assert</span> <span class="n">packed</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_groups</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">per_group</span></a>
+<span class="k">assert</span> <span class="n">footprint</span><span class="p">(</span><span class="n">packed</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">footprint</span><span class="p">(</span><span class="n">spread</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">spread</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">packed</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>from_dataframe, dates as labels                    2.93 ms
+from_dataframe, natural=['date']                   3.07 ms
+labelled dates:    (60, 12000),   1.67% populated,   6.48 MB
+natural index :      (60, 200), 100.00% populated,   0.19 MB
+</pre></div>
+</div>
+</section>
+<section id="what-that-would-cost-at-a-realistic-size">
+<h2>What that would cost at a realistic size<a class="headerlink" href="#what-that-would-cost-at-a-realistic-size" title="Link to this heading">¶</a></h2>
+<p>The density is knowable before anything is allocated, which is the check
+worth making in a pipeline: cells are the product of the distinct label
+counts, and the rows you have divided by that product is the density you will
+get. A dimension that is unique per row turns a modest frame into an array
+that will not fit.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_instruments</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_days</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_fields</span></a> <span class="o">=</span> <span class="mi">5_000</span><span class="p">,</span> <span class="mi">2_520</span><span class="p">,</span> <span class="mi">4</span>
+<a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_instruments</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_days</span></a>
+<a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">labelled_cells</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_instruments</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a>  <span class="c1"># a date column unique to each instrument</span>
+<a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">natural_cells</span></a> <span class="o">=</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_instruments</span></a> <span class="o">*</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_days</span></a>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> rows x </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_fields</span></a><span class="si">}</span><span class="s2"> fields"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"  dates as labels : </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">labelled_cells</span></a><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> cells,"</span>
+    <span class="sa">f</span><span class="s2">" </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">labelled_cells</span></a><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_fields</span></a><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e12</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> TB"</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"  natural index   : </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">natural_cells</span></a><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> cells, </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">natural_cells</span></a><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_fields</span></a><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e9</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> GB"</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"  density         : </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a><span class="w"> </span><span class="o">/</span><span class="w"> </span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">labelled_cells</span></a><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2"> against </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a><span class="w"> </span><span class="o">/</span><span class="w"> </span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">natural_cells</span></a><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">"</span>
+<span class="p">)</span>
+
+<span class="k">assert</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">rows</span></a> <span class="o">/</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">labelled_cells</span></a> <span class="o">&lt;</span> <span class="mf">0.001</span><span class="p">,</span> <span class="s2">"the dense layout is the wrong one here"</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>12,600,000 rows x 4 fields
+  dates as labels : 63,000,000,000 cells, 2.0 TB
+  natural index   : 12,600,000 cells, 0.4 GB
+  density         : 0.02% against 100%
+</pre></div>
+</div>
+</section>
+<section id="the-mask-costs-a-byte-a-cell">
+<h2>The mask costs a byte a cell<a class="headerlink" href="#the-mask-costs-a-byte-a-cell" title="Link to this heading">¶</a></h2>
+<p>A byte per cell, however many variables there are: an eighth of one float64
+variable, less with each one added. It is dropped entirely when every cell is
+populated, which is why the dense array above carries none.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">unmasked</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"from_dataframe, mask=False"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">from_dataframe</span><span class="p">(</span>
+        <span class="n">uneven</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"group"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">],</span> <span class="n">mask</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"mask     :"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">spread</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">nbytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"variables:"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">spread</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB"</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">spread</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">==</span> <span class="n">spread</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span><span class="o">.</span><span class="n">nbytes</span><span class="p">,</span> <span class="s2">"one bool against one float64"</span>
+<span class="k">assert</span> <span class="n">unmasked</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span>
+
+<span class="c1"># Dropping it is a memory decision, not a speed one, and it is only safe when</span>
+<span class="c1"># the frame really is dense: without a mask every empty cell is a row on the</span>
+<span class="c1"># way back out.</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">unmasked</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">())</span> <span class="o">==</span> <span class="n">unmasked</span><span class="o">.</span><span class="n">size</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">spread</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">())</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">uneven</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>from_dataframe, mask=False                         2.82 ms
+mask     : 0.72 MB
+variables: 5.76 MB
+</pre></div>
+</div>
+</section>
+<section id="reducing-a-dimension-away">
+<h2>Reducing a dimension away<a class="headerlink" href="#reducing-a-dimension-away" title="Link to this heading">¶</a></h2>
+<p>A reduction is one pass over the cells, so it costs about what the backend’s
+own reduction costs. A mask costs another pass: absent cells are replaced
+with the reduction’s identity first, which is a full copy of every variable
+before anything is added up.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">sparse_prices</span> <span class="o">=</span> <span class="n">prices</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.Generator.random.html#numpy.random.Generator.random" title="numpy.random.Generator.random" class="sphx-glr-backref-module-numpy-random sphx-glr-backref-type-py-method"><span class="n">rng</span><span class="o">.</span><span class="n">random</span></a><span class="p">(</span><span class="n">prices</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.2</span><span class="p">)</span>
+
+<span class="k">for</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">op</span></a> <span class="ow">in</span> <span class="p">(</span><span class="s2">"sum"</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">,</span> <span class="s2">"min"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">):</span>
+    <span class="n">bench</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">op</span></a><span class="si">}</span><span class="s2"> over 'date'"</span><span class="p">,</span> <span class="k">lambda</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">op</span></a><span class="o">=</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">op</span></a><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">prices</span><span class="p">,</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">op</span></a><span class="p">)(</span><span class="s2">"date"</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  the same on the bare numpy array"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"sum over 'date', 80% populated"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">sparse_prices</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">"date"</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"sum over both dimensions"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">prices</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">,)</span>
+<span class="k">assert</span> <span class="n">prices</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.testing.assert_allclose.html#numpy.testing.assert_allclose" title="numpy.testing.assert_allclose" class="sphx-glr-backref-module-numpy-testing sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span></a><span class="p">(</span><span class="n">prices</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)[</span><span class="s2">"close"</span><span class="p">],</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>sum over 'date'                                    0.55 ms
+mean over 'date'                                   0.43 ms
+min over 'date'                                    0.37 ms
+max over 'date'                                    0.37 ms
+  the same on the bare numpy array                 0.22 ms
+sum over 'date', 80% populated                     4.95 ms
+sum over both dimensions                           0.44 ms
+</pre></div>
+</div>
+</section>
+<section id="grouped-reductions">
+<h2>Grouped reductions<a class="headerlink" href="#grouped-reductions" title="Link to this heading">¶</a></h2>
+<p>A group is a selection along one dimension followed by a reduction over it,
+so the whole pass over the array is linear in its size however many groups
+there are – but each group is a python-level step, and that is what a large
+number of them costs.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sectors</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="sa">f</span><span class="s2">"sector-</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">20</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+<a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">many</span></a> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="sa">f</span><span class="s2">"group-</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">200</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
+<span class="n">by_sector</span> <span class="o">=</span> <span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"groupby 20 groups, mean"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sectors</span></a><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="s2">"asset"</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"groupby 200 groups, mean"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">many</span></a><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="s2">"asset"</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  pandas groupby on the same numbers"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">])</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sectors</span></a><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">by_sector</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a><span class="p">)</span>
+<span class="k">assert</span> <span class="n">by_sector</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="s2">"asset"</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">sectors</span></a><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>groupby 20 groups, mean                           12.54 ms
+groupby 200 groups, mean                          58.11 ms
+  pandas groupby on the same numbers               3.65 ms
+</pre></div>
+</div>
+</section>
+<section id="rolling-windows">
+<h2>Rolling windows<a class="headerlink" href="#rolling-windows" title="Link to this heading">¶</a></h2>
+<p>Each window is reduced in full, so the work is the size of the array times
+the window: this is where the time goes on a big panel. numpy sees the
+windows as a view rather than a copy, so what is paid for is the arithmetic
+and not the memory – but it is still one addition per cell per position of
+the window, which is why pandas, which keeps a running total instead, pulls
+ahead as the window grows.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">window</span></a> <span class="ow">in</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">250</span><span class="p">):</span>
+    <span class="n">bench</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"rolling mean, window </span><span class="si">{</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">window</span></a><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="k">lambda</span> <span class="n">w</span><span class="o">=</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">window</span></a><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="s2">"date"</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  pandas rolling(20).mean on the same numbers"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">rolled</span> <span class="o">=</span> <span class="n">prices</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="s2">"date"</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="k">assert</span> <span class="n">rolled</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">prices</span><span class="o">.</span><span class="n">shape</span>
+<span class="k">assert</span> <span class="n">rolled</span><span class="o">.</span><span class="n">mask</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">19</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"a partial window produces nothing"</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>rolling mean, window   5                          48.93 ms
+rolling mean, window  20                          58.25 ms
+rolling mean, window  60                          66.97 ms
+rolling mean, window 250                         119.67 ms
+  pandas rolling(20).mean on the same numbers     22.72 ms
+</pre></div>
+</div>
+</section>
+<section id="putting-two-arrays-onto-one-label-set">
+<h2>Putting two arrays onto one label set<a class="headerlink" href="#putting-two-arrays-onto-one-label-set" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">reindex</span></code> and <code class="docutils literal notranslate"><span class="pre">align</span></code> are a gather plus, where labels are new, a fill:
+the same one pass <code class="docutils literal notranslate"><span class="pre">select</span></code> makes, with a second one over whatever the join
+invented. Arithmetic between arrays whose labels differ pays for that
+alignment before it multiplies anything.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">half</span> <span class="o">=</span> <span class="n">prices</span><span class="o">.</span><span class="n">isel</span><span class="p">({</span><span class="s2">"asset"</span><span class="p">:</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="numpy.arange" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">arange</span></a><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_assets</span></a><span class="p">,</span> <span class="mi">2</span><span class="p">)})</span>
+
+<span class="n">bench</span><span class="p">(</span><span class="s2">"reindex onto the full asset set"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">half</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><a href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="numpy.ndarray" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">assets</span></a><span class="p">))</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"align, inner join"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">half</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">prices</span><span class="p">))</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"align, outer join"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">half</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">prices</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">"outer"</span><span class="p">))</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"arithmetic between aligned operands"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">half</span> <span class="o">+</span> <span class="n">prices</span><span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span><span class="s2">"  arithmetic on identical labels"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span> <span class="o">+</span> <span class="n">prices</span><span class="p">)</span>
+
+<span class="n">first</span> <span class="o">=</span> <span class="n">prices</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">second</span> <span class="o">=</span> <span class="n">prices</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/functions.html#int" title="builtins.int" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">n_dates</span></a> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"concat two halves along 'date'"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="s2">"date"</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"concat along a new dimension"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">first</span><span class="p">,</span> <span class="n">first</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="s2">"run"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="k">assert</span> <span class="p">(</span><span class="n">half</span> <span class="o">+</span> <span class="n">prices</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">half</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">"the inner join is the narrower operand"</span>
+<span class="k">assert</span> <span class="n">LabelledArray</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="s2">"date"</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>reindex onto the full asset set                    8.20 ms
+align, inner join                                  6.63 ms
+align, outer join                                 15.65 ms
+arithmetic between aligned operands                7.50 ms
+  arithmetic on identical labels                   1.19 ms
+concat two halves along 'date'                     1.32 ms
+concat along a new dimension                       1.22 ms
+</pre></div>
+</div>
+</section>
+<section id="back-out-to-a-frame">
+<h2>Back out to a frame<a class="headerlink" href="#back-out-to-a-frame" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">to_dataframe</span></code> gathers one row per populated cell: a flat gather per
+variable, plus the dimension labels expanded to match. It is priced on the
+rows it emits, so a sparse array is cheaper than a dense one of the same
+shape. With no engine named the frame is polars; pandas is asked for by name.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">bench</span><span class="p">(</span><span class="s2">"to_dataframe (polars, dense)"</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"to_dataframe (pandas, dense)"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="s2">"pandas"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="s2">"  ... with the dimensions as an index"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">prices</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="s2">"pandas"</span><span class="p">),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># The same shape, masked and unmasked, both out to polars: the mask is what</span>
+<span class="c1"># keeps the empty cells out of the frame, and it is the row count that the</span>
+<span class="c1"># conversion is priced on.</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"to_dataframe, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">uneven</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">spread</span><span class="o">.</span><span class="n">size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> cells masked in"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">spread</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">bench</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"to_dataframe, all </span><span class="si">{</span><span class="n">unmasked</span><span class="o">.</span><span class="n">size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> cells (mask=False)"</span><span class="p">,</span>
+    <span class="k">lambda</span><span class="p">:</span> <span class="n">unmasked</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(),</span>
+    <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">round_tripped</span> <span class="o">=</span> <span class="n">prices</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">round_tripped</span><span class="p">)</span> <span class="o">==</span> <span class="n">prices</span><span class="o">.</span><span class="n">size</span>
+<span class="k">assert</span> <span class="nb">bool</span><span class="p">((</span><span class="n">round_tripped</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">==</span> <span class="n">prices</span><span class="p">[</span><span class="s2">"close"</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>to_dataframe (polars, dense)                      48.49 ms
+to_dataframe (pandas, dense)                      39.03 ms
+  ... with the dimensions as an index            121.01 ms
+to_dataframe, 12,000 of 720,000 cells masked in     0.84 ms
+to_dataframe, all 720,000 cells (mask=False)      33.13 ms
+</pre></div>
+</div>
+</section>
+<section id="what-the-numbers-say">
+<h2>What the numbers say<a class="headerlink" href="#what-the-numbers-say" title="Link to this heading">¶</a></h2>
+<p>Sorted by cost, for the array built at the top of this file.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'cells'</span><span class="si">:</span><span class="s2">&lt;46</span><span class="si">}{</span><span class="n">prices</span><span class="o">.</span><span class="n">size</span><span class="si">:</span><span class="s2">9,</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">for</span> <a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a><span class="p">,</span> <a href="https://docs.python.org/3/builtins/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seconds</span></a> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><a href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="builtins.dict" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">TIMINGS</span></a><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="o">-</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])[:</span><span class="mi">8</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><a href="https://docs.python.org/3/builtins/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">label</span></a><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">:</span><span class="s2">&lt;46</span><span class="si">}{</span><a href="https://docs.python.org/3/builtins/functions.html#float" title="builtins.float" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">seconds</span></a><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e3</span><span class="si">:</span><span class="s2">9.2f</span><span class="si">}</span><span class="s2"> ms"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>cells                                         1,000,000
+from_dataframe (pandas)                          215.71 ms
+pandas adapter factorize 'asset'                 161.61 ms
+factorize 'asset' (object dtype)                 130.90 ms
+numpy reference factorize 'asset'                129.47 ms
+... with the dimensions as an index              121.01 ms
+rolling mean, window 250                         119.67 ms
+from_dataframe (polars)                           78.56 ms
+rolling mean, window  60                          66.97 ms
+</pre></div>
+</div>
+</section>
+<section id="rules-of-thumb">
+<h2>Rules of thumb<a class="headerlink" href="#rules-of-thumb" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Building is dominated by factorizing string dimension columns. A polars
+frame factorizes them natively, well ahead of the numpy reference; integer
+or datetime codes are cheap from either library.</p></li>
+<li><p>Everything else in the build is linear in the rows and cheap per row.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">select</span></code> costs what the result costs, whichever order the dimensions are
+asked for in.</p></li>
+<li><p>A reduction is one pass over the cells; a mask adds another. A rolling
+window is one pass per position of the window, so a long window is the one
+operation here whose cost is not linear in the array.</p></li>
+<li><p>A group is cheap, but each one is a python-level step: hundreds of groups
+cost more than the pass over the data does.</p></li>
+<li><p>The container overhead is fixed and tens of microseconds; it disappears
+above about ten thousand cells.</p></li>
+<li><p>Sparsity is paid in memory, not in time. Work the density out before
+allocating, and reach for <code class="docutils literal notranslate"><span class="pre">natural=</span></code> when it collapses.</p></li>
+</ul>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> (0 minutes 4.704 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-auto-examples-performance-01-timings-at-scale-py">
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/c79f0efedb867db14b98f49efdab20e3/01_timings_at_scale.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">01_timings_at_scale.ipynb</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/477ba90c82ad7bbcefb8dd40a9dcf8a4/01_timings_at_scale.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">01_timings_at_scale.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-zip docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/eb03689398a487a8f1275ad775ff2475/01_timings_at_scale.zip"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">zipped:</span> <span class="pre">01_timings_at_scale.zip</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../../api.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">API reference</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Performance</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">groupby</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code> : timings at scale</a><ul>
+<li><a class="reference internal" href="#a-timing-helper">A timing helper</a></li>
+<li><a class="reference internal" href="#the-data">The data</a></li>
+<li><a class="reference internal" href="#building-the-array">Building the array</a></li>
+<li><a class="reference internal" href="#where-that-time-goes">Where that time goes</a></li>
+<li><a class="reference internal" href="#factorizing-string-labels">Factorizing string labels</a></li>
+<li><a class="reference internal" href="#labels-you-already-hold-as-codes">Labels you already hold as codes</a></li>
+<li><a class="reference internal" href="#it-is-linear-in-the-rows">It is linear in the rows</a></li>
+<li><a class="reference internal" href="#selecting-is-a-copy-priced-by-what-comes-out">Selecting is a copy, priced by what comes out</a></li>
+<li><a class="reference internal" href="#several-dimensions-are-one-gather-in-either-order">Several dimensions are one gather, in either order</a></li>
+<li><a class="reference internal" href="#arithmetic-costs-what-the-backend-costs">Arithmetic costs what the backend costs</a></li>
+<li><a class="reference internal" href="#moving-between-backends">Moving between backends</a></li>
+<li><a class="reference internal" href="#sparsity-is-a-memory-cost-not-a-time-cost">Sparsity is a memory cost, not a time cost</a></li>
+<li><a class="reference internal" href="#what-that-would-cost-at-a-realistic-size">What that would cost at a realistic size</a></li>
+<li><a class="reference internal" href="#the-mask-costs-a-byte-a-cell">The mask costs a byte a cell</a></li>
+<li><a class="reference internal" href="#reducing-a-dimension-away">Reducing a dimension away</a></li>
+<li><a class="reference internal" href="#grouped-reductions">Grouped reductions</a></li>
+<li><a class="reference internal" href="#rolling-windows">Rolling windows</a></li>
+<li><a class="reference internal" href="#putting-two-arrays-onto-one-label-set">Putting two arrays onto one label set</a></li>
+<li><a class="reference internal" href="#back-out-to-a-frame">Back out to a frame</a></li>
+<li><a class="reference internal" href="#what-the-numbers-say">What the numbers say</a></li>
+<li><a class="reference internal" href="#rules-of-thumb">Rules of thumb</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=e259d695"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    </body>
+</html>

@@ -1,0 +1,1195 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html">
+        <link rel="canonical" href="https://ronaldbuddys.github.io/labelled-array/_modules/labelled_array/dimensions.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>labelled_array.dimensions - labelled-array</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=fd6457a4" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">labelled-array</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <span class="sidebar-brand-text">labelled-array</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../auto_examples/index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../auto_examples/basics/index.html">Basics</a><input aria-label="Toggle navigation of Basics" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/basics/01_labelled_array.html"><code class="docutils literal notranslate"><span class="pre">LabelledArray</span></code> : building one from scratch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/basics/02_from_dataframe.html"><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">to_dataframe</span></code> : round trips through a DataFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/basics/03_selection.html"><code class="docutils literal notranslate"><span class="pre">select</span></code> : selecting by label</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/basics/04_ordering.html"><code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">transpose</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code> : what keeps its order, and what does not</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../auto_examples/layout/index.html">Layout</a><input aria-label="Toggle navigation of Layout" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/layout/01_presence_mask.html"><code class="docutils literal notranslate"><span class="pre">mask</span></code> : the presence mask, end to end</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/layout/02_natural_index.html"><code class="docutils literal notranslate"><span class="pre">from_dataframe(natural=...)</span></code> : natural indices and sparsity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/layout/03_alternative_dimensions.html"><code class="docutils literal notranslate"><span class="pre">alt_dims</span></code> : alternative dimensions</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../auto_examples/operations/index.html">Operations</a><input aria-label="Toggle navigation of Operations" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/operations/01_combining_and_reducing.html"><code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">groupby</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>, <code class="docutils literal notranslate"><span class="pre">concat</span></code> : combining and reducing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/operations/02_ffill_and_staleness.html"><code class="docutils literal notranslate"><span class="pre">reindex</span></code>, <code class="docutils literal notranslate"><span class="pre">ffill</span></code> : forward filling, and knowing how stale the fill is</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../auto_examples/interop/index.html">Interoperability</a><input aria-label="Toggle navigation of Interoperability" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/interop/01_polars_and_pandas.html"><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">to_dataframe</span></code> : one API, two DataFrame engines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/interop/02_backends_and_dtypes.html"><code class="docutils literal notranslate"><span class="pre">to_backend</span></code> : array backends and dtypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/interop/03_subclassing.html"><code class="docutils literal notranslate"><span class="pre">LabelledArray</span></code> : subclassing for a domain</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../auto_examples/performance/index.html">Performance</a><input aria-label="Toggle navigation of Performance" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../auto_examples/performance/01_timings_at_scale.html"><code class="docutils literal notranslate"><span class="pre">from_dataframe</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">groupby</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code> : timings at scale</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../building.html">Building the docs locally</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for labelled_array.dimensions</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Ordered, validated dimension names and labels."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">labelled_array._utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_repr</span><span class="p">,</span> <span class="n">as_name_list</span><span class="p">,</span> <span class="n">duplicates</span><span class="p">,</span> <span class="n">is_null</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">labelled_array.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">DimensionError</span><span class="p">,</span> <span class="n">LabelNotFoundError</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Dimensions"</span><span class="p">]</span>
+
+<span class="c1">#: Accepted values for the ``missing`` argument of :meth:`Dimensions.get_indexer`.</span>
+<span class="n">MISSING_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"raise"</span><span class="p">,</span> <span class="s2">"ignore"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">as_1d</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"labels"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``value`` as a one-dimensional array, treating a scalar as one entry.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : array_like</span>
+<span class="sd">        Value to coerce.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Dimension the value belongs to, used in the error message.</span>
+<span class="sd">    what : str, default 'labels'</span>
+<span class="sd">        What the value is, used in the error message.</span>
+<span class="sd">    """</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> for dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be one-dimensional, got shape </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">array</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_labels</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``labels`` as a read-only, non-null, unique, one-dimensional array."""</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">as_1d</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_null</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"labels for dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must not be null: a null label can never "</span>
+            <span class="sa">f</span><span class="s2">"be selected, as it does not compare equal to itself"</span>
+        <span class="p">)</span>
+    <span class="n">repeated</span> <span class="o">=</span> <span class="n">duplicates</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">repeated</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"labels for dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be unique, duplicated: </span><span class="si">{</span><span class="n">repeated</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">array</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">array</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_natural</span><span class="p">(</span><span class="n">natural</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the natural-index flags as a ``dimension -&gt; source`` mapping.</span>
+
+<span class="sd">    A plain iterable of names flags them as positional with no source.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">natural</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">natural</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">natural</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"natural names are not dimensions: </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">flags</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_alt_labels</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``labels`` as read-only, non-null, one-dimensional labels of ``length``.</span>
+
+<span class="sd">    Unlike :func:`_as_labels` duplicates are allowed, and are the point: an</span>
+<span class="sd">    alternative dimension describes the entries of the dimension it is tied to,</span>
+<span class="sd">    and several of those usually share a description.</span>
+<span class="sd">    """</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">as_1d</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"alternative labels"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_null</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"labels for alternative dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must not be null: a null "</span>
+            <span class="sa">f</span><span class="s2">"label can never be selected, as it does not compare equal to itself"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">length</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"alternative dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> labels, expected "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">length</span><span class="si">}</span><span class="s2"> to match the dimension it refers to"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">array</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">array</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_alt</span><span class="p">(</span>
+    <span class="n">alt</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">natural</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Return the alternative dimensions as a ``name -&gt; (ref_dim, labels)`` mapping.</span>
+
+<span class="sd">    Each entry is given either as ``{"ref_dim": ..., "labels": ...}`` or as the</span>
+<span class="sd">    terser ``(ref_dim, labels)`` pair.</span>
+<span class="sd">    """</span>
+    <span class="n">resolved</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="n">alt</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"alternative dimension names must be non-empty str, got </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"alternative dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is already a dimension"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">absent</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="s2">"ref_dim"</span><span class="p">,</span> <span class="s2">"labels"</span><span class="p">}</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">absent</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"alternative dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> needs 'ref_dim' and 'labels', "</span>
+                    <span class="sa">f</span><span class="s2">"missing </span><span class="si">{</span><span class="n">absent</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="n">ref</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s2">"ref_dim"</span><span class="p">],</span> <span class="n">spec</span><span class="p">[</span><span class="s2">"labels"</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">spec</span>
+        <span class="k">if</span> <span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"alternative dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> refers to unknown dimension </span><span class="si">{</span><span class="n">ref</span><span class="si">!r}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"expected one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">natural</span> <span class="ow">and</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">natural</span><span class="p">:</span>
+            <span class="c1"># Same refusal as from_dataframe: a natural index numbers rows by</span>
+            <span class="c1"># position, so its entries carry no identity for a description to</span>
+            <span class="c1"># attach to, and the object could not round-trip.</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"alternative dimensions cannot be tied to a natural index: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> refers to </span><span class="si">{</span><span class="n">ref</span><span class="si">!r}</span><span class="s2">; pass the column as a coordinate instead"</span>
+            <span class="p">)</span>
+        <span class="n">resolved</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">_as_alt_labels</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">ref</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">resolved</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_comparable</span><span class="p">(</span><span class="n">reference</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``labels`` as a one-dimensional array comparable with ``reference``."""</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">as_1d</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"labels selected"</span><span class="p">)</span>
+    <span class="c1"># datetime64/timedelta64 compare across units only once aligned; other</span>
+    <span class="c1"># kinds are matched via their python equivalents, which avoids the silent</span>
+    <span class="c1"># truncation of casting (e.g. '&lt;U8' labels cast to '&lt;U1').</span>
+    <span class="k">if</span> <span class="n">reference</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="s2">"mM"</span> <span class="ow">and</span> <span class="n">query</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">reference</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">query</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gathered</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">positions</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``values`` at ``positions``, read-only.</span>
+
+<span class="sd">    Fancy indexing always copies, so the result owns its buffer and freezing it</span>
+<span class="sd">    leaves the caller's array alone.</span>
+<span class="sd">    """</span>
+    <span class="n">picked</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)]</span>
+    <span class="n">picked</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">picked</span>
+
+
+<div class="viewcode-block" id="Dimensions">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dimensions</span><span class="p">(</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">"""An ordered mapping of dimension name to its unique labels.</span>
+
+<span class="sd">    Labels are always held as numpy arrays, independently of the array backend,</span>
+<span class="sd">    and are read-only: a ``Dimensions`` instance is treated as immutable, and</span>
+<span class="sd">    every method returning a modified version returns a new instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dims : Mapping or sequence of (str, array_like) or Dimensions</span>
+<span class="sd">        Dimension names in axis order, each mapped to its labels.</span>
+<span class="sd">    natural : iterable of str or mapping of str to str, optional</span>
+<span class="sd">        Dimensions whose labels are a natural index (``0 .. n-1``) rather than</span>
+<span class="sd">        values of their own. Given as a mapping, each value names the</span>
+<span class="sd">        coordinate holding the values the index stands in for, which is what a</span>
+<span class="sd">        DataFrame round trip writes back out; given as a plain iterable, the</span>
+<span class="sd">        dimensions are simply positional.</span>
+<span class="sd">    alt : mapping of str to mapping or tuple, optional</span>
+<span class="sd">        Alternative dimensions: extra labels for the entries of a dimension the</span>
+<span class="sd">        array already has, rather than an axis of their own. Each is given as</span>
+<span class="sd">        ``{"ref_dim": name, "labels": values}``, or as the terser</span>
+<span class="sd">        ``(name, values)`` pair, and has one label per entry of ``ref_dim``.</span>
+<span class="sd">        Unlike a dimension's own labels these need not be unique -- an</span>
+<span class="sd">        alternative dimension describes the entries, so several of them</span>
+<span class="sd">        usually share a description -- and :meth:`alt_indexer` maps one of</span>
+<span class="sd">        them to every position that carries it.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    DimensionError</span>
+<span class="sd">        If a name is repeated or is not a string, if labels are not</span>
+<span class="sd">        one-dimensional, null, or unique within a dimension, if a name given</span>
+<span class="sd">        in ``natural`` is not a dimension, or if an alternative dimension</span>
+<span class="sd">        collides with a dimension name, names an unknown ``ref_dim``, or has</span>
+<span class="sd">        the wrong number of labels.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; dims = Dimensions({"a": [1, 2], "b": ["x", "y", "z"]})</span>
+<span class="sd">    &gt;&gt;&gt; dims.shape</span>
+<span class="sd">    (2, 3)</span>
+<span class="sd">    &gt;&gt;&gt; dims.get_indexer("b", ["z", "x"])</span>
+<span class="sd">    array([2, 0])</span>
+<span class="sd">    &gt;&gt;&gt; tied = Dimensions({"a": [1, 2, 3]}, alt={"g": ("a", ["x", "x", "y"])})</span>
+<span class="sd">    &gt;&gt;&gt; tied.alt_indexer("g", "x")</span>
+<span class="sd">    array([0, 1])</span>
+<span class="sd">    """</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"_labels"</span><span class="p">,</span>
+        <span class="s2">"_names"</span><span class="p">,</span>
+        <span class="s2">"_axes"</span><span class="p">,</span>
+        <span class="s2">"_shape"</span><span class="p">,</span>
+        <span class="s2">"_natural"</span><span class="p">,</span>
+        <span class="s2">"_alt"</span><span class="p">,</span>
+        <span class="s2">"_lookups"</span><span class="p">,</span>
+        <span class="s2">"_alt_lookups"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dims</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Dimensions</span><span class="p">,</span>
+        <span class="n">natural</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">alt</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">Dimensions</span><span class="p">):</span>
+            <span class="n">natural</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">dims</span><span class="o">.</span><span class="n">_natural</span><span class="p">,</span> <span class="o">**</span><span class="n">_as_natural</span><span class="p">(</span><span class="n">natural</span><span class="p">,</span> <span class="n">dims</span><span class="o">.</span><span class="n">names</span><span class="p">)}</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">dims</span><span class="o">.</span><span class="n">_alt</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">alt</span> <span class="ow">or</span> <span class="p">{})}</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dims</span><span class="p">]</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"dimension names must be str, got </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span><span class="s2">"dimension names must not be empty"</span><span class="p">)</span>
+        <span class="n">repeated</span> <span class="o">=</span> <span class="n">duplicates</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">repeated</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"dimension names must be unique, duplicated: </span><span class="si">{</span><span class="n">repeated</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+        <span class="n">resolved</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">_as_labels</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">items</span><span class="p">}</span>
+        <span class="n">natural_resolved</span> <span class="o">=</span> <span class="n">_as_natural</span><span class="p">(</span><span class="n">natural</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span>
+            <span class="n">resolved</span><span class="p">,</span>
+            <span class="n">natural_resolved</span><span class="p">,</span>
+            <span class="n">_as_alt</span><span class="p">(</span><span class="n">alt</span><span class="p">,</span> <span class="n">resolved</span><span class="p">,</span> <span class="n">natural_resolved</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">natural</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span>
+        <span class="n">alt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Populate the instance from labels that are already validated."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">axis</span> <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span> <span class="o">=</span> <span class="n">natural</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span> <span class="o">=</span> <span class="n">alt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alt_lookups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_derive</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">natural</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">alt</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a new instance from labels already known to be valid.</span>
+
+<span class="sd">        Deriving one set of dimensions from another -- renaming, reordering,</span>
+<span class="sd">        subsetting -- cannot introduce a null or a duplicate that was not</span>
+<span class="sd">        already there, so re-validating every label array would be pure cost.</span>
+<span class="sd">        """</span>
+        <span class="n">derived</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="n">derived</span><span class="o">.</span><span class="n">_init</span><span class="p">(</span>
+            <span class="n">labels</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span> <span class="k">if</span> <span class="n">natural</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">natural</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span> <span class="k">if</span> <span class="n">alt</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">alt</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">derived</span>
+
+    <span class="c1"># -- alternative constructors ------------------------------------------------</span>
+
+<div class="viewcode-block" id="Dimensions.from_shape">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.from_shape">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_shape</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build dimensions with natural index labels for each entry of ``shape``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : sequence of int</span>
+<span class="sd">            Length of each dimension.</span>
+<span class="sd">        names : sequence of str, optional</span>
+<span class="sd">            Dimension names; defaults to ``dim_0, dim_1, ...``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"dim_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">))]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2"> names for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2"> dimensions"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)},</span>
+            <span class="n">natural</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># -- mapping interface -------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"unknown dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">, expected one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether ``name`` is a dimension."""</span>
+        <span class="k">return</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span>
+
+    <span class="c1"># -- properties --------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Dimension names, in axis order."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Length of each dimension, in axis order."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Number of dimensions."""</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Number of cells spanned, i.e. the product of the dimension lengths."""</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">natural</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Natural index dimensions, mapped to the coordinate each stands in for."""</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Dimensions.is_natural">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.is_natural">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_natural</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether ``name`` is a natural index."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.source">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.source">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the coordinate ``name`` stands in for, if it is a natural index."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">alt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Alternative dimension labels, keyed by name."""</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">values</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<div class="viewcode-block" id="Dimensions.is_alt">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.is_alt">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_alt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether ``name`` is an alternative dimension."""</span>
+        <span class="k">return</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.alt_ref">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.alt_ref">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">alt_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the dimension alternative dimension ``name`` is tied to."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_alt</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.alt_on">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.alt_on">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">alt_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the alternative dimensions tied to dimension ``name``."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">alt</span><span class="p">:</span> <span class="n">values</span> <span class="k">for</span> <span class="n">alt</span><span class="p">,</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">ref</span> <span class="o">==</span> <span class="n">name</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.axis">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.axis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the axis number of dimension ``name``."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Raise unless every name is a dimension."""</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"unknown dimensions: </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">, expected some of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require_alt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Raise unless every name is an alternative dimension."""</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"unknown alternative dimensions: </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"expected some of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+    <span class="c1"># -- lookup ------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return (and cache) the ``label -&gt; position`` map for ``name``."""</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookups</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lookups</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">label</span><span class="p">:</span> <span class="n">position</span> <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookups</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Dimensions.get_indexer">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.get_indexer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_indexer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">missing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"raise"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the positions of ``labels`` within dimension ``name``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Dimension to look up in.</span>
+<span class="sd">        labels : scalar or array_like</span>
+<span class="sd">            Labels to locate. Scalars are treated as a single-element sequence.</span>
+<span class="sd">        missing : {'raise', 'ignore'}, default 'raise'</span>
+<span class="sd">            Whether absent labels raise :class:`LabelNotFoundError` or are</span>
+<span class="sd">            dropped from the result.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Integer positions, in the order the labels were given.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">missing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MISSING_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"missing must be one of </span><span class="si">{</span><span class="n">MISSING_MODES</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">missing</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_query</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">locate</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">found</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">missing</span> <span class="o">==</span> <span class="s2">"raise"</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">LabelNotFoundError</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">[</span><span class="n">found</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="n">found</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">found</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_as_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``labels`` as a one-dimensional array comparable with ``name``'s."""</span>
+        <span class="k">return</span> <span class="n">_comparable</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_alt_lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return (and cache) the ``label -&gt; positions`` map for alternative ``name``.</span>
+
+<span class="sd">        Alternative labels need not be unique, so a label maps to every position</span>
+<span class="sd">        carrying it rather than to a single one.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_lookups</span><span class="p">:</span>
+            <span class="n">grouped</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()):</span>
+                <span class="n">grouped</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">position</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_alt_lookups</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">label</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">grouped</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_lookups</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Dimensions.alt_indexer">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.alt_indexer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">alt_indexer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">missing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"raise"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return positions along the dimension alternative ``name`` is tied to.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Alternative dimension to look up in.</span>
+<span class="sd">        labels : scalar or array_like</span>
+<span class="sd">            Alternative labels to locate. Scalars are treated as a single-element</span>
+<span class="sd">            sequence.</span>
+<span class="sd">        missing : {'raise', 'ignore'}, default 'raise'</span>
+<span class="sd">            Whether absent labels raise :class:`LabelNotFoundError` or are</span>
+<span class="sd">            dropped from the result.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Integer positions along ``alt_ref(name)``. Because the labels need</span>
+<span class="sd">            not be unique, one label can yield several positions: they come back</span>
+<span class="sd">            in the order the labels were requested, and ascending within each</span>
+<span class="sd">            label. The blocks cannot overlap, since every position carries</span>
+<span class="sd">            exactly one alternative label.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; dims = Dimensions({"a": [1, 2, 3]}, alt={"g": ("a", ["x", "y", "x"])})</span>
+<span class="sd">        &gt;&gt;&gt; dims.alt_indexer("g", ["y", "x"])</span>
+<span class="sd">        array([1, 0, 2])</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">missing</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MISSING_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"missing must be one of </span><span class="si">{</span><span class="n">MISSING_MODES</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">missing</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_alt</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="n">lookup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt_lookup</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">_comparable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">repeated</span> <span class="o">=</span> <span class="n">duplicates</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">repeated</span><span class="p">:</span>
+            <span class="c1"># Caught here, on the labels the caller typed: once expanded to</span>
+            <span class="c1"># positions the duplicate would be reported against the dimension</span>
+            <span class="c1"># this one is tied to, in labels the caller never mentioned.</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"labels requested more than once for alternative dimension "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">repeated</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+        <span class="n">found</span><span class="p">,</span> <span class="n">absent</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">positions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">absent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">absent</span> <span class="ow">and</span> <span class="n">missing</span> <span class="o">==</span> <span class="s2">"raise"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LabelNotFoundError</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">absent</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.locate">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.locate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">locate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the position of each label within dimension ``name``, -1 where absent.</span>
+
+<span class="sd">        Unlike :meth:`get_indexer` this neither raises nor drops, so the caller</span>
+<span class="sd">        can tell which labels were missing and where -- what</span>
+<span class="sd">        :meth:`~labelled_array.core.LabelledArray.reindex` needs to know which cells</span>
+<span class="sd">        to fill.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Dimension to look up in.</span>
+<span class="sd">        labels : scalar or array_like</span>
+<span class="sd">            Labels to locate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            One integer position per label, ``-1`` where the label is absent.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; dims = Dimensions({"b": ["x", "y", "z"]})</span>
+<span class="sd">        &gt;&gt;&gt; dims.locate("b", ["z", "q"])</span>
+<span class="sd">        array([ 2, -1])</span>
+<span class="sd">        """</span>
+        <span class="n">lookup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_query</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">query</span><span class="o">.</span><span class="n">tolist</span><span class="p">()],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.get_positions">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.get_positions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return integer positions along dimension ``name``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Dimension the positions belong to.</span>
+<span class="sd">        value : int, slice, or array_like of int or bool</span>
+<span class="sd">            Positions to keep. A boolean array is taken as a mask over the</span>
+<span class="sd">            dimension; negative positions count from the end.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Integer positions, in the order given.</span>
+<span class="sd">        """</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">*</span><span class="n">value</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">length</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">as_1d</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"positions"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">positions</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">positions</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">length</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"boolean mask for dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has length </span><span class="si">{</span><span class="n">positions</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"expected </span><span class="si">{</span><span class="n">length</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">positions</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">positions</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"positions for dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be integers, got </span><span class="si">{</span><span class="n">positions</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">positions</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="p">(</span><span class="n">positions</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">length</span> <span class="ow">or</span> <span class="n">positions</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">length</span><span class="p">):</span>
+            <span class="n">out_of_range</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[(</span><span class="n">positions</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">length</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">positions</span> <span class="o">&gt;=</span> <span class="n">length</span><span class="p">)]</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"positions </span><span class="si">{</span><span class="n">out_of_range</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2"> are out of range for dimension "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> of length </span><span class="si">{</span><span class="n">length</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">positions</span> <span class="o">+</span> <span class="n">length</span> <span class="o">*</span> <span class="p">(</span><span class="n">positions</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">positions</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="n">positions</span></div>
+
+
+    <span class="c1"># -- derived instances -------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Dimensions.subset">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.subset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indexers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return dimensions with the given axes reduced to integer positions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        indexers : mapping of str to array_like of int</span>
+<span class="sd">            Positions to keep, per dimension. Dimensions not named are unchanged.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        DimensionError</span>
+<span class="sd">            If a dimension is unknown, or a position is asked for twice, which</span>
+<span class="sd">            would make its label ambiguous.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Alternative dimensions are subset alongside the dimension they are tied</span>
+<span class="sd">        to, so they keep describing the same entries.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="n">indexers</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">indexers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+            <span class="n">repeated</span> <span class="o">=</span> <span class="n">duplicates</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">repeated</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"labels requested more than once for dimension </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">repeated</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="n">labels</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">positions</span><span class="p">]</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">_gathered</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">indexers</span><span class="p">[</span><span class="n">ref</span><span class="p">])</span> <span class="k">if</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">indexers</span> <span class="k">else</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="n">alt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.rename">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.rename">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return dimensions with names remapped by ``mapping``.</span>
+
+<span class="sd">        Names of the coordinates that natural index dimensions stand in for are</span>
+<span class="sd">        remapped too, so the association survives a rename. An alternative</span>
+<span class="sd">        dimension can be renamed by its own name, and follows its dimension when</span>
+<span class="sd">        that is renamed.</span>
+<span class="sd">        """</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">{</span><span class="n">source</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span> <span class="o">-</span> <span class="n">sources</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown dimensions: </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span> <span class="n">values</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span><span class="s2">"dimension names must be unique after renaming"</span><span class="p">)</span>
+        <span class="n">natural</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span> <span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">ref</span><span class="p">),</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="n">clashes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">)</span> <span class="ow">or</span> <span class="n">clashes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span><span class="s2">"dimension names must be unique after renaming"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">natural</span><span class="p">,</span> <span class="n">alt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.transpose">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.transpose">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return dimensions reordered to ``order``, which must be a permutation."""</span>
+        <span class="k">if</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DimensionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"transpose order </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not a permutation of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">order</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.drop">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.drop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return dimensions without ``names``."""</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">as_name_list</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">values</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="p">}</span>
+        <span class="n">natural</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">source</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="p">}</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ref</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">natural</span><span class="p">,</span> <span class="n">alt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.drop_alt">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.drop_alt">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">drop_alt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return dimensions without the named alternative dimensions."""</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">as_name_list</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_alt</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">),</span>
+            <span class="n">alt</span><span class="o">=</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">entry</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dimensions.replace">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.replace">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">replace</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">natural</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">alt</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dimensions</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return dimensions with the labels of ``name`` replaced.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Dimension to replace the labels of.</span>
+<span class="sd">        labels : array_like</span>
+<span class="sd">            New labels; need not have the same length as the current ones.</span>
+<span class="sd">        natural : bool or str, optional</span>
+<span class="sd">            Whether the dimension is a natural index, or the name of the</span>
+<span class="sd">            coordinate it stands in for. Unchanged when omitted.</span>
+<span class="sd">        alt : mapping of str to array_like, optional</span>
+<span class="sd">            Alternative dimensions to carry on the replaced dimension, one label</span>
+<span class="sd">            per new label. Unlike ``natural`` this does **not** default to</span>
+<span class="sd">            leaving them alone: the label set has changed, so any alternative</span>
+<span class="sd">            dimension tied to ``name`` is dropped unless it is given here.</span>
+<span class="sd">            Alternative dimensions on the other dimensions are untouched.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">([</span><span class="n">name</span><span class="p">])</span>
+        <span class="n">replaced</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">)</span>
+        <span class="n">replaced</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_as_labels</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">natural</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">natural</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">flags</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">natural</span> <span class="ow">is</span> <span class="kc">True</span> <span class="k">else</span> <span class="n">natural</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">alt_name</span><span class="p">:</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">alt_name</span><span class="p">,</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ref</span> <span class="o">!=</span> <span class="n">name</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">alt_name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="p">(</span><span class="n">alt</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">kept</span><span class="p">[</span><span class="n">alt_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">_as_alt_labels</span><span class="p">(</span><span class="n">alt_name</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">replaced</span><span class="p">[</span><span class="n">name</span><span class="p">])),</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive</span><span class="p">(</span><span class="n">replaced</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">kept</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- comparison and display --------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Compare names, order, labels, natural flags and alternative dimensions."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Dimensions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_names</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_natural</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+                <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span>
+            <span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_alt</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+                <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">_alt</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore[assignment]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return an ``eval``-able representation (needs ``array`` in scope)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_repr</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Dimensions.to_repr">
+<a class="viewcode-back" href="../../api.html#labelled_array.dimensions.Dimensions.to_repr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return an ``eval``-able representation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        full : bool, default True</span>
+<span class="sd">            Print every label. When False, long label arrays are summarised by</span>
+<span class="sd">            numpy and the result is no longer ``eval``-able.</span>
+<span class="sd">        """</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">array_repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">],</span><span class="w"> </span><span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span>
+        <span class="p">)</span>
+        <span class="n">natural</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">", natural=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="si">!r}</span><span class="s2">"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">:</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: (</span><span class="si">{</span><span class="n">ref</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">array_repr</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">", alt=</span><span class="se">{{</span><span class="si">{</span><span class="n">pairs</span><span class="si">}</span><span class="se">}}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="se">{{</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">}}</span><span class="si">{</span><span class="n">natural</span><span class="si">}{</span><span class="n">alt</span><span class="si">}</span><span class="s2">)"</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a one-line-per-dimension summary."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: &lt;scalar&gt;"</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="p">))</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2">d, size </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">):"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">" [natural for </span><span class="si">{</span><span class="n">source</span><span class="si">!r}</span><span class="s2">]"</span>
+                <span class="k">if</span> <span class="n">source</span>
+                <span class="k">else</span> <span class="p">(</span><span class="s2">" [natural]"</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_natural</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">preview</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">edgeitems</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s2">", "</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">width</span><span class="si">}}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="si">}</span><span class="s2">) </span><span class="si">{</span><span class="n">labels</span><span class="o">.</span><span class="n">dtype</span><span class="si">}{</span><span class="n">flag</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">preview</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alt</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">preview</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">edgeitems</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s2">", "</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">width</span><span class="si">}}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="si">}</span><span class="s2">) </span><span class="si">{</span><span class="n">labels</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"[alt for </span><span class="si">{</span><span class="n">ref</span><span class="si">!r}</span><span class="s2">]: </span><span class="si">{</span><span class="n">preview</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=e259d695"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/sg-tags.js?v=d80f6fa4"></script>
+    </body>
+</html>
