@@ -34,6 +34,7 @@ torch = ["torch>=2.0"]
 
 [project.urls]
 Homepage = "https://github.com/ronaldBuddys/labelled-array"
+Documentation = "https://ronaldbuddys.github.io/labelled-array/"
 
 # pandas and polars are here rather than in an extra because the `engine` and
 # `backend` fixtures parametrise over *installed* libraries: without them the
