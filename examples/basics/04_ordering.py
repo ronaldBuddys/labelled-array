@@ -68,11 +68,12 @@ assert backwards.equals(sales.isel(product=[2, 1, 0]))
 # ---------------------------------
 # A scalar label leaves a length-one dimension behind, so the rank never
 # depends on how many labels were asked for. ``drop=True`` removes the
-# dimensions that were *named* and came out with one entry; the rest keep
-# their order.
+# dimensions that were *named with a scalar*; the rest keep their order. A
+# list keeps its dimension even when it holds one label.
 
 assert sales.select({"region": "north"}).shape == (1, 3)
 assert sales.select({"region": "north"}, drop=True).dims.names == ("product",)
+assert sales.select({"region": ["north"]}, drop=True).shape == (1, 3)
 
 one_product = sales.select({"product": "BBB"})
 assert one_product.select({"region": "north"}, drop=True).dims.names == ("product",)

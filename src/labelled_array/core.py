@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy as copy_module
 from collections import Counter
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from types import MappingProxyType
 from typing import Any
 
@@ -389,7 +389,7 @@ class LabelledArray(ArithmeticMixin):
     # -- derived instances -------------------------------------------------------
 
     def _take(
-        self, positions: Mapping[str, np.ndarray], drop: bool = False
+        self, positions: Mapping[str, np.ndarray], drop: Collection[str] = ()
     ) -> LabelledArray:
         """Return the entries at integer ``positions`` along the named dimensions.
 
@@ -397,20 +397,22 @@ class LabelledArray(ArithmeticMixin):
         ----------
         positions : mapping of str to ndarray of int
             Positions to keep, per dimension.
-        drop : bool, default False
-            Drop the selected dimensions that end up with a single entry.
+        drop : collection of str, default ()
+            Dimensions to drop if they end up with a single entry: the ones
+            :meth:`_scalar_dims` found indexed by a scalar.
         """
         dims = self._dims.subset(positions)
         axes = {self._dims.axis(name): indices for name, indices in positions.items()}
         cells = self._map_cells(lambda backend, array: backend.take_multi(array, axes))
 
-        if drop:
-            dropped = [name for name in positions if len(dims[name]) == 1]
-            if dropped:
-                dims = dims.drop(dropped)
-                cells = self._map_cells(
-                    lambda backend, array: backend.reshape(array, dims.shape), cells
-                )
+        # A scalar can still leave zero entries (absent, ignored) or several (an
+        # alternative label on many entries); only a single entry can be dropped.
+        dropped = [name for name in drop if len(dims[name]) == 1]
+        if dropped:
+            dims = dims.drop(dropped)
+            cells = self._map_cells(
+                lambda backend, array: backend.reshape(array, dims.shape), cells
+            )
         return self._replace(dims=dims, **cells)
 
     def select(
@@ -431,9 +433,12 @@ class LabelledArray(ArithmeticMixin):
             two kinds mix freely in one call. Because alternative labels need
             not be unique, one of them can keep several entries.
         drop : bool, default False
-            Drop the selected dimensions that end up with a single entry.
-            Without it a scalar label yields a length-one dimension, so the rank
-            of the result never depends on how many labels were asked for.
+            Drop each dimension selected by a scalar label, so long as the label
+            selected a single entry; a scalar alternative label shared by several
+            entries keeps the dimension it is tied to. A list keeps its dimension
+            even when it holds one label. Without ``drop`` a scalar label yields a
+            length-one dimension too, so in neither case does the rank of the
+            result depend on how many labels were asked for.
         missing : {'raise', 'ignore'}, default 'raise'
             Whether labels absent from a dimension raise
             :class:`LabelNotFoundError` or are skipped.
@@ -474,6 +479,8 @@ class LabelledArray(ArithmeticMixin):
         (1, 3)
         >>> la.select({"a": 1}, drop=True).shape
         (3,)
+        >>> la.select({"a": [1]}, drop=True).shape
+        (1, 3)
         >>> la.select(b=["z", "x"]).dims["b"].tolist()
         ['z', 'x']
         >>> la.select(g="odd").dims["b"].tolist()
@@ -483,26 +490,37 @@ class LabelledArray(ArithmeticMixin):
         --------
         isel : select by integer position, which alternative dimensions have none.
         """
-        return self._take(self._resolve_alt(indexers, kwargs, missing), drop=drop)
+        indexers = {**(indexers or {}), **kwargs}
+        positions = self._resolve_alt(indexers, missing)
+        return self._take(positions, drop=self._scalar_dims(indexers) if drop else ())
+
+    def _scalar_dims(self, indexers: Mapping[str, Any]) -> list[str]:
+        """Return the dimensions indexed by a scalar: those ``drop=True`` removes.
+
+        A list, slice or mask keeps its dimension even when it selects a single
+        entry, so the rank of a result follows the kind of request rather than
+        how many entries it matched. A scalar is anything numpy sees as 0-d, as
+        the indexers themselves treat it, except a slice. An alternative
+        dimension's scalar counts for the dimension it is tied to.
+        """
+        alt = self._dims.alt
+        return [
+            self._dims.alt_ref(name) if name in alt else name
+            for name, value in indexers.items()
+            if not isinstance(value, slice) and np.ndim(value) == 0
+        ]
 
     def _resolve(
-        self,
-        indexers: Mapping[str, Any] | None,
-        kwargs: Mapping[str, Any],
-        to_positions: Any,
+        self, indexers: Mapping[str, Any], to_positions: Any
     ) -> dict[str, np.ndarray]:
-        """Merge and validate indexers, turning each into integer positions."""
-        indexers = {**(indexers or {}), **kwargs}
+        """Validate indexers, turning each into integer positions."""
         self._dims._require(indexers)
         return {name: to_positions(name, value) for name, value in indexers.items()}
 
     def _resolve_alt(
-        self,
-        indexers: Mapping[str, Any] | None,
-        kwargs: Mapping[str, Any],
-        missing: str,
+        self, indexers: Mapping[str, Any], missing: str
     ) -> dict[str, np.ndarray]:
-        """Merge indexers, resolving alternative dimensions onto their own.
+        """Resolve indexers to positions, mapping alternative dimensions onto their own.
 
         Names are unique across dimensions, alternative dimensions, variables
         and coordinates, so a name needs no disambiguation: it is looked up as a
@@ -510,7 +528,6 @@ class LabelledArray(ArithmeticMixin):
         dimension resolves to positions along the dimension it is tied to, which
         is the key its positions land under.
         """
-        indexers = {**(indexers or {}), **kwargs}
         alt = self._dims.alt
         if not alt.keys() & indexers.keys():
             self._dims._require(indexers)
@@ -560,8 +577,10 @@ class LabelledArray(ArithmeticMixin):
             has no axis of its own, so it has no positions to index by. Its
             labels are carried along with the dimension it is tied to.
         drop : bool, default False
-            Drop the selected dimensions that end up with a single entry;
-            otherwise a scalar position yields a length-one dimension.
+            Drop each dimension indexed by a scalar position. As in numpy, a
+            slice, list or boolean mask keeps its dimension even when it selects
+            a single entry. Without ``drop`` a scalar position yields a
+            length-one dimension too.
         **kwargs
             Alternative to ``indexers``, as keyword arguments.
 
@@ -578,10 +597,12 @@ class LabelledArray(ArithmeticMixin):
         (2, 1)
         >>> la.isel(dim_1=0, drop=True).shape
         (2,)
+        >>> la.isel(dim_1=[0], drop=True).shape
+        (2, 1)
         """
-        return self._take(
-            self._resolve(indexers, kwargs, self._dims.get_positions), drop=drop
-        )
+        indexers = {**(indexers or {}), **kwargs}
+        positions = self._resolve(indexers, self._dims.get_positions)
+        return self._take(positions, drop=self._scalar_dims(indexers) if drop else ())
 
     def rename(
         self, mapping: Mapping[str, str] | None = None, **kwargs: str

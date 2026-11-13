@@ -158,6 +158,17 @@ def test_the_alternative_labels_are_subset_too(book):
     ]
 
 
+@pytest.mark.parametrize(
+    ("labels", "names"),
+    [("fin", ("date",)), ("tech", ("asset", "date")), (["fin"], ("asset", "date"))],
+    ids=["scalar-one-match", "scalar-three-matches", "list-of-one"],
+)
+def test_drop_on_an_alternative_needs_a_scalar_that_matched_one_entry(
+    book, labels, names
+):
+    assert book.select(sector=labels, drop=True).dims.names == names
+
+
 def test_a_slice_on_an_alternative_is_rejected(book):
     match = r"select got a slice for alternative dimension 'sector'.*isel on 'asset'"
     with pytest.raises(TypeError, match=match):
