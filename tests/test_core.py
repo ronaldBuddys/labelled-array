@@ -173,7 +173,7 @@ def test_isel_keeps_dimensions_by_default(simple):
     np.testing.assert_array_equal(selected["w"], simple["w"][:1])
 
 
-def test_isel_drop_removes_selected_size_one_dimensions(simple):
+def test_isel_drop_removes_a_dimension_indexed_by_a_scalar(simple):
     selected = simple.isel(a=0, drop=True)
     assert selected.dims.names == ("b",)
     assert selected.shape == (3,)

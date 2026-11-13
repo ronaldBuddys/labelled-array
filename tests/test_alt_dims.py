@@ -180,6 +180,11 @@ def test_a_slice_is_rejected_in_a_call_that_also_names_an_alternative(book):
         book.select(sector="fin", date=slice("d1", "d2"))
 
 
+def test_a_slice_is_rejected_before_an_absent_alternative_label_is_looked_up(book):
+    with pytest.raises(TypeError, match="select got a slice for dimension 'date'"):
+        book.select(sector="zzz", date=slice("d1", "d2"))
+
+
 def test_drop_removes_the_dimension_and_its_alternative(book):
     dropped = book.select({"sector": "fin"}, drop=True)
     assert dropped.dims.names == ("date",)

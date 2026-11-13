@@ -29,7 +29,7 @@ def test_a_scalar_label_keeps_the_dimension(cube):
     assert selected.dims["a"].tolist() == [1]
 
 
-def test_drop_removes_the_selected_size_one_dimensions(cube):
+def test_drop_removes_a_dimension_selected_by_a_scalar(cube):
     selected = cube.select({"a": 1}, drop=True)
     assert selected.dims.names == ("b", "flag")
     assert selected.shape == (3, 2)
