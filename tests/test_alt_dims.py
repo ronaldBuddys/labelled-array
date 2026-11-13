@@ -158,6 +158,17 @@ def test_the_alternative_labels_are_subset_too(book):
     ]
 
 
+def test_a_slice_on_an_alternative_is_rejected(book):
+    match = r"select got a slice for alternative dimension 'sector'.*isel on 'asset'"
+    with pytest.raises(TypeError, match=match):
+        book.select(sector=slice("fin", "tech"))
+
+
+def test_a_slice_is_rejected_in_a_call_that_also_names_an_alternative(book):
+    with pytest.raises(TypeError, match="select got a slice for dimension 'date'"):
+        book.select(sector="fin", date=slice("d1", "d2"))
+
+
 def test_drop_removes_the_dimension_and_its_alternative(book):
     dropped = book.select({"sector": "fin"}, drop=True)
     assert dropped.dims.names == ("date",)

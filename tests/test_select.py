@@ -49,6 +49,14 @@ def test_selecting_a_list_of_one_still_keeps_the_dimension(cube):
     assert cube.select({"a": [1]}).shape == (1, 3, 2)
 
 
+@pytest.mark.parametrize("missing", ["raise", "ignore"])
+def test_a_slice_is_rejected_with_a_pointer_to_isel(cube, missing):
+    # A slice is not a label: a label range is undefined when labels are unsorted
+    # or repeated, so select refuses it rather than look it up as one label.
+    with pytest.raises(TypeError, match=r"select got a slice for dimension 'a'.*isel"):
+        cube.select({"a": slice(1, 2)}, missing=missing)
+
+
 # -- label containers and ordering ----------------------------------------------
 
 

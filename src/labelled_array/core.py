@@ -458,6 +458,11 @@ class LabelledArray(ArithmeticMixin):
             is asked for as two chained calls instead.
         LabelNotFoundError
             If a label is absent and ``missing`` is ``'raise'``.
+        TypeError
+            If a value is a :class:`slice`. Labels need not be sorted, and an
+            alternative dimension's need not be unique, so a label range is not
+            defined: pass a list of labels, or use :meth:`isel` for a range of
+            positions.
 
         Examples
         --------
@@ -509,6 +514,8 @@ class LabelledArray(ArithmeticMixin):
         alt = self._dims.alt
         if not alt.keys() & indexers.keys():
             self._dims._require(indexers)
+            for name, labels in indexers.items():
+                _reject_slice(name, labels)
             return {
                 name: self._dims.get_indexer(name, labels, missing=missing)
                 for name, labels in indexers.items()
@@ -519,9 +526,11 @@ class LabelledArray(ArithmeticMixin):
         for name, labels in indexers.items():
             if name in alt:
                 ref = self._dims.alt_ref(name)
+                _reject_slice(name, labels, tied_to=ref)
                 found = self._dims.alt_indexer(name, labels, missing=missing)
             else:
                 self._dims._require([name])
+                _reject_slice(name, labels)
                 ref, found = name, self._dims.get_indexer(name, labels, missing=missing)
             if ref in claimed:
                 # Two selections along one axis is an intersection, and the order
@@ -1374,12 +1383,32 @@ class LabelledArray(ArithmeticMixin):
 
     # -- magic methods -----------------------------------------------------------
 
-    def __getitem__(self, key: str | Sequence[str]) -> Any:
+    def __getitem__(self, key: str | Sequence[str] | Mapping[str, Any]) -> Any:
         """Return a variable, a subset of variables, or a label selection.
 
-        A string returns that variable's array, a list of strings returns an
-        array holding just those variables, and a mapping is passed to
-        :meth:`select`.
+        Parameters
+        ----------
+        key : str, list or tuple of str, or mapping of str to labels
+            A variable name, several variable names, or labels to select per
+            dimension, as :meth:`select` takes them.
+
+        Returns
+        -------
+        array or LabelledArray
+            For a name, that variable's array, on this instance's backend. For a
+            list or tuple of names, an instance holding just those variables, in
+            the order given. For a mapping, ``self.select(key)``.
+
+        Raises
+        ------
+        KeyError
+            If a name, or any name in a list or tuple, is not a variable.
+        TypeError
+            If ``key`` is none of the above, such as an integer.
+
+        See Also
+        --------
+        select : the errors a mapping key can raise.
         """
         if isinstance(key, str):
             try:
@@ -1541,6 +1570,27 @@ class LabelledArray(ArithmeticMixin):
         if self._attrs:
             lines.append(f"Attrs: {self._attrs!r}")
         return "\n".join(lines)
+
+
+def _reject_slice(name: str, labels: Any, tied_to: str | None = None) -> None:
+    """Raise :class:`TypeError` if ``labels``, given to ``select``, is a slice.
+
+    Left alone, a slice would be looked up as one (absent) label, and reported as
+    missing -- or, with ``missing='ignore'``, silently select nothing. A label range
+    is not defined (labels need not be sorted, and an alternative dimension's need
+    not be unique), so point to a list of labels or a positional range instead.
+    """
+    if not isinstance(labels, slice):
+        return
+    if tied_to is None:
+        what, positional = f"dimension {name!r}", "isel"
+    else:
+        what = f"alternative dimension {name!r}"
+        positional = f"isel on {tied_to!r}, the dimension it is tied to,"
+    raise TypeError(
+        f"select got a slice for {what}, but it takes labels, not ranges: pass a "
+        f"list of labels, or use {positional} for a range of positions"
+    )
 
 
 def _check_broadcastable(
