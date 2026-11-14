@@ -74,7 +74,8 @@ def indexing() -> None:
     la.select({"sym": "A"}, drop=True)
     la.select({"date": DATES[1]}, drop=True)
     la.select({"date": DATES[[4, 0]], "sym": ["B"]})
-    with suppress(LabelNotFoundError):  # labels, not a slice, so refused as unknown
+    la.select({"sym": ["A"]}, drop=True)  # a list keeps its dimension, even of one
+    with suppress(TypeError):  # labels have no range, so a slice is refused
         la.select({"date": slice(DATES[1], DATES[3])})
     with suppress(LabelNotFoundError):
         la.select({"sym": "Z"})
@@ -84,6 +85,7 @@ def indexing() -> None:
     la.isel({"date": -1})
     la.isel({"date": -2}, drop=True)
     la.isel({"date": slice(1, None, 2)})
+    la.isel({"date": [0]}, drop=True)
     la.isel({"date": np.array([3, 0, 5]), "sym": np.array([-1, 0])})
     ba.isel({"a": [1, 0]})
     cube.isel({"strike": -1, "expiry": 0}, drop=True)
