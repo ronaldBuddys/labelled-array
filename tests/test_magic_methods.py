@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import copy
 import pickle
+import typing
+from collections.abc import Mapping
+from typing import Any
 
 import numpy as np
 import pytest
@@ -43,6 +46,12 @@ def test_getitem_list_with_unknown_names_raises(simple):
 def test_getitem_rejects_other_keys(simple):
     with pytest.raises(TypeError, match="variable name, a list of names, or a mapping"):
         simple[0]
+
+
+def test_getitem_annotation_admits_a_mapping():
+    # The body passes a mapping key on to select; the hint must say so.
+    key_hint = typing.get_type_hints(LabelledArray.__getitem__)["key"]
+    assert Mapping[str, Any] in typing.get_args(key_hint)
 
 
 def test_setitem_adds_a_variable(simple):

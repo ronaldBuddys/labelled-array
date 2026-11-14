@@ -158,6 +158,33 @@ def test_the_alternative_labels_are_subset_too(book):
     ]
 
 
+@pytest.mark.parametrize(
+    ("labels", "names"),
+    [("fin", ("date",)), ("tech", ("asset", "date")), (["fin"], ("asset", "date"))],
+    ids=["scalar-one-match", "scalar-three-matches", "list-of-one"],
+)
+def test_drop_on_an_alternative_needs_a_scalar_that_matched_one_entry(
+    book, labels, names
+):
+    assert book.select(sector=labels, drop=True).dims.names == names
+
+
+def test_a_slice_on_an_alternative_is_rejected(book):
+    match = r"select got a slice for alternative dimension 'sector'.*isel on 'asset'"
+    with pytest.raises(TypeError, match=match):
+        book.select(sector=slice("fin", "tech"))
+
+
+def test_a_slice_is_rejected_in_a_call_that_also_names_an_alternative(book):
+    with pytest.raises(TypeError, match="select got a slice for dimension 'date'"):
+        book.select(sector="fin", date=slice("d1", "d2"))
+
+
+def test_a_slice_is_rejected_before_an_absent_alternative_label_is_looked_up(book):
+    with pytest.raises(TypeError, match="select got a slice for dimension 'date'"):
+        book.select(sector="zzz", date=slice("d1", "d2"))
+
+
 def test_drop_removes_the_dimension_and_its_alternative(book):
     dropped = book.select({"sector": "fin"}, drop=True)
     assert dropped.dims.names == ("date",)

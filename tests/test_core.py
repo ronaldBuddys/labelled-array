@@ -173,7 +173,7 @@ def test_isel_keeps_dimensions_by_default(simple):
     np.testing.assert_array_equal(selected["w"], simple["w"][:1])
 
 
-def test_isel_drop_removes_selected_size_one_dimensions(simple):
+def test_isel_drop_removes_a_dimension_indexed_by_a_scalar(simple):
     selected = simple.isel(a=0, drop=True)
     assert selected.dims.names == ("b",)
     assert selected.shape == (3,)
@@ -182,7 +182,27 @@ def test_isel_drop_removes_selected_size_one_dimensions(simple):
 
 def test_isel_drop_leaves_untouched_size_one_dimensions():
     la = LabelledArray({"w": np.zeros((1, 3))}, {"a": [1], "b": [1, 2, 3]})
-    assert la.isel(b=[0], drop=True).dims.names == ("a",)
+    assert la.isel(b=0, drop=True).dims.names == ("a",)
+
+
+@pytest.mark.parametrize(
+    ("positions", "names"),
+    [
+        (0, ("b",)),
+        (-1, ("b",)),
+        ([0], ("a", "b")),
+        ([0, 1], ("a", "b")),
+        (slice(0, 1), ("a", "b")),
+        ([True, False], ("a", "b")),
+    ],
+    ids=["scalar", "negative-scalar", "list-of-one", "list-of-two", "slice", "mask"],
+)
+def test_isel_drop_removes_only_dimensions_indexed_by_a_scalar(
+    simple, positions, names
+):
+    # As in numpy, a slice, list or mask keeps its axis even when it selects one
+    # entry; only a scalar position removes it.
+    assert simple.isel(a=positions, drop=True).dims.names == names
 
 
 def test_isel_accepts_slices_lists_and_arrays(simple):

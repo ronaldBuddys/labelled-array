@@ -100,8 +100,9 @@ assert one_cell["px"].item() == 7.0
 # Order, and dropping
 # -------------------
 # Labels come back in the order they were asked for, ascending within each
-# label, and ``drop=True`` removes a dimension the selection reduced to one
-# entry -- taking the alternative dimension with it.
+# label, and ``drop=True`` removes a dimension a scalar label reduced to one
+# entry -- taking the alternative dimension with it. A scalar shared by several
+# entries, like ``"tech"``, keeps the dimension.
 
 reordered = book.select(sector=["fin", "tech"])
 assert reordered.dims["asset"].tolist() == ["CCC", "AAA", "BBB", "DDD"]
@@ -110,6 +111,7 @@ assert reordered.dims.alt["sector"].tolist() == ["fin", "tech", "tech", "tech"]
 dropped = book.select({"sector": "fin"}, drop=True)
 assert dropped.dims.names == ("date",)
 assert dropped.dims.alt == {}
+assert book.select({"sector": "tech"}, drop=True).dims.names == ("asset", "date")
 
 # %%
 # What it is not

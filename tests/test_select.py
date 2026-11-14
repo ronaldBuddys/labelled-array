@@ -29,7 +29,7 @@ def test_a_scalar_label_keeps_the_dimension(cube):
     assert selected.dims["a"].tolist() == [1]
 
 
-def test_drop_removes_the_selected_size_one_dimensions(cube):
+def test_drop_removes_a_dimension_selected_by_a_scalar(cube):
     selected = cube.select({"a": 1}, drop=True)
     assert selected.dims.names == ("b", "flag")
     assert selected.shape == (3, 2)
@@ -47,6 +47,35 @@ def test_drop_removes_several_dimensions_at_once(cube):
 
 def test_selecting_a_list_of_one_still_keeps_the_dimension(cube):
     assert cube.select({"a": [1]}).shape == (1, 3, 2)
+
+
+@pytest.mark.parametrize(
+    ("labels", "names"),
+    [
+        (1, ("b", "flag")),
+        ([1], ("a", "b", "flag")),
+        ([1, 2], ("a", "b", "flag")),
+    ],
+    ids=["scalar", "list-of-one", "list-of-two"],
+)
+def test_drop_removes_only_dimensions_selected_by_a_scalar(cube, labels, names):
+    # A list keeps its dimension even with one label, so the rank of the result
+    # depends on the kind of request, not on how many labels it holds.
+    assert cube.select({"a": labels}, drop=True).dims.names == names
+
+
+def test_drop_keeps_a_scalar_label_that_was_absent_and_ignored(cube):
+    selected = cube.select({"a": 9, "b": "x"}, drop=True, missing="ignore")
+    assert selected.dims.names == ("a", "flag")
+    assert selected.shape == (0, 2)
+
+
+@pytest.mark.parametrize("missing", ["raise", "ignore"])
+def test_a_slice_is_rejected_with_a_pointer_to_isel(cube, missing):
+    # A slice is not a label: a label range is undefined when labels are unsorted
+    # or repeated, so select refuses it rather than look it up as one label.
+    with pytest.raises(TypeError, match=r"select got a slice for dimension 'a'.*isel"):
+        cube.select({"a": slice(1, 2)}, missing=missing)
 
 
 # -- label containers and ordering ----------------------------------------------
