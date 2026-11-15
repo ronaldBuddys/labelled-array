@@ -1,0 +1,54 @@
+
+
+.. _sphx_glr_auto_examples_performance:
+
+.. _performance_examples:
+
+Performance
+-----------
+
+Where the time goes on a large array. The numbers depend on the machine that built these
+pages, so the page is kept apart from the rest of the gallery, and no other page times
+anything.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Where the time goes on a large array, and which choices change it. Every number below is measured on the machine running the script -- the point is not the absolute milliseconds but the ratios, which hold up across machines: what dominates from_dataframe, what a select costs, what the operations -- reductions, groups, rolling windows, alignment -- cost on a million cells, and what sparsity costs in memory rather than in time.">
+
+.. only:: html
+
+  .. image:: /auto_examples/performance/images/thumb/sphx_glr_01_timings_at_scale_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/performance/01_timings_at_scale`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe, select, groupby, rolling : timings at scale</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/performance/01_timings_at_scale
+

@@ -1,0 +1,71 @@
+
+
+.. _sphx_glr_auto_examples_operations:
+
+.. _operations_examples:
+
+Operations
+----------
+
+Reducing, grouping, rolling, aligning and concatenating, and forward filling onto another
+calendar while keeping track of how stale the fill is. Every operation is mask-aware.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Arrays that carry their labels can be put side by side even when their labels differ, and reduced along the dimensions they name. Everything in this example is mask-aware in the same way: a cell with no source row does not contribute, and a result with nothing behind it is marked absent rather than being invented.">
+
+.. only:: html
+
+  .. image:: /auto_examples/operations/images/thumb/sphx_glr_01_combining_and_reducing_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/operations/01_combining_and_reducing`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">sum, groupby, rolling, align, concat : combining and reducing</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Two calendars rarely agree. A discount curve is not published on every date an option chain has a snapshot for, so putting the curve on the chain&#x27;s dates leaves gaps. The right answer is to carry the most recent curve forward -- and, just as importantly, to know how old the one you used is, because a three-day stale discount curve is a different fact about your forward than a same-day one.">
+
+.. only:: html
+
+  .. image:: /auto_examples/operations/images/thumb/sphx_glr_02_ffill_and_staleness_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/operations/02_ffill_and_staleness`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">reindex, ffill : forward filling, and knowing how stale the fill is</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/operations/01_combining_and_reducing
+   /auto_examples/operations/02_ffill_and_staleness
+

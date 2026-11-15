@@ -1,0 +1,401 @@
+:orphan:
+
+.. _examples:
+
+Examples
+========
+
+Runnable scripts. Each one executes top to bottom under plain ``python`` and also opens as
+a notebook; the download links are at the foot of every page. The checks on each page are
+assertions, and Sphinx-Gallery runs every page at build time, so a page that stops
+matching the code fails the build, and the numbers shown were produced by the code, not
+typed in.
+
+Read the basics first. The performance page stands apart: its timings depend on the
+machine.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+Basics
+------
+
+Building an array, by hand and from a DataFrame, selecting from it by label, and what
+keeps its order when you do.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A LabelledArray is one or more equally shaped arrays plus an ordered mapping of dimension name to labels. This example builds one by hand and shows what it can tell you about itself.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_01_labelled_array_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/01_labelled_array`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">LabelledArray : building one from scratch</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Labelled arrays are usually reached from a DataFrame: some columns identify a cell, the rest become variables. The conversion goes both ways: polars is the default, and pandas works the same way when asked for by name.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_02_from_dataframe_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/02_from_dataframe`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe, to_dataframe : round trips through a DataFrame</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Selection is by label, not position, and the shape of the result never depends on how many labels were asked for: a single label still yields a dimension of length one unless it is explicitly dropped.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_03_selection_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/03_selection`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">select : selecting by label</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Two orders matter in a labelled array: the order of the dimensions, which is the order of the axes, and the order of the labels within each dimension. Selection changes only the second. This example walks through every operation that touches either, so that neither ever moves by surprise.">
+
+.. only:: html
+
+  .. image:: /auto_examples/basics/images/thumb/sphx_glr_04_ordering_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/basics/04_ordering`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">select, transpose, align : what keeps its order, and what does not</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+Layout
+------
+
+What an array holds besides its variables: the presence mask that records which cells
+had a source row, a natural index that keeps a sparse panel dense, and alternative
+dimensions that label a dimension the array already has.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A dense array has a cell for every combination of labels, whether or not the data had a row for it. The mask is how a LabelledArray remembers which cells are real. This example follows it from the frame it comes from, through every operation that changes it, and back out to a frame.">
+
+.. only:: html
+
+  .. image:: /auto_examples/layout/images/thumb/sphx_glr_01_presence_mask_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/layout/01_presence_mask`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">mask : the presence mask, end to end</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A dense array spans the product of its dimension labels, which is wasteful when one dimension&#x27;s labels are nearly unique per group -- dates, most of the time. Replacing that dimension with a natural index collapses the array while keeping the original values, so the round trip is still exact.">
+
+.. only:: html
+
+  .. image:: /auto_examples/layout/images/thumb/sphx_glr_02_natural_index_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/layout/02_natural_index`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe(natural=...) : natural indices and sparsity</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A descriptive column often varies along one dimension and only that one: a sector per asset, a currency per book, a maturity bucket per tenor. Making it a dimension of its own spans every combination and leaves the array mostly empty. An alternative dimension labels the entries of a dimension the array already has, is stored once per entry rather than once per cell, and -- unlike a coordinate -- can be selected on.">
+
+.. only:: html
+
+  .. image:: /auto_examples/layout/images/thumb/sphx_glr_03_alternative_dimensions_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/layout/03_alternative_dimensions`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">alt_dims : alternative dimensions</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+Operations
+----------
+
+Reducing, grouping, rolling, aligning and concatenating, and forward filling onto another
+calendar while keeping track of how stale the fill is. Every operation is mask-aware.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Arrays that carry their labels can be put side by side even when their labels differ, and reduced along the dimensions they name. Everything in this example is mask-aware in the same way: a cell with no source row does not contribute, and a result with nothing behind it is marked absent rather than being invented.">
+
+.. only:: html
+
+  .. image:: /auto_examples/operations/images/thumb/sphx_glr_01_combining_and_reducing_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/operations/01_combining_and_reducing`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">sum, groupby, rolling, align, concat : combining and reducing</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Two calendars rarely agree. A discount curve is not published on every date an option chain has a snapshot for, so putting the curve on the chain&#x27;s dates leaves gaps. The right answer is to carry the most recent curve forward -- and, just as importantly, to know how old the one you used is, because a three-day stale discount curve is a different fact about your forward than a same-day one.">
+
+.. only:: html
+
+  .. image:: /auto_examples/operations/images/thumb/sphx_glr_02_ffill_and_staleness_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/operations/02_ffill_and_staleness`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">reindex, ffill : forward filling, and knowing how stale the fill is</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+Interoperability
+----------------
+
+Where the array meets other libraries: polars and pandas frames, the numpy, JAX and torch
+backends, and subclasses that add a domain's own API.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="from_dataframe takes a polars frame or a pandas one, and to_dataframe writes either. The array in between is the same whichever library it came from. This example runs the two side by side, and then shows the few places where the libraries themselves differ and the difference shows through.">
+
+.. only:: html
+
+  .. image:: /auto_examples/interop/images/thumb/sphx_glr_01_polars_and_pandas_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/interop/01_polars_and_pandas`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe, to_dataframe : one API, two DataFrame engines</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The variables can live on numpy, JAX or torch, and the same conversion code serves all of them. Dimension labels, the mask and the coordinates always stay on numpy, because they are metadata rather than payload.">
+
+.. only:: html
+
+  .. image:: /auto_examples/interop/images/thumb/sphx_glr_02_backends_and_dtypes_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/interop/02_backends_and_dtypes`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">to_backend : array backends and dtypes</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="LabelledArray is meant to be inherited from. Every operation that returns a new array builds it through type(self), so a subclass keeps its own type, its extra API and its own validation without overriding anything.">
+
+.. only:: html
+
+  .. image:: /auto_examples/interop/images/thumb/sphx_glr_03_subclassing_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/interop/03_subclassing`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">LabelledArray : subclassing for a domain</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+Performance
+-----------
+
+Where the time goes on a large array. The numbers depend on the machine that built these
+pages, so the page is kept apart from the rest of the gallery, and no other page times
+anything.
+
+
+.. raw:: html
+
+  <div id='sg-tag-list' class='sphx-glr-tag-list'></div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Where the time goes on a large array, and which choices change it. Every number below is measured on the machine running the script -- the point is not the absolute milliseconds but the ratios, which hold up across machines: what dominates from_dataframe, what a select costs, what the operations -- reductions, groups, rolling windows, alignment -- cost on a million cells, and what sparsity costs in memory rather than in time.">
+
+.. only:: html
+
+  .. image:: /auto_examples/performance/images/thumb/sphx_glr_01_timings_at_scale_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/performance/01_timings_at_scale`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">from_dataframe, select, groupby, rolling : timings at scale</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+   :includehidden:
+
+
+   /auto_examples/basics/index.rst
+   /auto_examples/layout/index.rst
+   /auto_examples/operations/index.rst
+   /auto_examples/interop/index.rst
+   /auto_examples/performance/index.rst
+
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_
